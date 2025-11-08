@@ -1,0 +1,56 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-12 text-center mt-5">
+            <h1 class="display-4">Haldiram Promotional App</h1>
+            <p class="lead">Welcome to the Haldiram Promotional Management System</p>
+        </div>
+    </div>
+    
+    <!-- Seed message -->
+    @if (ViewBag.Message != null)
+    {
+        <div class="row mt-3">
+            <div class="col-md-12">
+                <div class="alert alert-success">
+                    <p>@ViewBag.Message</p>
+                </div>
+            </div>
+        </div>
+    }
+    
+    <div class="row mt-5">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Material Master</h5>
+                    <p class="card-text">Manage all material information including pricing, categories, and inventory details.</p>
+                    <a href="@Url.Action("Index", "MaterialMaster")" class="btn btn-primary">View Materials</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Promotions</h5>
+                    <p class="card-text">Create and manage promotional campaigns for materials.</p>
+                    <a href="@Url.Action("CreateCampaign", "Campaigns")" class="btn btn-primary">Manage Promotions</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Reports</h5>
+                    <p class="card-text">Generate reports on sales, inventory, and promotional performance.</p>
+                    <a href="#" class="btn btn-primary">View Reports</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

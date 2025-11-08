@@ -1,0 +1,294 @@
+@model HaldiramPromotionalApp.ViewModels.PointsRewardCampaignViewModel
+@{
+    ViewData["Title"] = "Create Points Reward Campaign";
+}
+
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <div class="px-4 py-3 border-b border-gray-200 sm:px-6">
+            <h1 class="text-lg font-medium text-gray-900">Create Points Reward Campaign</h1>
+            <p class="mt-1 text-xs text-gray-500">Points redeemable for a specific product/service</p>
+        </div>
+
+        <div class="p-4 sm:p-6">
+            <!-- Display success or error messages -->
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="mb-4 rounded-md bg-green-50 p-4">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm font-medium text-green-800">
+                                @TempData["SuccessMessage"]
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            }
+            
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="mb-4 rounded-md bg-red-50 p-4">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <h3 class="text-sm font-medium text-red-800">Error</h3>
+                            <div class="mt-2 text-sm text-red-700">
+                                <pre class="whitespace-pre-wrap">@TempData["ErrorMessage"]</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <form asp-action="CreatePointsRewardCampaign" method="post" id="campaignForm">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label asp-for="CampaignName" class="block text-xs font-medium text-gray-700 mb-1">Campaign Name</label>
+                        <input asp-for="CampaignName" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm" placeholder="Enter campaign name" />
+                        <span asp-validation-for="CampaignName" class="text-red-500 text-xs"></span>
+                    </div>
+                    
+                    <div>
+                        <label asp-for="VoucherGenerationThreshold" class="block text-xs font-medium text-gray-700 mb-1">Default Voucher Generation Threshold (Points)</label>
+                        <input asp-for="VoucherGenerationThreshold" type="number" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm" placeholder="Points required to generate voucher" />
+                        <span asp-validation-for="VoucherGenerationThreshold" class="text-red-500 text-xs"></span>
+                    </div>
+                    
+                    <div>
+                        <label asp-for="VoucherValidity" class="block text-xs font-medium text-gray-700 mb-1">Voucher Validity (Days)</label>
+                        <input asp-for="VoucherValidity" type="number" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm" placeholder="Voucher validity in days" />
+                        <span asp-validation-for="VoucherValidity" class="text-red-500 text-xs"></span>
+                    </div>
+                    
+                    <!-- Product Selection Dropdown -->
+                    <div>
+                        <label asp-for="RewardProductId" class="block text-xs font-medium text-gray-700 mb-1">Reward Product</label>
+                        <select asp-for="RewardProductId" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm">
+                            <option value="">Select a product</option>
+                            @if (Model.AllProducts != null && Model.AllProducts.Any())
+                            {
+                                @foreach (var product in Model.AllProducts)
+                                {
+                                    <option value="@product.Id">@product.ProductName - ₹@product.Price (@product.Category)</option>
+                                }
+                            }
+                        </select>
+                        <span asp-validation-for="RewardProductId" class="text-red-500 text-xs"></span>
+                    </div>
+                    
+                    <div class="md:col-span-2">
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Eligible Materials</label>
+                        <div class="mb-2">
+                            <div class="flex flex-wrap gap-2">
+                                <button type="button" class="filter-btn px-3 py-1 text-xs rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300" data-category="all">All</button>
+                                @{
+                                    var categories = Model.AllMaterials.Select(m => m.Category).Distinct().OrderBy(c => c);
+                                    foreach (var category in categories)
+                                    {
+                                        <button type="button" class="filter-btn px-3 py-1 text-xs rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300" data-category="@category">@category</button>
+                                    }
+                                }
+                            </div>
+                        </div>
+                        <div class="border border-gray-300 rounded-md p-3 max-h-60 overflow-y-auto" id="materials-container">
+                            @if (Model.AllMaterials != null && Model.AllMaterials.Any())
+                            {
+                                @for (int i = 0; i < Model.AllMaterials.Count; i++)
+                                {
+                                    <div class="flex items-center mb-2 material-item" data-category="@Model.AllMaterials[i].Category">
+                                        <input type="checkbox" 
+                                               id="material_@Model.AllMaterials[i].Id" 
+                                               name="SelectedMaterialIds" 
+                                               value="@Model.AllMaterials[i].Id" 
+                                               class="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300 rounded material-checkbox"
+                                               @(Model.SelectedMaterialIds.Contains(Model.AllMaterials[i].Id) ? "checked" : "")>
+                                        <label for="material_@Model.AllMaterials[i].Id" class="ml-2 block text-sm text-gray-700 flex-1">
+                                            @Model.AllMaterials[i].Name - @Model.AllMaterials[i].ShortName
+                                        </label>
+                                        <input type="number" 
+                                               id="points_@Model.AllMaterials[i].Id" 
+                                               name="MaterialPoints[@Model.AllMaterials[i].Id]" 
+                                               class="ml-2 w-20 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm material-points"
+                                               placeholder="Points"
+                                               min="1"
+                                               value="@(Model.MaterialPoints != null && Model.MaterialPoints.ContainsKey(Model.AllMaterials[i].Id) ? Model.MaterialPoints[Model.AllMaterials[i].Id].ToString() : "1")"
+                                               style="@(Model.SelectedMaterialIds.Contains(Model.AllMaterials[i].Id) ? "display: block;" : "display: none;")">
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <p class="text-sm text-gray-500">No materials available. Please add materials first.</p>
+                            }
+                        </div>
+                    </div>
+                    
+                    <div class="md:col-span-2">
+                        <label asp-for="Description" class="block text-xs font-medium text-gray-700 mb-1">Description</label>
+                        <textarea asp-for="Description" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm" rows="3" placeholder="Campaign description"></textarea>
+                        <span asp-validation-for="Description" class="text-red-500 text-xs"></span>
+                    </div>
+                    
+                    <div class="md:col-span-1">
+                        <label asp-for="StartDate" class="block text-xs font-medium text-gray-700 mb-1">Start Date</label>
+                        <input asp-for="StartDate" type="date" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm start-date" min="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                        <span asp-validation-for="StartDate" class="text-red-500 text-xs"></span>
+                    </div>
+                    
+                    <div class="md:col-span-1">
+                        <label asp-for="EndDate" class="block text-xs font-medium text-gray-700 mb-1">End Date</label>
+                        <input asp-for="EndDate" type="date" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm end-date" min="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                        <span asp-validation-for="EndDate" class="text-red-500 text-xs"></span>
+                    </div>
+                    
+                    <div class="md:col-span-2">
+                        <div class="flex items-center">
+                            <div class="flex items-center h-4">
+                                <input asp-for="IsActive" type="checkbox" class="focus:ring-blue-500 h-3.5 w-3.5 text-blue-600 border-gray-300 rounded" />
+                            </div>
+                            <div class="ml-2 text-xs">
+                                <label asp-for="IsActive" class="font-medium text-gray-700">Active</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-6 flex justify-end space-x-2">
+                    <a asp-action="CreateCampaign" class="py-2 px-4 border border-gray-300 rounded-md shadow-sm text-xs font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-500">
+                        Back
+                    </a>
+                    <button type="submit" class="py-2 px-4 border border-transparent rounded-md shadow-sm text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-500" id="submitBtn">
+                        Create Campaign
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const filterButtons = document.querySelectorAll('.filter-btn');
+            const materialItems = document.querySelectorAll('.material-item');
+            const materialCheckboxes = document.querySelectorAll('.material-checkbox');
+            const materialPoints = document.querySelectorAll('.material-points');
+            const startDateInput = document.querySelector('.start-date');
+            const endDateInput = document.querySelector('.end-date');
+            const form = document.getElementById('campaignForm');
+            const submitBtn = document.getElementById('submitBtn');
+            
+            // Filter functionality
+            filterButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const category = this.getAttribute('data-category');
+                    
+                    // Update active button state
+                    filterButtons.forEach(btn => btn.classList.remove('bg-blue-500', 'text-white'));
+                    this.classList.add('bg-blue-500', 'text-white');
+                    
+                    // Filter materials
+                    materialItems.forEach(item => {
+                        if (category === 'all' || item.getAttribute('data-category') === category) {
+                            item.style.display = 'flex';
+                        } else {
+                            item.style.display = 'none';
+                        }
+                    });
+                });
+            });
+            
+            // Show/hide points input when checkbox is checked/unchecked
+            materialCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    const materialId = this.value;
+                    const pointsInput = document.getElementById('points_' + materialId);
+                    
+                    if (this.checked) {
+                        pointsInput.style.display = 'block';
+                        pointsInput.required = true;
+                        // Set default value if empty
+                        if (!pointsInput.value) {
+                            pointsInput.value = '1';
+                        }
+                    } else {
+                        pointsInput.style.display = 'none';
+                        pointsInput.required = false;
+                        // Clear value when unchecked
+                        pointsInput.value = '';
+                    }
+                });
+            });
+            
+            // Set min attribute for end date based on start date
+            startDateInput.addEventListener('change', function() {
+                if (this.value) {
+                    endDateInput.min = this.value;
+                    // If end date is before start date, reset it
+                    if (endDateInput.value && new Date(endDateInput.value) < new Date(this.value)) {
+                        endDateInput.value = this.value;
+                    }
+                }
+            });
+            
+            // Initialize with today's date as minimum
+            const today = new Date().toISOString().split('T')[0];
+            startDateInput.min = today;
+            endDateInput.min = today;
+            
+            // Set initial values to today if not set
+            if (!startDateInput.value) {
+                startDateInput.value = today;
+            }
+            if (!endDateInput.value) {
+                endDateInput.value = today;
+            }
+            
+            // Form submission with loading state
+            form.addEventListener('submit', function(e) {
+                // Check if at least one material is selected
+                const selectedMaterials = document.querySelectorAll('input[name="SelectedMaterialIds"]:checked');
+                if (selectedMaterials.length === 0) {
+                    e.preventDefault();
+                    alert('Please select at least one material.');
+                    return false;
+                }
+                
+                // Validate that all selected materials have points values
+                let isValid = true;
+                selectedMaterials.forEach(checkbox => {
+                    const materialId = checkbox.value;
+                    const pointsInput = document.getElementById('points_' + materialId);
+                    if (!pointsInput.value || pointsInput.value <= 0) {
+                        isValid = false;
+                        pointsInput.classList.add('border-red-500');
+                    } else {
+                        pointsInput.classList.remove('border-red-500');
+                    }
+                });
+                
+                if (!isValid) {
+                    e.preventDefault();
+                    alert('Please enter valid points values for all selected materials (minimum 1 point).');
+                    return false;
+                }
+                
+                // Show loading state
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Creating...';
+                
+                return true;
+            });
+        });
+    </script>
+}

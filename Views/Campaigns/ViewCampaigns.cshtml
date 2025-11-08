@@ -1,0 +1,603 @@
+@model ViewCampaignsViewModel
+@{
+    ViewData["Title"] = "View Campaigns";
+}
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <div class="px-4 py-5 border-b border-gray-200 sm:px-6">
+            <h1 class="text-lg font-medium text-gray-900">Campaigns Overview</h1>
+            <p class="mt-1 text-sm text-gray-500">View all active campaigns with complete details</p>
+        </div>
+
+        <div class="p-4 sm:p-6">
+            <!-- Points to Cash Campaigns -->
+            <div class="mb-8">
+                <h2 class="text-md font-semibold text-gray-800 mb-3 flex items-center">
+                    <svg class="w-5 h-5 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    Points to Cash Campaigns
+                </h2>
+                @if (Model.DetailedPointsToCashCampaigns.Any())
+                {
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        @foreach (var campaign in Model.DetailedPointsToCashCampaigns)
+                        {
+                            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow">
+                                <div class="flex justify-between items-start">
+                                    <h3 class="text-sm font-semibold text-gray-900">@campaign.CampaignName</h3>
+                                    @if (campaign.IsActive)
+                                    {
+                                        <span class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">Active</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">Inactive</span>
+                                    }
+                                </div>
+                                <div class="mt-2 space-y-1">
+                                    <div class="flex justify-between text-xs">
+                                        <span class="text-gray-500">Start Date:</span>
+                                        <span class="text-gray-900">@campaign.StartDate.ToString("dd/MM/yyyy")</span>
+                                    </div>
+                                    <div class="flex justify-between text-xs">
+                                        <span class="text-gray-500">End Date:</span>
+                                        <span class="text-gray-900">@campaign.EndDate.ToString("dd/MM/yyyy")</span>
+                                    </div>
+                                    <div class="flex justify-between text-xs">
+                                        <span class="text-gray-500">Validity:</span>
+                                        <span class="text-gray-900">@campaign.VoucherValidity days</span>
+                                    </div>
+                                </div>
+                                <div class="mt-3">
+                                    <button type="button" class="text-xs text-indigo-600 hover:text-indigo-900 font-medium" onclick="showDetails('pointsToCash-@campaign.Id')">
+                                        Show All Details
+                                    </button>
+                                </div>
+                                <div id="pointsToCash-@campaign.Id" class="mt-2 text-xs text-gray-600 hidden">
+                                    <div class="pt-2 border-t border-gray-100">
+                                        <div class="space-y-1">
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-500">ID:</span>
+                                                <span class="text-gray-900">@campaign.Id</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-500">Campaign Name:</span>
+                                                <span class="text-gray-900">@campaign.CampaignName</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-500">Start Date:</span>
+                                                <span class="text-gray-900">@campaign.StartDate.ToString("dd/MM/yyyy")</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-500">End Date:</span>
+                                                <span class="text-gray-900">@campaign.EndDate.ToString("dd/MM/yyyy")</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-500">Threshold:</span>
+                                                <span class="text-gray-900">@campaign.VoucherGenerationThreshold points</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-500">Voucher Value:</span>
+                                                <span class="text-gray-900">₹@campaign.VoucherValue</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-500">Validity:</span>
+                                                <span class="text-gray-900">@campaign.VoucherValidity days</span>
+                                            </div>
+                                            @if (campaign.MaterialDetails.Any())
+                                            {
+                                                <div class="mt-2">
+                                                    <span class="text-gray-500">Materials (@campaign.MaterialDetails.Count):</span>
+                                                    <div class="ml-2 mt-1 space-y-1">
+                                                        @foreach (var material in campaign.MaterialDetails)
+                                                        {
+                                                            <div class="border-b border-gray-100 pb-1">
+                                                                <div class="flex justify-between">
+                                                                    <span class="text-gray-900 font-medium">@material.MaterialName</span>
+                                                                    <span class="text-gray-900">@material.Points points</span>
+                                                                </div>
+                                                            </div>
+                                                        }
+                                                    </div>
+                                                </div>
+                                            }
+                                            @if (!string.IsNullOrEmpty(campaign.Description))
+                                            {
+                                                <div class="mt-2">
+                                                    <span class="text-gray-500">Description:</span>
+                                                    <p class="text-gray-900">@campaign.Description</p>
+                                                </div>
+                                            }
+                                            <div class="flex justify-between mt-2">
+                                                <span class="text-gray-500">Status:</span>
+                                                <span class="text-gray-900">@(campaign.IsActive ? "Active" : "Inactive")</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <p class="text-gray-500 text-sm">No Points to Cash campaigns found.</p>
+                }
+            </div>
+
+            <!-- Points Reward Campaigns -->
+            <div class="mb-8">
+                <h2 class="text-md font-semibold text-gray-800 mb-3 flex items-center">
+                    <svg class="w-5 h-5 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>
+                    </svg>
+                    Points Reward Campaigns
+                </h2>
+                @if (Model.DetailedPointsRewardCampaigns.Any())
+                {
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        @foreach (var campaign in Model.DetailedPointsRewardCampaigns)
+                        {
+                            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow">
+                                <div class="flex justify-between items-start">
+                                    <h3 class="text-sm font-semibold text-gray-900">@campaign.CampaignName</h3>
+                                    @if (campaign.IsActive)
+                                    {
+                                        <span class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">Active</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">Inactive</span>
+                                    }
+                                </div>
+                                <div class="mt-2 space-y-1">
+                                    <div class="flex justify-between text-xs">
+                                        <span class="text-gray-500">Start Date:</span>
+                                        <span class="text-gray-900">@campaign.StartDate.ToString("dd/MM/yyyy")</span>
+                                    </div>
+                                    <div class="flex justify-between text-xs">
+                                        <span class="text-gray-500">End Date:</span>
+                                        <span class="text-gray-900">@campaign.EndDate.ToString("dd/MM/yyyy")</span>
+                                    </div>
+                                    <div class="flex justify-between text-xs">
+                                        <span class="text-gray-500">Validity:</span>
+                                        <span class="text-gray-900">@campaign.VoucherValidity days</span>
+                                    </div>
+                                </div>
+                                <div class="mt-3">
+                                    <button type="button" class="text-xs text-indigo-600 hover:text-indigo-900 font-medium" onclick="showDetails('pointsReward-@campaign.Id')">
+                                        Show All Details
+                                    </button>
+                                </div>
+                                <div id="pointsReward-@campaign.Id" class="mt-2 text-xs text-gray-600 hidden">
+                                    <div class="pt-2 border-t border-gray-100">
+                                        <div class="space-y-1">
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-500">ID:</span>
+                                                <span class="text-gray-900">@campaign.Id</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-500">Campaign Name:</span>
+                                                <span class="text-gray-900">@campaign.CampaignName</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-500">Start Date:</span>
+                                                <span class="text-gray-900">@campaign.StartDate.ToString("dd/MM/yyyy")</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-500">End Date:</span>
+                                                <span class="text-gray-900">@campaign.EndDate.ToString("dd/MM/yyyy")</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-500">Threshold:</span>
+                                                <span class="text-gray-900">@campaign.VoucherGenerationThreshold points</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-500">Validity:</span>
+                                                <span class="text-gray-900">@campaign.VoucherValidity days</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-500">Reward Product ID:</span>
+                                                <span class="text-gray-900">@(campaign.RewardProductId?.ToString() ?? "N/A")</span>
+                                            </div>
+                                            @if (campaign.MaterialDetails.Any())
+                                            {
+                                                <div class="mt-2">
+                                                    <span class="text-gray-500">Materials (@campaign.MaterialDetails.Count):</span>
+                                                    <div class="ml-2 mt-1 space-y-1">
+                                                        @foreach (var material in campaign.MaterialDetails)
+                                                        {
+                                                            <div class="border-b border-gray-100 pb-1">
+                                                                <div class="flex justify-between">
+                                                                    <span class="text-gray-900 font-medium">@material.MaterialName</span>
+                                                                    <span class="text-gray-900">@material.Points points</span>
+                                                                </div>
+                                                            </div>
+                                                        }
+                                                    </div>
+                                                </div>
+                                            }
+                                            @if (campaign.RewardProduct != null)
+                                            {
+                                                <div class="mt-2">
+                                                    <span class="text-gray-500">Reward Product:</span>
+                                                    <div class="ml-2 mt-1 space-y-1">
+                                                        <div class="flex justify-between">
+                                                            <span class="text-gray-500">Name:</span>
+                                                            <span class="text-gray-900">@campaign.RewardProduct.ProductName</span>
+                                                        </div>
+                                                        <div class="flex justify-between">
+                                                            <span class="text-gray-500">Price:</span>
+                                                            <span class="text-gray-900">₹@campaign.RewardProduct.Price</span>
+                                                        </div>
+                                                        <div class="flex justify-between">
+                                                            <span class="text-gray-500">Category:</span>
+                                                            <span class="text-gray-900">@campaign.RewardProduct.Category</span>
+                                                        </div>
+                                                        <div class="flex justify-between">
+                                                            <span class="text-gray-500">Status:</span>
+                                                            <span class="text-gray-900">@(campaign.RewardProduct.IsActive ? "Active" : "Inactive")</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            }
+                                            @if (!string.IsNullOrEmpty(campaign.Description))
+                                            {
+                                                <div class="mt-2">
+                                                    <span class="text-gray-500">Description:</span>
+                                                    <p class="text-gray-900">@campaign.Description</p>
+                                                </div>
+                                            }
+                                            <div class="flex justify-between mt-2">
+                                                <span class="text-gray-500">Status:</span>
+                                                <span class="text-gray-900">@(campaign.IsActive ? "Active" : "Inactive")</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <p class="text-gray-500 text-sm">No Points Reward campaigns found.</p>
+                }
+            </div>
+
+            <!-- Free Product Campaigns -->
+            <div class="mb-8">
+                <h2 class="text-md font-semibold text-gray-800 mb-3 flex items-center">
+                    <svg class="w-5 h-5 text-purple-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                    Free Product Campaigns
+                </h2>
+                @if (Model.DetailedFreeProductCampaigns.Any())
+                {
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        @foreach (var campaign in Model.DetailedFreeProductCampaigns)
+                        {
+                            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow">
+                                <div class="flex justify-between items-start">
+                                    <h3 class="text-sm font-semibold text-gray-900">@campaign.CampaignName</h3>
+                                    @if (campaign.IsActive)
+                                    {
+                                        <span class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">Active</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">Inactive</span>
+                                    }
+                                </div>
+                                <div class="mt-2 space-y-1">
+                                    <div class="flex justify-between text-xs">
+                                        <span class="text-gray-500">Start Date:</span>
+                                        <span class="text-gray-900">@campaign.StartDate.ToString("dd/MM/yyyy")</span>
+                                    </div>
+                                    <div class="flex justify-between text-xs">
+                                        <span class="text-gray-500">End Date:</span>
+                                        <span class="text-gray-900">@campaign.EndDate.ToString("dd/MM/yyyy")</span>
+                                    </div>
+                                    <div class="flex justify-between text-xs">
+                                        <span class="text-gray-500">Materials:</span>
+                                        <span class="text-gray-900">@campaign.MaterialDetails.Count items</span>
+                                    </div>
+                                </div>
+                                <div class="mt-3">
+                                    <button type="button" class="text-xs text-indigo-600 hover:text-indigo-900 font-medium" onclick="showDetails('freeProduct-@campaign.Id')">
+                                        Show All Details
+                                    </button>
+                                </div>
+                                <div id="freeProduct-@campaign.Id" class="mt-2 text-xs text-gray-600 hidden">
+                                    <div class="pt-2 border-t border-gray-100">
+                                        <div class="space-y-1">
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-500">ID:</span>
+                                                <span class="text-gray-900">@campaign.Id</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-500">Campaign Name:</span>
+                                                <span class="text-gray-900">@campaign.CampaignName</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-500">Start Date:</span>
+                                                <span class="text-gray-900">@campaign.StartDate.ToString("dd/MM/yyyy")</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-500">End Date:</span>
+                                                <span class="text-gray-900">@campaign.EndDate.ToString("dd/MM/yyyy")</span>
+                                            </div>
+                                            @if (campaign.MaterialDetails.Any())
+                                            {
+                                                <div class="mt-2">
+                                                    <span class="text-gray-500">Materials (@campaign.MaterialDetails.Count):</span>
+                                                    <div class="ml-2 mt-1 space-y-1">
+                                                        @foreach (var material in campaign.MaterialDetails)
+                                                        {
+                                                            <div class="border-b border-gray-100 pb-1">
+                                                                <div class="flex justify-between">
+                                                                    <span class="text-gray-900 font-medium">@material.MaterialName</span>
+                                                                    <span class="text-gray-900">@material.Quantity</span>
+                                                                </div>
+                                                            </div>
+                                                        }
+                                                    </div>
+                                                </div>
+                                            }
+                                            @if (campaign.FreeProductDetails.Any())
+                                            {
+                                                <div class="mt-2">
+                                                    <span class="text-gray-500">Free Products (@campaign.FreeProductDetails.Count):</span>
+                                                    <div class="ml-2 mt-1 space-y-1">
+                                                        @foreach (var kvp in campaign.FreeProductDetails)
+                                                        {
+                                                            var materialId = kvp.Key;
+                                                            var freeProductDetail = kvp.Value;
+                                                            <div class="border-b border-gray-100 pb-1">
+                                                                <div class="flex justify-between">
+                                                                    <span class="text-gray-900 font-medium">@freeProductDetail.FreeProductName</span>
+                                                                    <span class="text-gray-900">@freeProductDetail.FreeQuantity</span>
+                                                                </div>
+                                                            </div>
+                                                        }
+                                                    </div>
+                                                </div>
+                                            }
+                                            @if (!string.IsNullOrEmpty(campaign.Description))
+                                            {
+                                                <div class="mt-2">
+                                                    <span class="text-gray-500">Description:</span>
+                                                    <p class="text-gray-900">@campaign.Description</p>
+                                                </div>
+                                            }
+                                            <div class="flex justify-between mt-2">
+                                                <span class="text-gray-500">Status:</span>
+                                                <span class="text-gray-900">@(campaign.IsActive ? "Active" : "Inactive")</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <p class="text-gray-500 text-sm">No Free Product campaigns found.</p>
+                }
+            </div>
+
+            <!-- Amount Reach Goal Campaigns -->
+            <div class="mb-8">
+                <h2 class="text-md font-semibold text-gray-800 mb-3 flex items-center">
+                    <svg class="w-5 h-5 text-yellow-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                    </svg>
+                    Amount Reach Goal Campaigns
+                </h2>
+                @if (Model.AmountReachGoalCampaigns.Any())
+                {
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        @foreach (var campaign in Model.AmountReachGoalCampaigns)
+                        {
+                            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow">
+                                <div class="flex justify-between items-start">
+                                    <h3 class="text-sm font-semibold text-gray-900">@campaign.CampaignName</h3>
+                                    @if (campaign.IsActive)
+                                    {
+                                        <span class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">Active</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">Inactive</span>
+                                    }
+                                </div>
+                                <div class="mt-2 space-y-1">
+                                    <div class="flex justify-between text-xs">
+                                        <span class="text-gray-500">Start Date:</span>
+                                        <span class="text-gray-900">@campaign.StartDate.ToString("dd/MM/yyyy")</span>
+                                    </div>
+                                    <div class="flex justify-between text-xs">
+                                        <span class="text-gray-500">End Date:</span>
+                                        <span class="text-gray-900">@campaign.EndDate.ToString("dd/MM/yyyy")</span>
+                                    </div>
+                                    <div class="flex justify-between text-xs">
+                                        <span class="text-gray-500">Validity:</span>
+                                        <span class="text-gray-900">@campaign.VoucherValidity days</span>
+                                    </div>
+                                </div>
+                                <div class="mt-3">
+                                    <button type="button" class="text-xs text-indigo-600 hover:text-indigo-900 font-medium" onclick="showDetails('amountReach-@campaign.Id')">
+                                        Show All Details
+                                    </button>
+                                </div>
+                                <div id="amountReach-@campaign.Id" class="mt-2 text-xs text-gray-600 hidden">
+                                    <div class="pt-2 border-t border-gray-100">
+                                        <div class="space-y-1">
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-500">ID:</span>
+                                                <span class="text-gray-900">@campaign.Id</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-500">Campaign Name:</span>
+                                                <span class="text-gray-900">@campaign.CampaignName</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-500">Start Date:</span>
+                                                <span class="text-gray-900">@campaign.StartDate.ToString("dd/MM/yyyy")</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-500">End Date:</span>
+                                                <span class="text-gray-900">@campaign.EndDate.ToString("dd/MM/yyyy")</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-500">Target Amount:</span>
+                                                <span class="text-gray-900">₹@campaign.TargetAmount</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-500">Voucher Value:</span>
+                                                <span class="text-gray-900">₹@campaign.VoucherValue</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-500">Validity:</span>
+                                                <span class="text-gray-900">@campaign.VoucherValidity days</span>
+                                            </div>
+                                            @if (!string.IsNullOrEmpty(campaign.Description))
+                                            {
+                                                <div class="mt-2">
+                                                    <span class="text-gray-500">Description:</span>
+                                                    <p class="text-gray-900">@campaign.Description</p>
+                                                </div>
+                                            }
+                                            <div class="flex justify-between mt-2">
+                                                <span class="text-gray-500">Status:</span>
+                                                <span class="text-gray-900">@(campaign.IsActive ? "Active" : "Inactive")</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <p class="text-gray-500 text-sm">No Amount Reach Goal campaigns found.</p>
+                }
+            </div>
+
+            <!-- Session Duration Reward Campaigns -->
+            <div>
+                <h2 class="text-md font-semibold text-gray-800 mb-3 flex items-center">
+                    <svg class="w-5 h-5 text-red-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    Session Duration Reward Campaigns
+                </h2>
+                @if (Model.SessionDurationRewardCampaigns.Any())
+                {
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        @foreach (var campaign in Model.SessionDurationRewardCampaigns)
+                        {
+                            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow">
+                                <div class="flex justify-between items-start">
+                                    <h3 class="text-sm font-semibold text-gray-900">@campaign.CampaignName</h3>
+                                    @if (campaign.IsActive)
+                                    {
+                                        <span class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">Active</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">Inactive</span>
+                                    }
+                                </div>
+                                <div class="mt-2 space-y-1">
+                                    <div class="flex justify-between text-xs">
+                                        <span class="text-gray-500">Start Date:</span>
+                                        <span class="text-gray-900">@campaign.StartDate.ToString("dd/MM/yyyy")</span>
+                                    </div>
+                                    <div class="flex justify-between text-xs">
+                                        <span class="text-gray-500">End Date:</span>
+                                        <span class="text-gray-900">@campaign.EndDate.ToString("dd/MM/yyyy")</span>
+                                    </div>
+                                    <div class="flex justify-between text-xs">
+                                        <span class="text-gray-500">Validity:</span>
+                                        <span class="text-gray-900">@campaign.VoucherValidity days</span>
+                                    </div>
+                                </div>
+                                <div class="mt-3">
+                                    <button type="button" class="text-xs text-indigo-600 hover:text-indigo-900 font-medium" onclick="showDetails('sessionDuration-@campaign.Id')">
+                                        Show All Details
+                                    </button>
+                                </div>
+                                <div id="sessionDuration-@campaign.Id" class="mt-2 text-xs text-gray-600 hidden">
+                                    <div class="pt-2 border-t border-gray-100">
+                                        <div class="space-y-1">
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-500">ID:</span>
+                                                <span class="text-gray-900">@campaign.Id</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-500">Campaign Name:</span>
+                                                <span class="text-gray-900">@campaign.CampaignName</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-500">Start Date:</span>
+                                                <span class="text-gray-900">@campaign.StartDate.ToString("dd/MM/yyyy")</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-500">End Date:</span>
+                                                <span class="text-gray-900">@campaign.EndDate.ToString("dd/MM/yyyy")</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-500">Duration:</span>
+                                                <span class="text-gray-900">@campaign.SessionDuration minutes</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-500">Voucher Value:</span>
+                                                <span class="text-gray-900">₹@campaign.VoucherValue</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-500">Validity:</span>
+                                                <span class="text-gray-900">@campaign.VoucherValidity days</span>
+                                            </div>
+                                            @if (!string.IsNullOrEmpty(campaign.Description))
+                                            {
+                                                <div class="mt-2">
+                                                    <span class="text-gray-500">Description:</span>
+                                                    <p class="text-gray-900">@campaign.Description</p>
+                                                </div>
+                                            }
+                                            <div class="flex justify-between mt-2">
+                                                <span class="text-gray-500">Status:</span>
+                                                <span class="text-gray-900">@(campaign.IsActive ? "Active" : "Inactive")</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <p class="text-gray-500 text-sm">No Session Duration Reward campaigns found.</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function showDetails(id) {
+        var detailsDiv = document.getElementById(id);
+        if (detailsDiv.classList.contains('hidden')) {
+            detailsDiv.classList.remove('hidden');
+        } else {
+            detailsDiv.classList.add('hidden');
+        }
+    }
+</script>
