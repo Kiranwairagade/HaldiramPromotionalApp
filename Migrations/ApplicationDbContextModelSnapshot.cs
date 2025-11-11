@@ -40,6 +40,9 @@ namespace HaldiramPromotionalApp.Migrations
                     b.Property<DateTime>("EndDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("ImagePath")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
@@ -82,6 +85,9 @@ namespace HaldiramPromotionalApp.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("FreeQuantities")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ImagePath")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("IsActive")
@@ -190,6 +196,67 @@ namespace HaldiramPromotionalApp.Migrations
                     b.ToTable("MaterialMaster");
                 });
 
+            modelBuilder.Entity("HaldiramPromotionalApp.Models.Order", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("OrderDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("OrderStatus")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<decimal>("TotalAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Orders");
+                });
+
+            modelBuilder.Entity("HaldiramPromotionalApp.Models.OrderItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("MaterialId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("OrderId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("TotalPrice")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("UnitPrice")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MaterialId");
+
+                    b.HasIndex("OrderId");
+
+                    b.ToTable("OrderItems");
+                });
+
             modelBuilder.Entity("HaldiramPromotionalApp.Models.PointsRewardCampaign", b =>
                 {
                     b.Property<int>("Id")
@@ -207,6 +274,9 @@ namespace HaldiramPromotionalApp.Migrations
 
                     b.Property<DateTime>("EndDate")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("ImagePath")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
@@ -253,6 +323,9 @@ namespace HaldiramPromotionalApp.Migrations
 
                     b.Property<DateTime>("EndDate")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("ImagePath")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
@@ -359,6 +432,9 @@ namespace HaldiramPromotionalApp.Migrations
                     b.Property<DateTime>("EndDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("ImagePath")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
@@ -379,6 +455,34 @@ namespace HaldiramPromotionalApp.Migrations
                     b.ToTable("SessionDurationRewardCampaigns");
                 });
 
+            modelBuilder.Entity("HaldiramPromotionalApp.Models.User", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Password")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<string>("Role")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("name")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("phoneno")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Users");
+                });
+
             modelBuilder.Entity("HaldiramPromotionalApp.Models.MaterialImage", b =>
                 {
                     b.HasOne("HaldiramPromotionalApp.Models.MaterialMaster", "MaterialMaster")
@@ -390,6 +494,36 @@ namespace HaldiramPromotionalApp.Migrations
                     b.Navigation("MaterialMaster");
                 });
 
+            modelBuilder.Entity("HaldiramPromotionalApp.Models.Order", b =>
+                {
+                    b.HasOne("HaldiramPromotionalApp.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("HaldiramPromotionalApp.Models.OrderItem", b =>
+                {
+                    b.HasOne("HaldiramPromotionalApp.Models.MaterialMaster", "Material")
+                        .WithMany()
+                        .HasForeignKey("MaterialId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("HaldiramPromotionalApp.Models.Order", "Order")
+                        .WithMany("OrderItems")
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Material");
+
+                    b.Navigation("Order");
+                });
+
             modelBuilder.Entity("HaldiramPromotionalApp.Models.PointsRewardCampaign", b =>
                 {
                     b.HasOne("HaldiramPromotionalApp.Models.Product", "RewardProduct")
@@ -397,6 +531,11 @@ namespace HaldiramPromotionalApp.Migrations
                         .HasForeignKey("RewardProductId");
 
                     b.Navigation("RewardProduct");
+                });
+
+            modelBuilder.Entity("HaldiramPromotionalApp.Models.Order", b =>
+                {
+                    b.Navigation("OrderItems");
                 });
 #pragma warning restore 612, 618
         }

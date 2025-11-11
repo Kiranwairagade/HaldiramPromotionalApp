@@ -44,6 +44,9 @@ namespace HaldiramPromotionalApp.Models
         [Display(Name = "Material Points")]
         public string? MaterialPoints { get; set; } // JSON string of material ID to points mapping
 
+        [Display(Name = "Campaign Image")]
+        public string? ImagePath { get; set; }
+
         public bool IsActive { get; set; } = true;
     }
 }

@@ -1,0 +1,180 @@
+@model HaldiramPromotionalApp.ViewModels.PointsRewardCampaignViewModel
+
+@{
+    ViewData["Title"] = "Edit Points Reward Campaign";
+}
+
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
+            <h3 class="text-lg leading-6 font-medium text-gray-900">Edit Points Reward Campaign</h3>
+            <p class="mt-1 max-w-2xl text-sm text-gray-500">Update the campaign details.</p>
+        </div>
+        <div class="px-4 py-5 sm:p-6">
+            <form asp-action="EditPointsRewardCampaign" enctype="multipart/form-data">
+                <div asp-validation-summary="ModelOnly" class="text-red-500 text-sm mb-4"></div>
+                <input type="hidden" asp-for="Id" />
+                
+                <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                    <div class="sm:col-span-2">
+                        <label asp-for="CampaignName" class="block text-sm font-medium text-gray-700 mb-1"></label>
+                        <input asp-for="CampaignName" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
+                        <span asp-validation-for="CampaignName" class="text-red-500 text-sm"></span>
+                    </div>
+
+                    <div>
+                        <label asp-for="StartDate" class="block text-sm font-medium text-gray-700 mb-1"></label>
+                        <input asp-for="StartDate" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
+                        <span asp-validation-for="StartDate" class="text-red-500 text-sm"></span>
+                    </div>
+
+                    <div>
+                        <label asp-for="EndDate" class="block text-sm font-medium text-gray-700 mb-1"></label>
+                        <input asp-for="EndDate" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
+                        <span asp-validation-for="EndDate" class="text-red-500 text-sm"></span>
+                    </div>
+
+                    <div>
+                        <label asp-for="VoucherGenerationThreshold" class="block text-sm font-medium text-gray-700 mb-1"></label>
+                        <input asp-for="VoucherGenerationThreshold" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
+                        <span asp-validation-for="VoucherGenerationThreshold" class="text-red-500 text-sm"></span>
+                    </div>
+
+                    <div>
+                        <label asp-for="VoucherValidity" class="block text-sm font-medium text-gray-700 mb-1"></label>
+                        <input asp-for="VoucherValidity" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
+                        <span asp-validation-for="VoucherValidity" class="text-red-500 text-sm"></span>
+                    </div>
+
+                    <div class="sm:col-span-2">
+                        <label asp-for="RewardProductId" class="block text-sm font-medium text-gray-700 mb-1">Reward Product</label>
+                        <select asp-for="RewardProductId" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                            <option value="">Select a reward product</option>
+                            @if (Model.AllProducts != null)
+                            {
+                                @foreach (var product in Model.AllProducts)
+                                {
+                                    <option value="@product.Id">@product.ProductName (@product.Category)</option>
+                                }
+                            }
+                        </select>
+                        <span asp-validation-for="RewardProductId" class="text-red-500 text-sm"></span>
+                    </div>
+
+                    <div class="sm:col-span-2">
+                        <label asp-for="Description" class="block text-sm font-medium text-gray-700 mb-1"></label>
+                        <textarea asp-for="Description" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" rows="3"></textarea>
+                        <span asp-validation-for="Description" class="text-red-500 text-sm"></span>
+                    </div>
+
+                    <div class="sm:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Campaign Image</label>
+                        @if (!string.IsNullOrEmpty(Model.ImagePath))
+                        {
+                            <div class="mb-2">
+                                <img src="@Model.ImagePath" alt="Current Campaign Image" class="w-32 h-32 object-cover rounded-md" />
+                                <p class="text-xs text-gray-500 mt-1">Current image</p>
+                            </div>
+                        }
+                        <input type="file" name="ImagePath" class="mt-1 block w-full text-sm text-gray-500
+                            file:mr-4 file:py-2 file:px-4
+                            file:rounded-md file:border-0
+                            file:text-sm file:font-semibold
+                            file:bg-blue-50 file:text-blue-700
+                            hover:file:bg-blue-100" />
+                        <p class="text-xs text-gray-500 mt-1">Leave blank to keep current image</p>
+                    </div>
+
+                    <div class="sm:col-span-2">
+                        <div class="flex items-center">
+                            <div class="flex items-center h-5">
+                                <input asp-for="IsActive" class="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300 rounded" />
+                            </div>
+                            <div class="ml-3 text-sm">
+                                <label asp-for="IsActive" class="font-medium text-gray-700"></label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-6">
+                    <h4 class="text-md font-medium text-gray-900 mb-3">Materials and Points</h4>
+                    <div class="border border-gray-200 rounded-md p-4">
+                        @if (Model.AllMaterials != null && Model.AllMaterials.Any())
+                        {
+                            <div class="space-y-3">
+                                @for (int i = 0; i < Model.AllMaterials.Count; i++)
+                                {
+                                    var material = Model.AllMaterials[i];
+                                    bool isSelected = Model.SelectedMaterialIds != null && Model.SelectedMaterialIds.Contains(material.Id);
+                                    int points = 0;
+                                    if (Model.MaterialPoints != null && Model.MaterialPoints.ContainsKey(material.Id))
+                                    {
+                                        points = Model.MaterialPoints[material.Id];
+                                    }
+                                    
+                                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-md">
+                                        <div class="flex items-center">
+                                            <input type="checkbox" 
+                                                   name="SelectedMaterialIds" 
+                                                   value="@material.Id" 
+                                                   id="material_@material.Id"
+                                                   checked="@(isSelected ? "checked" : null)" 
+                                                   class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" />
+                                            <input type="hidden" name="AllMaterials[@i].Id" value="@material.Id" />
+                                            <input type="hidden" name="AllMaterials[@i].Name" value="@material.Name" />
+                                            <label for="material_@material.Id" class="ml-3 block text-sm font-medium text-gray-700">
+                                                @material.Name (@material.Category)
+                                            </label>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <label for="points_@material.Id" class="mr-2 text-sm text-gray-600">Points:</label>
+                                            <input type="number" 
+                                                   name="MaterialPoints[@material.Id]" 
+                                                   id="points_@material.Id"
+                                                   value="@points" 
+                                                   min="0" 
+                                                   class="w-20 border border-gray-300 rounded-md shadow-sm py-1 px-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <p class="text-sm text-gray-500">No materials available.</p>
+                        }
+                    </div>
+                </div>
+
+                <div class="mt-6 flex items-center justify-end space-x-3">
+                    <a asp-action="ViewCampaigns" class="py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Cancel
+                    </a>
+                    <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Save
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        // Set today as minimum date for start date
+        var today = new Date().toISOString().split('T')[0];
+        document.getElementById('StartDate').setAttribute('min', today);
+        
+        // Set start date as minimum for end date
+        document.getElementById('StartDate').addEventListener('change', function() {
+            document.getElementById('EndDate').setAttribute('min', this.value);
+        });
+        
+        // Initialize end date min if start date already has a value
+        if (document.getElementById('StartDate').value) {
+            document.getElementById('EndDate').setAttribute('min', document.getElementById('StartDate').value);
+        }
+    </script>
+}

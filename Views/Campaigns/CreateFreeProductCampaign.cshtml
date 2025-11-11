@@ -49,7 +49,7 @@
                 </div>
             }
 
-            <form asp-action="CreateFreeProductCampaign" method="post" id="campaignForm">
+            <form asp-action="CreateFreeProductCampaign" method="post" id="campaignForm" enctype="multipart/form-data">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label asp-for="CampaignName" class="block text-xs font-medium text-gray-700 mb-1">Campaign Name</label>
@@ -77,55 +77,24 @@
                                 <div class="grid grid-cols-1 gap-2">
                                     @for (int i = 0; i < Model.AllMaterials.Count; i++)
                                     {
-                                        <div class="material-item p-3 border border-gray-200 rounded-md bg-gray-50" data-category="@Model.AllMaterials[i].Category">
-                                            <div class="flex items-center justify-between">
-                                                <div class="flex items-center">
-                                                    <input type="checkbox" 
-                                                           id="material_@Model.AllMaterials[i].Id" 
-                                                           name="SelectedMaterialIds" 
-                                                           value="@Model.AllMaterials[i].Id" 
-                                                           class="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300 rounded material-checkbox"
-                                                           @(Model.SelectedMaterialIds.Contains(Model.AllMaterials[i].Id) ? "checked" : "")>
-                                                    <label for="material_@Model.AllMaterials[i].Id" class="ml-2 block text-sm text-gray-700">
-                                                        @Model.AllMaterials[i].Name - @Model.AllMaterials[i].ShortName
-                                                    </label>
-                                                </div>
-                                                <div class="flex items-center space-x-2 material-fields" 
-                                                     style="@(Model.SelectedMaterialIds.Contains(Model.AllMaterials[i].Id) ? "display: flex;" : "display: none;")">
-                                                    <div class="flex items-center">
-                                                        <label for="quantity_@Model.AllMaterials[i].Id" class="text-xs text-gray-600 mr-1">Qty:</label>
-                                                        <input type="number" 
-                                                               id="quantity_@Model.AllMaterials[i].Id" 
-                                                               name="MaterialQuantities[@Model.AllMaterials[i].Id]" 
-                                                               class="w-16 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm material-quantity"
-                                                               placeholder="Qty"
-                                                               min="1"
-                                                               value="@(Model.MaterialQuantities != null && Model.MaterialQuantities.ContainsKey(Model.AllMaterials[i].Id) ? Model.MaterialQuantities[Model.AllMaterials[i].Id].ToString() : "1")">
-                                                    </div>
-                                                    <div class="flex items-center">
-                                                        <label for="free_product_@Model.AllMaterials[i].Id" class="text-xs text-gray-600 mr-1">Free:</label>
-                                                        <select id="free_product_@Model.AllMaterials[i].Id" 
-                                                                name="FreeProducts[@Model.AllMaterials[i].Id]" 
-                                                                class="w-32 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm free-product">
-                                                            <option value="">Select Free Product</option>
-                                                            @foreach (var material in Model.AllMaterials)
-                                                            {
-                                                                <!option value="@material.Id" @(Model.FreeProducts != null && Model.FreeProducts.ContainsKey(Model.AllMaterials[i].Id) && Model.FreeProducts[Model.AllMaterials[i].Id] == material.Id ? "selected" : "")>@material.Name - @material.ShortName</!option>
-                                                            }
-                                                        </select>
-                                                    </div>
-                                                    <div class="flex items-center">
-                                                        <label for="free_quantity_@Model.AllMaterials[i].Id" class="text-xs text-gray-600 mr-1">Free Qty:</label>
-                                                        <input type="number" 
-                                                               id="free_quantity_@Model.AllMaterials[i].Id" 
-                                                               name="FreeQuantities[@Model.AllMaterials[i].Id]" 
-                                                               class="w-16 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm free-quantity"
-                                                               placeholder="Qty"
-                                                               min="1"
-                                                               value="@(Model.FreeQuantities != null && Model.FreeQuantities.ContainsKey(Model.AllMaterials[i].Id) ? Model.FreeQuantities[Model.AllMaterials[i].Id].ToString() : "1")">
-                                                    </div>
-                                                </div>
-                                            </div>
+                                        <div class="flex items-center mb-2 material-item" data-category="@Model.AllMaterials[i].Category">
+                                            <input type="checkbox" 
+                                                   id="material_@Model.AllMaterials[i].Id" 
+                                                   name="SelectedMaterialIds" 
+                                                   value="@Model.AllMaterials[i].Id" 
+                                                   class="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300 rounded material-checkbox"
+                                                   checked="@(Model.SelectedMaterialIds.Contains(Model.AllMaterials[i].Id) ? "checked" : null)">
+                                            <label for="material_@Model.AllMaterials[i].Id" class="ml-2 block text-sm text-gray-700 flex-1">
+                                                @Model.AllMaterials[i].Name - @Model.AllMaterials[i].ShortName
+                                            </label>
+                                            <input type="number" 
+                                                   id="quantity_@Model.AllMaterials[i].Id" 
+                                                   name="MaterialQuantities[@Model.AllMaterials[i].Id]" 
+                                                   class="ml-2 w-20 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm material-quantities"
+                                                   placeholder="Qty"
+                                                   min="1"
+                                                   value="@(Model.MaterialQuantities != null && Model.MaterialQuantities.ContainsKey(Model.AllMaterials[i].Id) ? Model.MaterialQuantities[Model.AllMaterials[i].Id].ToString() : "1")"
+                                                   style="@(Model.SelectedMaterialIds.Contains(Model.AllMaterials[i].Id) ? "display: block;" : "display: none;")">
                                         </div>
                                     }
                                 </div>
@@ -164,6 +133,12 @@
                                 <label asp-for="IsActive" class="font-medium text-gray-700">Active</label>
                             </div>
                         </div>
+                    </div>
+                    
+                    <div class="md:col-span-2">
+                        <label asp-for="ImagePath" class="block text-xs font-medium text-gray-700 mb-1">Campaign Image</label>
+                        <input asp-for="ImagePath" type="file" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm" />
+                        <span asp-validation-for="ImagePath" class="text-red-500 text-xs"></span>
                     </div>
                 </div>
                 
@@ -216,26 +191,16 @@
             materialCheckboxes.forEach(checkbox => {
                 checkbox.addEventListener('change', function() {
                     const materialId = this.value;
-                    const materialFields = this.closest('.material-item').querySelector('.material-fields');
                     const quantityInput = document.getElementById('quantity_' + materialId);
-                    const freeProductSelect = document.getElementById('free_product_' + materialId);
-                    const freeQuantityInput = document.getElementById('free_quantity_' + materialId);
                     
                     if (this.checked) {
-                        materialFields.style.display = 'flex';
-                        // Set default values if empty
+                        // Set default value if empty
                         if (!quantityInput.value || quantityInput.value <= 0) {
                             quantityInput.value = '1';
                         }
-                        if (!freeQuantityInput.value || freeQuantityInput.value <= 0) {
-                            freeQuantityInput.value = '1';
-                        }
                     } else {
-                        materialFields.style.display = 'none';
-                        // Clear values when unchecked
+                        // Clear value when unchecked
                         quantityInput.value = '';
-                        freeProductSelect.value = '';
-                        freeQuantityInput.value = '';
                     }
                 });
             });
@@ -281,8 +246,6 @@
                 selectedMaterials.forEach(checkbox => {
                     const materialId = checkbox.value;
                     const quantityInput = document.getElementById('quantity_' + materialId);
-                    const freeProductSelect = document.getElementById('free_product_' + materialId);
-                    const freeQuantityInput = document.getElementById('free_quantity_' + materialId);
                     
                     // Check material quantity
                     if (!quantityInput.value || quantityInput.value <= 0) {
@@ -291,24 +254,6 @@
                         errorMessages.push(`Please enter a valid quantity for material ${materialId}.`);
                     } else {
                         quantityInput.classList.remove('border-red-500');
-                    }
-                    
-                    // Allow free product to be optional, but if provided, validate it
-                    if (freeProductSelect.value && freeProductSelect.value <= 0) {
-                        isValid = false;
-                        freeProductSelect.classList.add('border-red-500');
-                        errorMessages.push(`Please select a valid free product for material ${materialId}.`);
-                    } else {
-                        freeProductSelect.classList.remove('border-red-500');
-                    }
-                    
-                    // Allow free quantity to be 0 or more, but not negative
-                    if (freeQuantityInput.value && freeQuantityInput.value < 0) {
-                        isValid = false;
-                        freeQuantityInput.classList.add('border-red-500');
-                        errorMessages.push(`Free quantity for material ${materialId} cannot be negative.`);
-                    } else {
-                        freeQuantityInput.classList.remove('border-red-500');
                     }
                 });
                 

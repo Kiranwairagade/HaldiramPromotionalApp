@@ -39,6 +39,9 @@ namespace HaldiramPromotionalApp.Models
         [Display(Name = "Voucher Validity (Days)")]
         public int VoucherValidity { get; set; }
 
+        [Display(Name = "Campaign Image")]
+        public string? ImagePath { get; set; }
+
         public bool IsActive { get; set; } = true;
     }
 }

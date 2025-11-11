@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Http;
 
 namespace HaldiramPromotionalApp.ViewModels
 {
@@ -30,6 +31,9 @@ namespace HaldiramPromotionalApp.ViewModels
         
         [Display(Name = "All Materials")]
         public List<MaterialViewModel> AllMaterials { get; set; } = new List<MaterialViewModel>();
+        
+        [Display(Name = "Campaign Image")]
+        public string? ImagePath { get; set; }
         
         public bool IsActive { get; set; } = true;
     }
@@ -83,6 +87,9 @@ namespace HaldiramPromotionalApp.ViewModels
         [Display(Name = "All Materials")]
         public List<MaterialViewModel> AllMaterials { get; set; } = new List<MaterialViewModel>();
         
+        [Display(Name = "Campaign Image")]
+        public string? ImagePath { get; set; }
+        
         public bool IsActive { get; set; } = true;
     }
     
@@ -129,6 +136,9 @@ namespace HaldiramPromotionalApp.ViewModels
         [Display(Name = "All Products")]
         public List<ProductViewModel> AllProducts { get; set; } = new List<ProductViewModel>();
         
+        [Display(Name = "Campaign Image")]
+        public string? ImagePath { get; set; }
+        
         public bool IsActive { get; set; } = true;
     }
     
@@ -169,6 +179,13 @@ namespace HaldiramPromotionalApp.ViewModels
         
         [Display(Name = "All Materials")]
         public List<MaterialViewModel> AllMaterials { get; set; } = new List<MaterialViewModel>();
+        
+        // Add the missing AllProducts property
+        [Display(Name = "All Products")]
+        public List<ProductViewModel> AllProducts { get; set; } = new List<ProductViewModel>();
+        
+        [Display(Name = "Campaign Image")]
+        public string? ImagePath { get; set; }
         
         public bool IsActive { get; set; } = true;
         
@@ -241,6 +258,9 @@ namespace HaldiramPromotionalApp.ViewModels
         [Display(Name = "All Materials")]
         public List<MaterialViewModel> AllMaterials { get; set; } = new List<MaterialViewModel>();
         
+        [Display(Name = "Campaign Image")]
+        public string? ImagePath { get; set; }
+        
         public bool IsActive { get; set; } = true;
     }
     
@@ -277,6 +297,9 @@ namespace HaldiramPromotionalApp.ViewModels
         
         [Display(Name = "All Materials")]
         public List<MaterialViewModel> AllMaterials { get; set; } = new List<MaterialViewModel>();
+        
+        [Display(Name = "Campaign Image")]
+        public string? ImagePath { get; set; }
         
         public bool IsActive { get; set; } = true;
     }

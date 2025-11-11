@@ -37,6 +37,9 @@ namespace HaldiramPromotionalApp.Models
         [Display(Name = "Free Quantities")]
         public string? FreeQuantities { get; set; } // JSON string of material ID to free quantity mapping
 
+        [Display(Name = "Campaign Image")]
+        public string? ImagePath { get; set; }
+
         public bool IsActive { get; set; } = true;
     }
 }

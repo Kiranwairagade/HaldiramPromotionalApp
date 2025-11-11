@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using HaldiramPromotionalApp.Data;
 using HaldiramPromotionalApp.Models;
+using HaldiramPromotionalApp.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -19,6 +20,25 @@ namespace HaldiramPromotionalApp.Controllers
 
         public async Task<IActionResult> Index()
         {
+            // Check if user is logged in
+            if (HttpContext.Session.GetString("UserName") != null)
+            {
+                // Get user role
+                var userRole = HttpContext.Session.GetString("role");
+                
+                // If user is a Dealer, redirect to Dealer Home page
+                if (userRole == "Dealer")
+                {
+                    return RedirectToAction("DealerHome");
+                }
+                
+                // If user is an Admin, redirect to admin dashboard
+                if (userRole == "Admin")
+                {
+                    return RedirectToAction("AdminDashboard");
+                }
+            }
+            
             // Check if there are any materials in the database
             var materialCount = await _context.MaterialMaster.CountAsync();
             ViewBag.MaterialCount = materialCount;
@@ -26,6 +46,126 @@ namespace HaldiramPromotionalApp.Controllers
             // Get first 5 materials for testing
             var materials = await _context.MaterialMaster.Take(5).ToListAsync();
             ViewBag.TestMaterials = materials;
+            
+            return View();
+        }
+
+        public async Task<IActionResult> DealerHome()
+        {
+            // Check if user is logged in and is a Dealer
+            if (HttpContext.Session.GetString("UserName") == null || HttpContext.Session.GetString("role") != "Dealer")
+            {
+                return RedirectToAction("Login");
+            }
+            
+            // Get the logged-in user's information
+            var userName = HttpContext.Session.GetString("UserName");
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.phoneno == userName);
+            
+            var viewModel = new DealerDashboardViewModel
+            {
+                // Get all posters
+                Posters = await _context.Posters.ToListAsync(),
+                
+                // Get all campaigns (reusing the logic from ViewCampaigns)
+                Campaigns = new ViewCampaignsViewModel
+                {
+                    DetailedPointsToCashCampaigns = await _context.PointsToCashCampaigns
+                        .Select(c => new DetailedPointsToCashCampaign
+                        {
+                            Id = c.Id,
+                            CampaignName = c.CampaignName,
+                            StartDate = c.StartDate,
+                            EndDate = c.EndDate,
+                            VoucherGenerationThreshold = c.VoucherGenerationThreshold,
+                            VoucherValue = c.VoucherValue,
+                            VoucherValidity = c.VoucherValidity,
+                            Description = c.Description,
+                            IsActive = c.IsActive,
+                            ImagePath = c.ImagePath
+                            // MaterialDetails will be populated separately if needed
+                        }).ToListAsync(),
+                        
+                    DetailedPointsRewardCampaigns = await _context.PointsRewardCampaigns
+                        .Select(c => new DetailedPointsRewardCampaign
+                        {
+                            Id = c.Id,
+                            CampaignName = c.CampaignName,
+                            StartDate = c.StartDate,
+                            EndDate = c.EndDate,
+                            VoucherGenerationThreshold = c.VoucherGenerationThreshold,
+                            VoucherValidity = c.VoucherValidity,
+                            Description = c.Description,
+                            IsActive = c.IsActive,
+                            RewardProductId = c.RewardProductId,
+                            ImagePath = c.ImagePath
+                            // MaterialDetails and RewardProduct will be populated separately if needed
+                        }).ToListAsync(),
+                        
+                    DetailedFreeProductCampaigns = await _context.FreeProductCampaigns
+                        .Select(c => new DetailedFreeProductCampaign
+                        {
+                            Id = c.Id,
+                            CampaignName = c.CampaignName,
+                            StartDate = c.StartDate,
+                            EndDate = c.EndDate,
+                            Description = c.Description,
+                            IsActive = c.IsActive,
+                            ImagePath = c.ImagePath
+                            // MaterialDetails and FreeProductDetails will be populated separately if needed
+                        }).ToListAsync(),
+                        
+                    AmountReachGoalCampaigns = await _context.AmountReachGoalCampaigns.Select(c => new AmountReachGoalCampaign
+                    {
+                        Id = c.Id,
+                        CampaignName = c.CampaignName,
+                        StartDate = c.StartDate,
+                        EndDate = c.EndDate,
+                        Description = c.Description,
+                        TargetAmount = c.TargetAmount,
+                        VoucherValue = c.VoucherValue,
+                        VoucherValidity = c.VoucherValidity,
+                        IsActive = c.IsActive,
+                        ImagePath = c.ImagePath
+                    }).ToListAsync(),
+                    SessionDurationRewardCampaigns = await _context.SessionDurationRewardCampaigns.Select(c => new SessionDurationRewardCampaign
+                    {
+                        Id = c.Id,
+                        CampaignName = c.CampaignName,
+                        StartDate = c.StartDate,
+                        EndDate = c.EndDate,
+                        Description = c.Description,
+                        SessionDuration = c.SessionDuration,
+                        VoucherValue = c.VoucherValue,
+                        VoucherValidity = c.VoucherValidity,
+                        IsActive = c.IsActive,
+                        ImagePath = c.ImagePath
+                    }).ToListAsync()
+                },
+                
+                // Get all materials and material images
+                Materials = await _context.MaterialMaster.ToListAsync(),
+                MaterialImages = await _context.MaterialImages.Include(m => m.MaterialMaster).ToListAsync(),
+                
+                // Get the most recent order for the logged-in user
+                RecentOrder = user != null ? await _context.Orders
+                    .Include(o => o.OrderItems)
+                    .ThenInclude(oi => oi.Material)
+                    .Where(o => o.UserId == user.Id)
+                    .OrderByDescending(o => o.OrderDate)
+                    .FirstOrDefaultAsync() : null
+            };
+            
+            return View("~/Views/Home/Dealer/DealerHome.cshtml", viewModel);
+        }
+
+        public IActionResult AdminDashboard()
+        {
+            // Check if user is logged in and is an Admin
+            if (HttpContext.Session.GetString("UserName") == null || HttpContext.Session.GetString("role") != "Admin")
+            {
+                return RedirectToAction("Login");
+            }
             
             return View();
         }
@@ -101,5 +241,122 @@ namespace HaldiramPromotionalApp.Controllers
             ViewBag.Message = "Successfully added 3 test materials to the database.";
             return View("Index");
         }
+
+        public IActionResult Login()
+        {
+            // If user is already logged in, redirect based on role
+            if (HttpContext.Session.GetString("UserName") != null)
+            {
+                var userRole = HttpContext.Session.GetString("role");
+                if (userRole == "Dealer")
+                {
+                    return RedirectToAction("DealerHome");
+                }
+                else if (userRole == "Admin")
+                {
+                    return RedirectToAction("AdminDashboard");
+                }
+                // For other roles, stay on index
+                return RedirectToAction("Index");
+            }
+            
+            return View();
+        }
+        
+        public IActionResult ChangePassword()
+        {
+            if (HttpContext.Session.GetString("UserName") != null)
+            {
+                var data = new User();
+                data.phoneno = ViewBag.phoneno;
+                return View(data);
+            }
+            else
+            {
+                return RedirectToAction("Index");
+            }
+        }
+
+        public IActionResult change(User user)
+        {
+            if (HttpContext.Session.GetString("UserName") != null)
+            {
+                var data = _context.Users.Where(a => a.phoneno == user.phoneno).AsNoTracking().FirstOrDefault();
+                if (data != null)
+                {
+                    var modify = new User();
+                    modify.Id = data.Id;
+                    modify.Role = data.Role;
+                    modify.phoneno = user.phoneno;
+                    modify.Password = user.Password;
+                    modify.name = data.name;
+                    _context.Update(modify);
+                    _context.SaveChanges();
+                    return RedirectToAction("Index");
+
+                }
+            }
+            else
+            {
+                return RedirectToAction("Index");
+            }
+            return RedirectToAction("Index");
+        }
+        
+        //Post Action
+        [HttpPost]
+        public ActionResult Login(User u)
+        {
+            if (HttpContext.Session.GetString("UserName") == null)
+            {
+                var obj = _context.Users.Where(a => a.phoneno.Equals(u.phoneno) && a.Password.Equals(u.Password)).FirstOrDefault();
+                if (obj != null)
+                {
+                    HttpContext.Session.SetString("UserName", obj.phoneno?.ToString() ?? "");
+                    HttpContext.Session.SetString("role", obj.Role?.ToString() ?? "");
+                    HttpContext.Session.SetString("name", obj.name?.ToString() ?? "");
+                    
+                    // Redirect based on user role
+                    if (obj.Role == "Dealer")
+                    {
+                        return RedirectToAction("DealerHome");
+                    }
+                    else if (obj.Role == "Admin")
+                    {
+                        // Admin gets access to admin dashboard
+                        return RedirectToAction("AdminDashboard");
+                    }
+                    return RedirectToAction("Index");
+                }
+                else
+                {
+                    // Add error message
+                    ModelState.AddModelError("", "Invalid username or password");
+                    return View(u);
+                }
+            }
+            else
+            {
+                // Check user role and redirect accordingly after login
+                var userRole = HttpContext.Session.GetString("role");
+                if (userRole == "Dealer")
+                {
+                    return RedirectToAction("DealerHome");
+                }
+                else if (userRole == "Admin")
+                {
+                    return RedirectToAction("AdminDashboard");
+                }
+                return RedirectToAction("Index");
+            }
+        }
+        
+        public ActionResult Logout()
+        {
+            HttpContext.Session.Clear();
+            HttpContext.Session.Remove("UserName");
+            return RedirectToAction("Login");
+        }
+
     }
 }

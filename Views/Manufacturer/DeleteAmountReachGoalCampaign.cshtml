@@ -1,0 +1,98 @@
+@model HaldiramPromotionalApp.Models.AmountReachGoalCampaign
+
+@{
+    ViewData["Title"] = "Delete Amount Reach Goal Campaign";
+}
+
+<div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
+            <h3 class="text-lg leading-6 font-medium text-gray-900">Delete Amount Reach Goal Campaign</h3>
+            <p class="mt-1 max-w-2xl text-sm text-gray-500">Are you sure you want to delete this campaign?</p>
+        </div>
+        <div class="px-4 py-5 sm:p-6">
+            <dl class="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
+                <div class="sm:col-span-1">
+                    <dt class="text-sm font-medium text-gray-500">Campaign Name</dt>
+                    <dd class="mt-1 text-sm text-gray-900">@Html.DisplayFor(model => model.CampaignName)</dd>
+                </div>
+                <div class="sm:col-span-1">
+                    <dt class="text-sm font-medium text-gray-500">Start Date</dt>
+                    <dd class="mt-1 text-sm text-gray-900">@Html.DisplayFor(model => model.StartDate)</dd>
+                </div>
+                <div class="sm:col-span-1">
+                    <dt class="text-sm font-medium text-gray-500">End Date</dt>
+                    <dd class="mt-1 text-sm text-gray-900">@Html.DisplayFor(model => model.EndDate)</dd>
+                </div>
+                <div class="sm:col-span-1">
+                    <dt class="text-sm font-medium text-gray-500">Target Amount</dt>
+                    <dd class="mt-1 text-sm text-gray-900">₹@Html.DisplayFor(model => model.TargetAmount)</dd>
+                </div>
+                <div class="sm:col-span-1">
+                    <dt class="text-sm font-medium text-gray-500">Voucher Value</dt>
+                    <dd class="mt-1 text-sm text-gray-900">₹@Html.DisplayFor(model => model.VoucherValue)</dd>
+                </div>
+                <div class="sm:col-span-1">
+                    <dt class="text-sm font-medium text-gray-500">Voucher Validity</dt>
+                    <dd class="mt-1 text-sm text-gray-900">@Html.DisplayFor(model => model.VoucherValidity) days</dd>
+                </div>
+                <div class="sm:col-span-2">
+                    <dt class="text-sm font-medium text-gray-500">Description</dt>
+                    <dd class="mt-1 text-sm text-gray-900">@Html.DisplayFor(model => model.Description)</dd>
+                </div>
+                @if (!string.IsNullOrEmpty(Model.ImagePath))
+                {
+                    <div class="sm:col-span-2">
+                        <dt class="text-sm font-medium text-gray-500">Campaign Image</dt>
+                        <dd class="mt-1">
+                            <img src="@Model.ImagePath" alt="Campaign Image" class="w-32 h-32 object-cover rounded-md" />
+                        </dd>
+                    </div>
+                }
+                <div class="sm:col-span-1">
+                    <dt class="text-sm font-medium text-gray-500">Status</dt>
+                    <dd class="mt-1 text-sm text-gray-900">
+                        @if (Model.IsActive)
+                        {
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                Active
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                Inactive
+                            </span>
+                        }
+                    </dd>
+                </div>
+            </dl>
+            
+            <div class="mt-6 bg-yellow-50 border-l-4 border-yellow-400 p-4">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm text-yellow-700">
+                            <strong>Warning:</strong> This action cannot be undone. This will permanently delete the campaign and its associated image.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="px-4 py-3 bg-gray-50 sm:px-6 flex justify-end space-x-3">
+            <form asp-action="DeleteAmountReachGoalCampaign">
+                <input type="hidden" asp-for="Id" />
+                <a asp-action="ViewCampaigns" class="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    Cancel
+                </a>
+                <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                    Delete
+                </button>
+            </form>
+        </div>
+    </div>
+</div>

@@ -17,7 +17,7 @@ namespace HaldiramPromotionalApp.Controllers
         // GET: Products
         public async Task<IActionResult> Index()
         {
-            return View(await _context.Products.ToListAsync());
+            return View("~/Views/Manufacturer/Products/Index.cshtml", await _context.Products.ToListAsync());
         }
 
         // GET: Products/Details/5
@@ -35,13 +35,13 @@ namespace HaldiramPromotionalApp.Controllers
                 return NotFound();
             }
 
-            return View(product);
+            return View("~/Views/Manufacturer/Products/Details.cshtml", product);
         }
 
         // GET: Products/Create
         public IActionResult Create()
         {
-            return View();
+            return View("~/Views/Manufacturer/Products/Create.cshtml");
         }
 
         // POST: Products/Create
@@ -55,7 +55,7 @@ namespace HaldiramPromotionalApp.Controllers
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            return View(product);
+            return View("~/Views/Manufacturer/Products/Create.cshtml", product);
         }
 
         // GET: Products/Edit/5
@@ -71,7 +71,7 @@ namespace HaldiramPromotionalApp.Controllers
             {
                 return NotFound();
             }
-            return View(product);
+            return View("~/Views/Manufacturer/Products/Edit.cshtml", product);
         }
 
         // POST: Products/Edit/5
@@ -104,7 +104,7 @@ namespace HaldiramPromotionalApp.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            return View(product);
+            return View("~/Views/Manufacturer/Products/Edit.cshtml", product);
         }
 
         // GET: Products/Delete/5
@@ -122,7 +122,7 @@ namespace HaldiramPromotionalApp.Controllers
                 return NotFound();
             }
 
-            return View(product);
+            return View("~/Views/Manufacturer/Products/Delete.cshtml", product);
         }
 
         // POST: Products/Delete/5

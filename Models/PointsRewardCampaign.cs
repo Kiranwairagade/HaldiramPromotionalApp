@@ -47,6 +47,9 @@ namespace HaldiramPromotionalApp.Models
         [ForeignKey("RewardProductId")]
         public virtual Product? RewardProduct { get; set; }
 
+        [Display(Name = "Campaign Image")]
+        public string? ImagePath { get; set; }
+
         public bool IsActive { get; set; } = true;
     }
 }

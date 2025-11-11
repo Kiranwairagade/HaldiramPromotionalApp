@@ -1,0 +1,287 @@
+@model HaldiramPromotionalApp.Models.User
+
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login | Milk & Bakery</title>
+    <link rel="icon" href="~/img/Picture1.png" type="image/svg">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="~/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" />
+    <style>
+        :root {
+            --primary-color: #4a69bd;
+            --secondary-color: #1e3799;
+            --accent-color: #f6b93b;
+            --text-color: #333;
+            --light-gray: #f7f8fa;
+            --medium-gray: #e1e4e8;
+            --error-color: #e74c3c;
+            --success-color: #2ecc71;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .login-container {
+            display: flex;
+            width: 100%;
+            max-width: 1000px;
+            background: #fff;
+            border-radius: 15px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        .login-image {
+            flex: 1;
+            background: url('/Img/Dairy.png') center/cover;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 1rem;
+            color: #000;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+
+        .image-text h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .image-text p {
+            font-size: 1.1rem;
+            max-width: 350px;
+        }
+
+        .login-form {
+            flex: 1;
+            padding: 3rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        #loginLogo {
+            height: 80px;
+            width: auto;
+            margin-bottom: 1.5rem;
+            align-self: center;
+
+        }
+
+        .form-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            text-align: center;
+             align-self: center;
+            color: var(--secondary-color);
+        }
+
+        .form-subtitle {
+            font-size: 1rem;
+            color: #777;
+             align-self: center;
+            margin-bottom: 2rem;
+        }
+
+        .input-group {
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 1rem 1rem 1rem 3rem;
+            border: 1px solid var(--medium-gray);
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(74, 105, 189, 0.2);
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+            transition: color 0.3s ease;
+        }
+
+        .input-field:focus ~ .input-icon {
+            color: var(--primary-color);
+        }
+
+        .form-options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            font-size: 0.9rem;
+        }
+
+        .remember-me {
+            display: flex;
+            align-items: center;
+        }
+
+        .remember-me input {
+            margin-right: 0.5rem;
+        }
+
+        .forgot-password a {
+            color: var(--primary-color);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .forgot-password a:hover {
+            color: var(--secondary-color);
+            text-decoration: underline;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(74, 105, 189, 0.3);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        .text-danger {
+            color: var(--error-color);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            display: block;
+        }
+
+        .error-section {
+            background-color: rgba(231, 76, 60, 0.1);
+            color: var(--error-color);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            border: 1px solid rgba(231, 76, 60, 0.2);
+            display: none; /* Hidden by default */
+        }
+
+        @@media (max-width: 768px) {
+            .login-container {
+                flex-direction: column;
+                max-width: 450px;
+            }
+
+            .login-image {
+                display: none;
+            }
+
+            .login-form {
+                padding: 2rem;
+            }
+        }
+
+        @@keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-image">
+            @* <div class="image-text">
+                <h2 style="color:white">Freshly Baked, Daily Delivered.</h2>
+                <p style="color:white">Your one-stop solution for managing your milk and bakery supply chain.</p>
+            </div> *@
+        </div>
+        <div class="login-form">
+            <img src="~/img/Picture1.png" id="loginLogo" alt="Milk & Bakery Logo" />
+            <h1 class="form-title">Haldiram B2B App</h1>
+            <p class="form-subtitle">Please sign in to continue</p>
+
+            <form asp-action="Login" method="post">
+                
+                <div asp-validation-summary="ModelOnly" class="error-section" style="display: block;"></div>
+
+                <div class="input-group">
+                    <input asp-for="phoneno" class="input-field" placeholder="Username" required autocomplete="username">
+                    <i class="fas fa-user input-icon"></i>
+                    <span asp-validation-for="phoneno" class="text-danger"></span>
+                </div>
+
+                <div class="input-group">
+                    <input asp-for="Password" type="password" class="input-field" placeholder="Password" required autocomplete="current-password">
+                    <i class="fas fa-lock input-icon"></i>
+                    <span asp-validation-for="Password" class="text-danger"></span>
+                </div>
+
+                <div class="form-options">
+                    <div class="remember-me">
+                        <input type="checkbox" id="rememberMe">
+                        <label for="rememberMe">Remember me</label>
+                    </div>
+                    <div class="forgot-password">
+                        <a href="#">Forgot password?</a>
+                    </div>
+                </div>
+
+                <button type="submit" class="submit-btn">
+                    <i class="fas fa-sign-in-alt"></i>
+                    <span>Login</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    @section Scripts {
+        @{
+            await Html.RenderPartialAsync("_ValidationScriptsPartial");
+        }
+    }
+</body>
+</html>

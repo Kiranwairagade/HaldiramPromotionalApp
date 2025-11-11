@@ -1,6 +1,7 @@
 using HaldiramPromotionalApp.Data;
 using HaldiramPromotionalApp.Models;
 using HaldiramPromotionalApp.ViewModels;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
@@ -18,7 +19,7 @@ namespace HaldiramPromotionalApp.Controllers
 
         public IActionResult CreateCampaign()
         {
-            return View();
+            return View("~/Views/Manufacturer/CreateCampaign.cshtml");
         }
         
         [HttpPost]
@@ -62,7 +63,7 @@ namespace HaldiramPromotionalApp.Controllers
         }
         
         [HttpPost]
-        public async Task<IActionResult> CreatePointsToCashCampaign(PointsToCashCampaignViewModel viewModel)
+        public async Task<IActionResult> CreatePointsToCashCampaign(PointsToCashCampaignViewModel viewModel, IFormFile ImagePath)
         {
             // Add debugging information
             System.Diagnostics.Debug.WriteLine($"ModelState IsValid: {ModelState.IsValid}");
@@ -81,6 +82,30 @@ namespace HaldiramPromotionalApp.Controllers
             {
                 try
                 {
+                    string imagePath = null;
+                    if (ImagePath != null && ImagePath.Length > 0)
+                    {
+                        // Save the uploaded file
+                        var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "campaigns");
+                        if (!Directory.Exists(uploadsFolder))
+                        {
+                            Directory.CreateDirectory(uploadsFolder);
+                        }
+                        
+                        var fileName = Path.GetFileNameWithoutExtension(ImagePath.FileName);
+                        var extension = Path.GetExtension(ImagePath.FileName);
+                        var uniqueFileName = $"{fileName}_{DateTime.Now:yyyyMMddHHmmss}{extension}";
+                        var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+                        
+                        using (var fileStream = new FileStream(filePath, FileMode.Create))
+                        {
+                            await ImagePath.CopyToAsync(fileStream);
+                        }
+                        
+                        // Store the relative path to be saved in the database
+                        imagePath = $"/images/campaigns/{uniqueFileName}";
+                    }
+                    
                     var campaign = new PointsToCashCampaign
                     {
                         CampaignName = viewModel.CampaignName,
@@ -92,6 +117,7 @@ namespace HaldiramPromotionalApp.Controllers
                         VoucherValidity = viewModel.VoucherValidity,
                         Materials = viewModel.SelectedMaterialIds != null ? string.Join(",", viewModel.SelectedMaterialIds) : "",
                         MaterialPoints = viewModel.MaterialPoints != null ? JsonSerializer.Serialize(viewModel.MaterialPoints) : "{}",
+                        ImagePath = imagePath,
                         IsActive = viewModel.IsActive
                     };
                     
@@ -173,7 +199,7 @@ namespace HaldiramPromotionalApp.Controllers
         }
         
         [HttpPost]
-        public async Task<IActionResult> CreatePointsRewardCampaign(PointsRewardCampaignViewModel viewModel)
+        public async Task<IActionResult> CreatePointsRewardCampaign(PointsRewardCampaignViewModel viewModel, IFormFile ImagePath)
         {
             // Add debugging information
             System.Diagnostics.Debug.WriteLine($"ModelState IsValid: {ModelState.IsValid}");
@@ -192,6 +218,30 @@ namespace HaldiramPromotionalApp.Controllers
             {
                 try
                 {
+                    string imagePath = null;
+                    if (ImagePath != null && ImagePath.Length > 0)
+                    {
+                        // Save the uploaded file
+                        var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "campaigns");
+                        if (!Directory.Exists(uploadsFolder))
+                        {
+                            Directory.CreateDirectory(uploadsFolder);
+                        }
+                        
+                        var fileName = Path.GetFileNameWithoutExtension(ImagePath.FileName);
+                        var extension = Path.GetExtension(ImagePath.FileName);
+                        var uniqueFileName = $"{fileName}_{DateTime.Now:yyyyMMddHHmmss}{extension}";
+                        var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+                        
+                        using (var fileStream = new FileStream(filePath, FileMode.Create))
+                        {
+                            await ImagePath.CopyToAsync(fileStream);
+                        }
+                        
+                        // Store the relative path to be saved in the database
+                        imagePath = $"/images/campaigns/{uniqueFileName}";
+                    }
+                    
                     var campaign = new PointsRewardCampaign
                     {
                         CampaignName = viewModel.CampaignName,
@@ -203,6 +253,7 @@ namespace HaldiramPromotionalApp.Controllers
                         Materials = viewModel.SelectedMaterialIds != null ? string.Join(",", viewModel.SelectedMaterialIds) : "",
                         MaterialPoints = viewModel.MaterialPoints != null ? JsonSerializer.Serialize(viewModel.MaterialPoints) : "{}",
                         RewardProductId = viewModel.RewardProductId,
+                        ImagePath = imagePath,
                         IsActive = viewModel.IsActive
                     };
                     
@@ -267,6 +318,7 @@ namespace HaldiramPromotionalApp.Controllers
         public async Task<IActionResult> CreateFreeProductCampaign()
         {
             var materials = await _context.MaterialMaster.Where(m => m.isactive).ToListAsync();
+            var products = await _context.Products.Where(p => p.IsActive).ToListAsync();
             var viewModel = new FreeProductCampaignViewModel
             {
                 AllMaterials = materials.Select(m => new MaterialViewModel
@@ -276,6 +328,13 @@ namespace HaldiramPromotionalApp.Controllers
                     ShortName = m.ShortName ?? "",
                     Category = m.Category ?? "",
                     Price = m.price
+                }).ToList(),
+                AllProducts = products.Select(p => new ProductViewModel
+                {
+                    Id = p.Id,
+                    ProductName = p.ProductName ?? "",
+                    Price = p.Price,
+                    Category = p.Category ?? ""
                 }).ToList()
             };
             
@@ -284,7 +343,7 @@ namespace HaldiramPromotionalApp.Controllers
         }
         
         [HttpPost]
-        public async Task<IActionResult> CreateFreeProductCampaign(FreeProductCampaignViewModel viewModel)
+        public async Task<IActionResult> CreateFreeProductCampaign(FreeProductCampaignViewModel viewModel, IFormFile ImagePath)
         {
             // Add debugging information
             System.Diagnostics.Debug.WriteLine($"ModelState IsValid: {ModelState.IsValid}");
@@ -363,6 +422,30 @@ namespace HaldiramPromotionalApp.Controllers
             {
                 try
                 {
+                    string imagePath = null;
+                    if (ImagePath != null && ImagePath.Length > 0)
+                    {
+                        // Save the uploaded file
+                        var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "campaigns");
+                        if (!Directory.Exists(uploadsFolder))
+                        {
+                            Directory.CreateDirectory(uploadsFolder);
+                        }
+                        
+                        var fileName = Path.GetFileNameWithoutExtension(ImagePath.FileName);
+                        var extension = Path.GetExtension(ImagePath.FileName);
+                        var uniqueFileName = $"{fileName}_{DateTime.Now:yyyyMMddHHmmss}{extension}";
+                        var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+                        
+                        using (var fileStream = new FileStream(filePath, FileMode.Create))
+                        {
+                            await ImagePath.CopyToAsync(fileStream);
+                        }
+                        
+                        // Store the relative path to be saved in the database
+                        imagePath = $"/images/campaigns/{uniqueFileName}";
+                    }
+                    
                     // Create filtered dictionaries containing only data for selected materials
                     var filteredMaterialQuantities = new Dictionary<int, int>();
                     var filteredFreeProducts = new Dictionary<int, int>();
@@ -397,6 +480,7 @@ namespace HaldiramPromotionalApp.Controllers
                         MaterialQuantities = filteredMaterialQuantities.Any() ? JsonSerializer.Serialize(filteredMaterialQuantities) : "{}",
                         FreeProducts = filteredFreeProducts.Any() ? JsonSerializer.Serialize(filteredFreeProducts) : "{}",
                         FreeQuantities = filteredFreeQuantities.Any() ? JsonSerializer.Serialize(filteredFreeQuantities) : "{}",
+                        ImagePath = imagePath,
                         IsActive = viewModel.IsActive
                     };
                     
@@ -439,8 +523,9 @@ namespace HaldiramPromotionalApp.Controllers
                 TempData["ErrorMessage"] = "Please correct the following errors:\n" + errorMessages;
             }
             
-            // Repopulate materials if model state is invalid
+            // Repopulate materials and products if model state is invalid
             var materials = await _context.MaterialMaster.Where(m => m.isactive).ToListAsync();
+            var products = await _context.Products.Where(p => p.IsActive).ToListAsync();
             viewModel.AllMaterials = materials.Select(m => new MaterialViewModel
             {
                 Id = m.Id,
@@ -448,6 +533,13 @@ namespace HaldiramPromotionalApp.Controllers
                 ShortName = m.ShortName ?? "",
                 Category = m.Category ?? "",
                 Price = m.price
+            }).ToList();
+            viewModel.AllProducts = products.Select(p => new ProductViewModel
+            {
+                Id = p.Id,
+                ProductName = p.ProductName ?? "",
+                Price = p.Price,
+                Category = p.Category ?? ""
             }).ToList();
             
             ViewBag.CampaignType = "Free Product";
@@ -474,7 +566,7 @@ namespace HaldiramPromotionalApp.Controllers
         }
         
         [HttpPost]
-        public async Task<IActionResult> CreateAmountReachGoalCampaign(AmountReachGoalCampaignViewModel viewModel)
+        public async Task<IActionResult> CreateAmountReachGoalCampaign(AmountReachGoalCampaignViewModel viewModel, IFormFile ImagePath)
         {
             // Add debugging information
             System.Diagnostics.Debug.WriteLine($"ModelState IsValid: {ModelState.IsValid}");
@@ -483,6 +575,30 @@ namespace HaldiramPromotionalApp.Controllers
             {
                 try
                 {
+                    string imagePath = null;
+                    if (ImagePath != null && ImagePath.Length > 0)
+                    {
+                        // Save the uploaded file
+                        var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "campaigns");
+                        if (!Directory.Exists(uploadsFolder))
+                        {
+                            Directory.CreateDirectory(uploadsFolder);
+                        }
+                        
+                        var fileName = Path.GetFileNameWithoutExtension(ImagePath.FileName);
+                        var extension = Path.GetExtension(ImagePath.FileName);
+                        var uniqueFileName = $"{fileName}_{DateTime.Now:yyyyMMddHHmmss}{extension}";
+                        var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+                        
+                        using (var fileStream = new FileStream(filePath, FileMode.Create))
+                        {
+                            await ImagePath.CopyToAsync(fileStream);
+                        }
+                        
+                        // Store the relative path to be saved in the database
+                        imagePath = $"/images/campaigns/{uniqueFileName}";
+                    }
+                    
                     var campaign = new AmountReachGoalCampaign
                     {
                         CampaignName = viewModel.CampaignName,
@@ -492,6 +608,7 @@ namespace HaldiramPromotionalApp.Controllers
                         TargetAmount = viewModel.TargetAmount,
                         VoucherValue = viewModel.VoucherValue,
                         VoucherValidity = viewModel.VoucherValidity,
+                        ImagePath = imagePath,
                         IsActive = viewModel.IsActive
                     };
                     
@@ -563,7 +680,7 @@ namespace HaldiramPromotionalApp.Controllers
         }
         
         [HttpPost]
-        public async Task<IActionResult> CreateSessionDurationRewardCampaign(SessionDurationRewardCampaignViewModel viewModel)
+        public async Task<IActionResult> CreateSessionDurationRewardCampaign(SessionDurationRewardCampaignViewModel viewModel, IFormFile ImagePath)
         {
             // Add debugging information
             System.Diagnostics.Debug.WriteLine($"ModelState IsValid: {ModelState.IsValid}");
@@ -572,6 +689,30 @@ namespace HaldiramPromotionalApp.Controllers
             {
                 try
                 {
+                    string imagePath = null;
+                    if (ImagePath != null && ImagePath.Length > 0)
+                    {
+                        // Save the uploaded file
+                        var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "campaigns");
+                        if (!Directory.Exists(uploadsFolder))
+                        {
+                            Directory.CreateDirectory(uploadsFolder);
+                        }
+                        
+                        var fileName = Path.GetFileNameWithoutExtension(ImagePath.FileName);
+                        var extension = Path.GetExtension(ImagePath.FileName);
+                        var uniqueFileName = $"{fileName}_{DateTime.Now:yyyyMMddHHmmss}{extension}";
+                        var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+                        
+                        using (var fileStream = new FileStream(filePath, FileMode.Create))
+                        {
+                            await ImagePath.CopyToAsync(fileStream);
+                        }
+                        
+                        // Store the relative path to be saved in the database
+                        imagePath = $"/images/campaigns/{uniqueFileName}";
+                    }
+                    
                     var campaign = new SessionDurationRewardCampaign
                     {
                         CampaignName = viewModel.CampaignName,
@@ -581,6 +722,7 @@ namespace HaldiramPromotionalApp.Controllers
                         SessionDuration = viewModel.SessionDuration,
                         VoucherValue = viewModel.VoucherValue,
                         VoucherValidity = viewModel.VoucherValidity,
+                        ImagePath = imagePath,
                         IsActive = viewModel.IsActive
                     };
                     
@@ -658,44 +800,40 @@ namespace HaldiramPromotionalApp.Controllers
                     CampaignName = campaign.CampaignName,
                     StartDate = campaign.StartDate,
                     EndDate = campaign.EndDate,
-                    Description = campaign.Description,
-                    Materials = campaign.Materials,
-                    MaterialPoints = campaign.MaterialPoints,
                     VoucherGenerationThreshold = campaign.VoucherGenerationThreshold,
                     VoucherValue = campaign.VoucherValue,
                     VoucherValidity = campaign.VoucherValidity,
-                    IsActive = campaign.IsActive
+                    Description = campaign.Description,
+                    IsActive = campaign.IsActive,
+                    ImagePath = campaign.ImagePath
                 };
 
-                // Parse material details
+                // Process materials
                 if (!string.IsNullOrEmpty(campaign.Materials))
                 {
-                    var materialIds = campaign.Materials.Split(',').Select(int.Parse).ToList();
-                    var materialPoints = new Dictionary<int, int>();
-
-                    if (!string.IsNullOrEmpty(campaign.MaterialPoints))
+                    try
                     {
-                        try
+                        var materialIds = campaign.Materials.Split(',').Select(int.Parse).ToList();
+                        var materialPoints = !string.IsNullOrEmpty(campaign.MaterialPoints) ? 
+                            JsonSerializer.Deserialize<Dictionary<int, int>>(campaign.MaterialPoints) : 
+                            new Dictionary<int, int>();
+
+                        foreach (var materialId in materialIds)
                         {
-                            materialPoints = JsonSerializer.Deserialize<Dictionary<int, int>>(campaign.MaterialPoints) ?? new Dictionary<int, int>();
-                        }
-                        catch
-                        {
-                            // Handle deserialization error
+                            if (allMaterials.ContainsKey(materialId))
+                            {
+                                detailedCampaign.MaterialDetails.Add(new MaterialDetail
+                                {
+                                    MaterialId = materialId,
+                                    MaterialName = allMaterials[materialId].Materialname,
+                                    Points = materialPoints.ContainsKey(materialId) ? materialPoints[materialId] : 0
+                                });
+                            }
                         }
                     }
-
-                    foreach (var materialId in materialIds)
+                    catch
                     {
-                        if (allMaterials.ContainsKey(materialId))
-                        {
-                            detailedCampaign.MaterialDetails.Add(new MaterialDetail
-                            {
-                                MaterialId = materialId,
-                                MaterialName = allMaterials[materialId].Materialname,
-                                Points = materialPoints.ContainsKey(materialId) ? materialPoints[materialId] : 0
-                            });
-                        }
+                        // Handle deserialization error
                     }
                 }
 
@@ -712,52 +850,48 @@ namespace HaldiramPromotionalApp.Controllers
                     CampaignName = campaign.CampaignName,
                     StartDate = campaign.StartDate,
                     EndDate = campaign.EndDate,
-                    Description = campaign.Description,
-                    Materials = campaign.Materials,
-                    MaterialPoints = campaign.MaterialPoints,
                     VoucherGenerationThreshold = campaign.VoucherGenerationThreshold,
                     VoucherValidity = campaign.VoucherValidity,
+                    Description = campaign.Description,
+                    IsActive = campaign.IsActive,
                     RewardProductId = campaign.RewardProductId,
                     RewardProduct = campaign.RewardProduct,
-                    IsActive = campaign.IsActive
+                    ImagePath = campaign.ImagePath
                 };
 
-                // Parse material details
+                // Process materials
                 if (!string.IsNullOrEmpty(campaign.Materials))
                 {
-                    var materialIds = campaign.Materials.Split(',').Select(int.Parse).ToList();
-                    var materialPoints = new Dictionary<int, int>();
-
-                    if (!string.IsNullOrEmpty(campaign.MaterialPoints))
+                    try
                     {
-                        try
+                        var materialIds = campaign.Materials.Split(',').Select(int.Parse).ToList();
+                        var materialPoints = !string.IsNullOrEmpty(campaign.MaterialPoints) ? 
+                            JsonSerializer.Deserialize<Dictionary<int, int>>(campaign.MaterialPoints) : 
+                            new Dictionary<int, int>();
+
+                        foreach (var materialId in materialIds)
                         {
-                            materialPoints = JsonSerializer.Deserialize<Dictionary<int, int>>(campaign.MaterialPoints) ?? new Dictionary<int, int>();
-                        }
-                        catch
-                        {
-                            // Handle deserialization error
+                            if (allMaterials.ContainsKey(materialId))
+                            {
+                                detailedCampaign.MaterialDetails.Add(new MaterialDetail
+                                {
+                                    MaterialId = materialId,
+                                    MaterialName = allMaterials[materialId].Materialname,
+                                    Points = materialPoints.ContainsKey(materialId) ? materialPoints[materialId] : 0
+                                });
+                            }
                         }
                     }
-
-                    foreach (var materialId in materialIds)
+                    catch
                     {
-                        if (allMaterials.ContainsKey(materialId))
-                        {
-                            detailedCampaign.MaterialDetails.Add(new MaterialDetail
-                            {
-                                MaterialId = materialId,
-                                MaterialName = allMaterials[materialId].Materialname,
-                                Points = materialPoints.ContainsKey(materialId) ? materialPoints[materialId] : 0
-                            });
-                        }
+                        // Handle deserialization error
                     }
                 }
 
                 detailedPointsRewardCampaigns.Add(detailedCampaign);
             }
 
-            // Process FreeProductCampaigns to include material details
+            // Process FreeProductCampaigns to include material names and free product details
             var detailedFreeProductCampaigns = new List<DetailedFreeProductCampaign>();
             foreach (var campaign in freeProductCampaigns)
             {
@@ -768,56 +902,37 @@ namespace HaldiramPromotionalApp.Controllers
                     StartDate = campaign.StartDate,
                     EndDate = campaign.EndDate,
                     Description = campaign.Description,
-                    Materials = campaign.Materials,
-                    MaterialQuantities = campaign.MaterialQuantities,
-                    FreeProducts = campaign.FreeProducts,
-                    FreeQuantities = campaign.FreeQuantities,
-                    IsActive = campaign.IsActive
+                    IsActive = campaign.IsActive,
+                    ImagePath = campaign.ImagePath
                 };
 
-                // Parse material details
+                // Process materials
                 if (!string.IsNullOrEmpty(campaign.Materials))
-                {
-                    var materialIds = campaign.Materials.Split(',').Select(int.Parse).ToList();
-                    var materialQuantities = new Dictionary<int, int>();
-                    
-                    if (!string.IsNullOrEmpty(campaign.MaterialQuantities))
-                    {
-                        try
-                        {
-                            materialQuantities = JsonSerializer.Deserialize<Dictionary<int, int>>(campaign.MaterialQuantities) ?? new Dictionary<int, int>();
-                        }
-                        catch
-                        {
-                            // Handle deserialization error
-                        }
-                    }
-
-                    foreach (var materialId in materialIds)
-                    {
-                        if (allMaterials.ContainsKey(materialId))
-                        {
-                            detailedCampaign.MaterialDetails.Add(new MaterialDetail
-                            {
-                                MaterialId = materialId,
-                                MaterialName = allMaterials[materialId].Materialname,
-                                Quantity = materialQuantities.ContainsKey(materialId) ? materialQuantities[materialId] : 0
-                            });
-                        }
-                    }
-                }
-
-                // Parse free product details
-                if (!string.IsNullOrEmpty(campaign.FreeProducts))
                 {
                     try
                     {
-                        var freeProducts = JsonSerializer.Deserialize<Dictionary<int, int>>(campaign.FreeProducts) ?? new Dictionary<int, int>();
-                        var freeQuantities = new Dictionary<int, int>();
-                        
-                        if (!string.IsNullOrEmpty(campaign.FreeQuantities))
+                        var materialIds = campaign.Materials.Split(',').Select(int.Parse).ToList();
+                        var materialQuantities = !string.IsNullOrEmpty(campaign.MaterialQuantities) ? 
+                            JsonSerializer.Deserialize<Dictionary<int, int>>(campaign.MaterialQuantities) : 
+                            new Dictionary<int, int>();
+                        var freeProducts = !string.IsNullOrEmpty(campaign.FreeProducts) ? 
+                            JsonSerializer.Deserialize<Dictionary<int, int>>(campaign.FreeProducts) : 
+                            new Dictionary<int, int>();
+                        var freeQuantities = !string.IsNullOrEmpty(campaign.FreeQuantities) ? 
+                            JsonSerializer.Deserialize<Dictionary<int, int>>(campaign.FreeQuantities) : 
+                            new Dictionary<int, int>();
+
+                        foreach (var materialId in materialIds)
                         {
-                            freeQuantities = JsonSerializer.Deserialize<Dictionary<int, int>>(campaign.FreeQuantities) ?? new Dictionary<int, int>();
+                            if (allMaterials.ContainsKey(materialId))
+                            {
+                                detailedCampaign.MaterialDetails.Add(new MaterialDetail
+                                {
+                                    MaterialId = materialId,
+                                    MaterialName = allMaterials[materialId].Materialname,
+                                    Quantity = materialQuantities.ContainsKey(materialId) ? materialQuantities[materialId] : 0
+                                });
+                            }
                         }
 
                         foreach (var kvp in freeProducts)
@@ -850,11 +965,1110 @@ namespace HaldiramPromotionalApp.Controllers
                 DetailedPointsToCashCampaigns = detailedPointsToCashCampaigns,
                 DetailedPointsRewardCampaigns = detailedPointsRewardCampaigns,
                 DetailedFreeProductCampaigns = detailedFreeProductCampaigns,
-                AmountReachGoalCampaigns = amountReachGoalCampaigns,
-                SessionDurationRewardCampaigns = sessionDurationRewardCampaigns
+                AmountReachGoalCampaigns = amountReachGoalCampaigns.Select(c => new AmountReachGoalCampaign
+                {
+                    Id = c.Id,
+                    CampaignName = c.CampaignName,
+                    StartDate = c.StartDate,
+                    EndDate = c.EndDate,
+                    Description = c.Description,
+                    TargetAmount = c.TargetAmount,
+                    VoucherValue = c.VoucherValue,
+                    VoucherValidity = c.VoucherValidity,
+                    IsActive = c.IsActive,
+                    ImagePath = c.ImagePath
+                }).ToList(),
+                SessionDurationRewardCampaigns = sessionDurationRewardCampaigns.Select(c => new SessionDurationRewardCampaign
+                {
+                    Id = c.Id,
+                    CampaignName = c.CampaignName,
+                    StartDate = c.StartDate,
+                    EndDate = c.EndDate,
+                    Description = c.Description,
+                    SessionDuration = c.SessionDuration,
+                    VoucherValue = c.VoucherValue,
+                    VoucherValidity = c.VoucherValidity,
+                    IsActive = c.IsActive,
+                    ImagePath = c.ImagePath
+                }).ToList()
             };
 
-            return View(viewModel);
+            return View("~/Views/Manufacturer/ViewCampaigns.cshtml", viewModel);
+        }
+
+        // GET: Campaigns/EditPointsToCashCampaign/5
+        public async Task<IActionResult> EditPointsToCashCampaign(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var campaign = await _context.PointsToCashCampaigns.FindAsync(id);
+            if (campaign == null)
+            {
+                return NotFound();
+            }
+
+            var materials = await _context.MaterialMaster.Where(m => m.isactive).ToListAsync();
+            var selectedMaterialIds = !string.IsNullOrEmpty(campaign.Materials) ? 
+                campaign.Materials.Split(',').Select(int.Parse).ToList() : new List<int>();
+            
+            var materialPoints = !string.IsNullOrEmpty(campaign.MaterialPoints) ? 
+                JsonSerializer.Deserialize<Dictionary<int, int>>(campaign.MaterialPoints) : 
+                new Dictionary<int, int>();
+
+            var viewModel = new PointsToCashCampaignViewModel
+            {
+                Id = campaign.Id,
+                CampaignName = campaign.CampaignName,
+                StartDate = campaign.StartDate,
+                EndDate = campaign.EndDate,
+                Description = campaign.Description,
+                VoucherGenerationThreshold = campaign.VoucherGenerationThreshold,
+                VoucherValue = campaign.VoucherValue,
+                VoucherValidity = campaign.VoucherValidity,
+                SelectedMaterialIds = selectedMaterialIds,
+                MaterialPoints = materialPoints,
+                IsActive = campaign.IsActive,
+                AllMaterials = materials.Select(m => new MaterialViewModel
+                {
+                    Id = m.Id,
+                    Name = m.Materialname ?? "",
+                    ShortName = m.ShortName ?? "",
+                    Category = m.Category ?? "",
+                    Price = m.price
+                }).ToList()
+            };
+
+            ViewBag.CampaignType = "Points to Cash";
+            return View("~/Views/Manufacturer/EditPointsToCashCampaign.cshtml", viewModel);
+        }
+
+        // POST: Campaigns/EditPointsToCashCampaign/5
+        [HttpPost]
+        public async Task<IActionResult> EditPointsToCashCampaign(int id, PointsToCashCampaignViewModel viewModel, IFormFile ImagePath)
+        {
+            if (id != viewModel.Id)
+            {
+                return NotFound();
+            }
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    var campaign = await _context.PointsToCashCampaigns.FindAsync(id);
+                    if (campaign == null)
+                    {
+                        return NotFound();
+                    }
+
+                    // Handle image upload if a new image is provided
+                    string imagePath = campaign.ImagePath; // Keep existing image path by default
+                    if (ImagePath != null && ImagePath.Length > 0)
+                    {
+                        // Delete old image if it exists
+                        if (!string.IsNullOrEmpty(campaign.ImagePath))
+                        {
+                            var oldFilePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", campaign.ImagePath.TrimStart('/'));
+                            if (System.IO.File.Exists(oldFilePath))
+                            {
+                                System.IO.File.Delete(oldFilePath);
+                            }
+                        }
+
+                        // Save the new uploaded file
+                        var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "campaigns");
+                        if (!Directory.Exists(uploadsFolder))
+                        {
+                            Directory.CreateDirectory(uploadsFolder);
+                        }
+
+                        var fileName = Path.GetFileNameWithoutExtension(ImagePath.FileName);
+                        var extension = Path.GetExtension(ImagePath.FileName);
+                        var uniqueFileName = $"{fileName}_{DateTime.Now:yyyyMMddHHmmss}{extension}";
+                        var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                        using (var fileStream = new FileStream(filePath, FileMode.Create))
+                        {
+                            await ImagePath.CopyToAsync(fileStream);
+                        }
+
+                        // Store the relative path to be saved in the database
+                        imagePath = $"/images/campaigns/{uniqueFileName}";
+                    }
+
+                    // Update campaign properties
+                    campaign.CampaignName = viewModel.CampaignName;
+                    campaign.StartDate = viewModel.StartDate;
+                    campaign.EndDate = viewModel.EndDate;
+                    campaign.Description = viewModel.Description;
+                    campaign.VoucherGenerationThreshold = viewModel.VoucherGenerationThreshold;
+                    campaign.VoucherValue = viewModel.VoucherValue;
+                    campaign.VoucherValidity = viewModel.VoucherValidity;
+                    campaign.Materials = viewModel.SelectedMaterialIds != null ? string.Join(",", viewModel.SelectedMaterialIds) : "";
+                    campaign.MaterialPoints = viewModel.MaterialPoints != null ? JsonSerializer.Serialize(viewModel.MaterialPoints) : "{}";
+                    campaign.ImagePath = imagePath;
+                    campaign.IsActive = viewModel.IsActive;
+
+                    _context.Update(campaign);
+                    await _context.SaveChangesAsync();
+                    TempData["SuccessMessage"] = "Points to Cash Campaign updated successfully!";
+                    return RedirectToAction("ViewCampaigns");
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!PointsToCashCampaignExists(viewModel.Id))
+                    {
+                        return NotFound();
+                    }
+                    else
+                    {
+                        throw;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    ModelState.AddModelError("", "An error occurred while updating the campaign: " + ex.Message);
+                }
+            }
+
+            // If we got this far, something failed, redisplay form
+            var materials = await _context.MaterialMaster.Where(m => m.isactive).ToListAsync();
+            viewModel.AllMaterials = materials.Select(m => new MaterialViewModel
+            {
+                Id = m.Id,
+                Name = m.Materialname ?? "",
+                ShortName = m.ShortName ?? "",
+                Category = m.Category ?? "",
+                Price = m.price
+            }).ToList();
+
+            ViewBag.CampaignType = "Points to Cash";
+            return View("~/Views/Manufacturer/EditPointsToCashCampaign.cshtml", viewModel);
+        }
+
+        private bool PointsToCashCampaignExists(int id)
+        {
+            return _context.PointsToCashCampaigns.Any(e => e.Id == id);
+        }
+
+        // GET: Campaigns/EditPointsRewardCampaign/5
+        public async Task<IActionResult> EditPointsRewardCampaign(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var campaign = await _context.PointsRewardCampaigns
+                .Include(p => p.RewardProduct)
+                .FirstOrDefaultAsync(m => m.Id == id);
+                
+            if (campaign == null)
+            {
+                return NotFound();
+            }
+
+            var materials = await _context.MaterialMaster.Where(m => m.isactive).ToListAsync();
+            var products = await _context.Products.Where(p => p.IsActive).ToListAsync();
+            var selectedMaterialIds = !string.IsNullOrEmpty(campaign.Materials) ? 
+                campaign.Materials.Split(',').Select(int.Parse).ToList() : new List<int>();
+            
+            var materialPoints = !string.IsNullOrEmpty(campaign.MaterialPoints) ? 
+                JsonSerializer.Deserialize<Dictionary<int, int>>(campaign.MaterialPoints) : 
+                new Dictionary<int, int>();
+
+            var viewModel = new PointsRewardCampaignViewModel
+            {
+                Id = campaign.Id,
+                CampaignName = campaign.CampaignName,
+                StartDate = campaign.StartDate,
+                EndDate = campaign.EndDate,
+                Description = campaign.Description,
+                VoucherGenerationThreshold = campaign.VoucherGenerationThreshold,
+                VoucherValidity = campaign.VoucherValidity,
+                SelectedMaterialIds = selectedMaterialIds,
+                MaterialPoints = materialPoints,
+                RewardProductId = campaign.RewardProductId,
+                IsActive = campaign.IsActive,
+                AllMaterials = materials.Select(m => new MaterialViewModel
+                {
+                    Id = m.Id,
+                    Name = m.Materialname ?? "",
+                    ShortName = m.ShortName ?? "",
+                    Category = m.Category ?? "",
+                    Price = m.price
+                }).ToList(),
+                AllProducts = products.Select(p => new ProductViewModel
+                {
+                    Id = p.Id,
+                    ProductName = p.ProductName ?? "",
+                    Price = p.Price,
+                    Category = p.Category ?? ""
+                }).ToList()
+            };
+
+            ViewBag.CampaignType = "Points Reward";
+            return View("~/Views/Manufacturer/EditPointsRewardCampaign.cshtml", viewModel);
+        }
+
+        // POST: Campaigns/EditPointsRewardCampaign/5
+        [HttpPost]
+        public async Task<IActionResult> EditPointsRewardCampaign(int id, PointsRewardCampaignViewModel viewModel, IFormFile ImagePath)
+        {
+            if (id != viewModel.Id)
+            {
+                return NotFound();
+            }
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    var campaign = await _context.PointsRewardCampaigns.FindAsync(id);
+                    if (campaign == null)
+                    {
+                        return NotFound();
+                    }
+
+                    // Handle image upload if a new image is provided
+                    string imagePath = campaign.ImagePath; // Keep existing image path by default
+                    if (ImagePath != null && ImagePath.Length > 0)
+                    {
+                        // Delete old image if it exists
+                        if (!string.IsNullOrEmpty(campaign.ImagePath))
+                        {
+                            var oldFilePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", campaign.ImagePath.TrimStart('/'));
+                            if (System.IO.File.Exists(oldFilePath))
+                            {
+                                System.IO.File.Delete(oldFilePath);
+                            }
+                        }
+
+                        // Save the new uploaded file
+                        var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "campaigns");
+                        if (!Directory.Exists(uploadsFolder))
+                        {
+                            Directory.CreateDirectory(uploadsFolder);
+                        }
+
+                        var fileName = Path.GetFileNameWithoutExtension(ImagePath.FileName);
+                        var extension = Path.GetExtension(ImagePath.FileName);
+                        var uniqueFileName = $"{fileName}_{DateTime.Now:yyyyMMddHHmmss}{extension}";
+                        var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                        using (var fileStream = new FileStream(filePath, FileMode.Create))
+                        {
+                            await ImagePath.CopyToAsync(fileStream);
+                        }
+
+                        // Store the relative path to be saved in the database
+                        imagePath = $"/images/campaigns/{uniqueFileName}";
+                    }
+
+                    // Update campaign properties
+                    campaign.CampaignName = viewModel.CampaignName;
+                    campaign.StartDate = viewModel.StartDate;
+                    campaign.EndDate = viewModel.EndDate;
+                    campaign.Description = viewModel.Description;
+                    campaign.VoucherGenerationThreshold = viewModel.VoucherGenerationThreshold;
+                    campaign.VoucherValidity = viewModel.VoucherValidity;
+                    campaign.Materials = viewModel.SelectedMaterialIds != null ? string.Join(",", viewModel.SelectedMaterialIds) : "";
+                    campaign.MaterialPoints = viewModel.MaterialPoints != null ? JsonSerializer.Serialize(viewModel.MaterialPoints) : "{}";
+                    campaign.RewardProductId = viewModel.RewardProductId;
+                    campaign.ImagePath = imagePath;
+                    campaign.IsActive = viewModel.IsActive;
+
+                    _context.Update(campaign);
+                    await _context.SaveChangesAsync();
+                    TempData["SuccessMessage"] = "Points Reward Campaign updated successfully!";
+                    return RedirectToAction("ViewCampaigns");
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!PointsRewardCampaignExists(viewModel.Id))
+                    {
+                        return NotFound();
+                    }
+                    else
+                    {
+                        throw;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    ModelState.AddModelError("", "An error occurred while updating the campaign: " + ex.Message);
+                }
+            }
+
+            // If we got this far, something failed, redisplay form
+            var materials = await _context.MaterialMaster.Where(m => m.isactive).ToListAsync();
+            var products = await _context.Products.Where(p => p.IsActive).ToListAsync();
+            viewModel.AllMaterials = materials.Select(m => new MaterialViewModel
+            {
+                Id = m.Id,
+                Name = m.Materialname ?? "",
+                ShortName = m.ShortName ?? "",
+                Category = m.Category ?? "",
+                Price = m.price
+            }).ToList();
+            viewModel.AllProducts = products.Select(p => new ProductViewModel
+            {
+                Id = p.Id,
+                ProductName = p.ProductName ?? "",
+                Price = p.Price,
+                Category = p.Category ?? ""
+            }).ToList();
+
+            ViewBag.CampaignType = "Points Reward";
+            return View("~/Views/Manufacturer/EditPointsRewardCampaign.cshtml", viewModel);
+        }
+
+        private bool PointsRewardCampaignExists(int id)
+        {
+            return _context.PointsRewardCampaigns.Any(e => e.Id == id);
+        }
+
+        // GET: Campaigns/EditFreeProductCampaign/5
+        public async Task<IActionResult> EditFreeProductCampaign(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var campaign = await _context.FreeProductCampaigns.FindAsync(id);
+            if (campaign == null)
+            {
+                return NotFound();
+            }
+
+            var materials = await _context.MaterialMaster.Where(m => m.isactive).ToListAsync();
+            var products = await _context.Products.Where(p => p.IsActive).ToListAsync();
+            var selectedMaterialIds = !string.IsNullOrEmpty(campaign.Materials) ? 
+                campaign.Materials.Split(',').Select(int.Parse).ToList() : new List<int>();
+            
+            var materialQuantities = !string.IsNullOrEmpty(campaign.MaterialQuantities) ? 
+                JsonSerializer.Deserialize<Dictionary<int, int>>(campaign.MaterialQuantities) : 
+                new Dictionary<int, int>();
+            var freeProducts = !string.IsNullOrEmpty(campaign.FreeProducts) ? 
+                JsonSerializer.Deserialize<Dictionary<int, int>>(campaign.FreeProducts) : 
+                new Dictionary<int, int>();
+            var freeQuantities = !string.IsNullOrEmpty(campaign.FreeQuantities) ? 
+                JsonSerializer.Deserialize<Dictionary<int, int>>(campaign.FreeQuantities) : 
+                new Dictionary<int, int>();
+
+            var viewModel = new FreeProductCampaignViewModel
+            {
+                Id = campaign.Id,
+                CampaignName = campaign.CampaignName,
+                StartDate = campaign.StartDate,
+                EndDate = campaign.EndDate,
+                Description = campaign.Description,
+                SelectedMaterialIds = selectedMaterialIds,
+                MaterialQuantities = materialQuantities,
+                FreeProducts = freeProducts,
+                FreeQuantities = freeQuantities,
+                IsActive = campaign.IsActive,
+                AllMaterials = materials.Select(m => new MaterialViewModel
+                {
+                    Id = m.Id,
+                    Name = m.Materialname ?? "",
+                    ShortName = m.ShortName ?? "",
+                    Category = m.Category ?? "",
+                    Price = m.price
+                }).ToList(),
+                AllProducts = products.Select(p => new ProductViewModel
+                {
+                    Id = p.Id,
+                    ProductName = p.ProductName ?? "",
+                    Price = p.Price,
+                    Category = p.Category ?? ""
+                }).ToList()
+            };
+
+            ViewBag.CampaignType = "Free Product";
+            return View("~/Views/Manufacturer/EditFreeProductCampaign.cshtml", viewModel);
+        }
+
+        // POST: Campaigns/EditFreeProductCampaign/5
+        [HttpPost]
+        public async Task<IActionResult> EditFreeProductCampaign(int id, FreeProductCampaignViewModel viewModel, IFormFile ImagePath)
+        {
+            if (id != viewModel.Id)
+            {
+                return NotFound();
+            }
+
+            // Process only checked materials
+            if (viewModel.SelectedMaterialIds != null && viewModel.SelectedMaterialIds.Any())
+            {
+                var validMaterialIds = new List<int>();
+                
+                foreach (var materialId in viewModel.SelectedMaterialIds)
+                {
+                    // Check if all required data is present for this material
+                    bool hasValidQuantity = viewModel.MaterialQuantities?.ContainsKey(materialId) == true && 
+                                           viewModel.MaterialQuantities[materialId] > 0;
+                    
+                    // Allow FreeProducts to be null/empty, but if provided, validate it
+                    bool hasValidFreeProduct = true; // Allow null/empty by default
+                    if (viewModel.FreeProducts?.ContainsKey(materialId) == true && viewModel.FreeProducts[materialId] > 0)
+                    {
+                        // If a value is provided, it must be valid
+                        hasValidFreeProduct = true;
+                    }
+                    // If key exists but value is 0 or negative, it's invalid
+                    else if (viewModel.FreeProducts?.ContainsKey(materialId) == true && viewModel.FreeProducts[materialId] <= 0)
+                    {
+                        hasValidFreeProduct = false;
+                    }
+                    // If key doesn't exist, that's fine (null/empty is allowed)
+                    
+                    // Allow FreeQuantities to be 0 or null, but if provided, it must be non-negative
+                    bool hasValidFreeQuantity = true; // Allow 0 or null by default
+                    if (viewModel.FreeQuantities?.ContainsKey(materialId) == true && viewModel.FreeQuantities[materialId] >= 0)
+                    {
+                        // If a value is provided, it must be valid (non-negative)
+                        hasValidFreeQuantity = true;
+                    }
+                    // If key exists but value is negative, it's invalid
+                    else if (viewModel.FreeQuantities?.ContainsKey(materialId) == true && viewModel.FreeQuantities[materialId] < 0)
+                    {
+                        hasValidFreeQuantity = false;
+                    }
+                    // If key doesn't exist, that's fine (null/empty is allowed)
+                    
+                    if (hasValidQuantity && hasValidFreeProduct && hasValidFreeQuantity)
+                    {
+                        validMaterialIds.Add(materialId);
+                    }
+                    else
+                    {
+                        // Add specific error messages for missing data
+                        if (!hasValidQuantity)
+                        {
+                            ModelState.AddModelError("", $"Please enter a valid quantity for material {materialId}.");
+                        }
+                        if (!hasValidFreeProduct)
+                        {
+                            ModelState.AddModelError("", $"Please select a valid free product for material {materialId}.");
+                        }
+                        if (!hasValidFreeQuantity)
+                        {
+                            ModelState.AddModelError("", $"Free quantity for material {materialId} cannot be negative.");
+                        }
+                    }
+                }
+                
+                // Update the selected material IDs to only include valid ones
+                viewModel.SelectedMaterialIds = validMaterialIds;
+            }
+            else
+            {
+                ModelState.AddModelError("", "Please select at least one material.");
+            }
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    var campaign = await _context.FreeProductCampaigns.FindAsync(id);
+                    if (campaign == null)
+                    {
+                        return NotFound();
+                    }
+
+                    // Handle image upload if a new image is provided
+                    string imagePath = campaign.ImagePath; // Keep existing image path by default
+                    if (ImagePath != null && ImagePath.Length > 0)
+                    {
+                        // Delete old image if it exists
+                        if (!string.IsNullOrEmpty(campaign.ImagePath))
+                        {
+                            var oldFilePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", campaign.ImagePath.TrimStart('/'));
+                            if (System.IO.File.Exists(oldFilePath))
+                            {
+                                System.IO.File.Delete(oldFilePath);
+                            }
+                        }
+
+                        // Save the new uploaded file
+                        var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "campaigns");
+                        if (!Directory.Exists(uploadsFolder))
+                        {
+                            Directory.CreateDirectory(uploadsFolder);
+                        }
+
+                        var fileName = Path.GetFileNameWithoutExtension(ImagePath.FileName);
+                        var extension = Path.GetExtension(ImagePath.FileName);
+                        var uniqueFileName = $"{fileName}_{DateTime.Now:yyyyMMddHHmmss}{extension}";
+                        var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                        using (var fileStream = new FileStream(filePath, FileMode.Create))
+                        {
+                            await ImagePath.CopyToAsync(fileStream);
+                        }
+
+                        // Store the relative path to be saved in the database
+                        imagePath = $"/images/campaigns/{uniqueFileName}";
+                    }
+
+                    // Create filtered dictionaries containing only data for selected materials
+                    var filteredMaterialQuantities = new Dictionary<int, int>();
+                    var filteredFreeProducts = new Dictionary<int, int>();
+                    var filteredFreeQuantities = new Dictionary<int, int>();
+                    
+                    foreach (var materialId in viewModel.SelectedMaterialIds)
+                    {
+                        if (viewModel.MaterialQuantities?.ContainsKey(materialId) == true)
+                        {
+                            filteredMaterialQuantities[materialId] = viewModel.MaterialQuantities[materialId];
+                        }
+                        
+                        if (viewModel.FreeProducts?.ContainsKey(materialId) == true && viewModel.FreeProducts[materialId] > 0)
+                        {
+                            filteredFreeProducts[materialId] = viewModel.FreeProducts[materialId];
+                        }
+                        
+                        // Store FreeQuantities even if 0, but only if the key exists
+                        if (viewModel.FreeQuantities?.ContainsKey(materialId) == true)
+                        {
+                            filteredFreeQuantities[materialId] = viewModel.FreeQuantities[materialId];
+                        }
+                    }
+
+                    // Update campaign properties
+                    campaign.CampaignName = viewModel.CampaignName;
+                    campaign.StartDate = viewModel.StartDate;
+                    campaign.EndDate = viewModel.EndDate;
+                    campaign.Description = viewModel.Description;
+                    campaign.Materials = viewModel.SelectedMaterialIds != null ? string.Join(",", viewModel.SelectedMaterialIds) : "";
+                    campaign.MaterialQuantities = filteredMaterialQuantities.Any() ? JsonSerializer.Serialize(filteredMaterialQuantities) : "{}";
+                    campaign.FreeProducts = filteredFreeProducts.Any() ? JsonSerializer.Serialize(filteredFreeProducts) : "{}";
+                    campaign.FreeQuantities = filteredFreeQuantities.Any() ? JsonSerializer.Serialize(filteredFreeQuantities) : "{}";
+                    campaign.ImagePath = imagePath;
+                    campaign.IsActive = viewModel.IsActive;
+
+                    _context.Update(campaign);
+                    await _context.SaveChangesAsync();
+                    TempData["SuccessMessage"] = "Free Product Campaign updated successfully!";
+                    return RedirectToAction("ViewCampaigns");
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!FreeProductCampaignExists(viewModel.Id))
+                    {
+                        return NotFound();
+                    }
+                    else
+                    {
+                        throw;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    ModelState.AddModelError("", "An error occurred while updating the campaign: " + ex.Message);
+                }
+            }
+
+            // If we got this far, something failed, redisplay form
+            var materials = await _context.MaterialMaster.Where(m => m.isactive).ToListAsync();
+            var products = await _context.Products.Where(p => p.IsActive).ToListAsync();
+            viewModel.AllMaterials = materials.Select(m => new MaterialViewModel
+            {
+                Id = m.Id,
+                Name = m.Materialname ?? "",
+                ShortName = m.ShortName ?? "",
+                Category = m.Category ?? "",
+                Price = m.price
+            }).ToList();
+            viewModel.AllProducts = products.Select(p => new ProductViewModel
+            {
+                Id = p.Id,
+                ProductName = p.ProductName ?? "",
+                Price = p.Price,
+                Category = p.Category ?? ""
+            }).ToList();
+
+            ViewBag.CampaignType = "Free Product";
+            return View("~/Views/Manufacturer/EditFreeProductCampaign.cshtml", viewModel);
+        }
+
+        private bool FreeProductCampaignExists(int id)
+        {
+            return _context.FreeProductCampaigns.Any(e => e.Id == id);
+        }
+
+        // GET: Campaigns/EditAmountReachGoalCampaign/5
+        public async Task<IActionResult> EditAmountReachGoalCampaign(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var campaign = await _context.AmountReachGoalCampaigns.FindAsync(id);
+            if (campaign == null)
+            {
+                return NotFound();
+            }
+
+            var viewModel = new AmountReachGoalCampaignViewModel
+            {
+                Id = campaign.Id,
+                CampaignName = campaign.CampaignName,
+                StartDate = campaign.StartDate,
+                EndDate = campaign.EndDate,
+                Description = campaign.Description,
+                TargetAmount = campaign.TargetAmount,
+                VoucherValue = campaign.VoucherValue,
+                VoucherValidity = campaign.VoucherValidity,
+                IsActive = campaign.IsActive
+            };
+
+            ViewBag.CampaignType = "Amount Reach Goal";
+            return View("~/Views/Manufacturer/EditAmountReachGoalCampaign.cshtml", viewModel);
+        }
+
+        // POST: Campaigns/EditAmountReachGoalCampaign/5
+        [HttpPost]
+        public async Task<IActionResult> EditAmountReachGoalCampaign(int id, AmountReachGoalCampaignViewModel viewModel, IFormFile ImagePath)
+        {
+            if (id != viewModel.Id)
+            {
+                return NotFound();
+            }
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    var campaign = await _context.AmountReachGoalCampaigns.FindAsync(id);
+                    if (campaign == null)
+                    {
+                        return NotFound();
+                    }
+
+                    // Handle image upload if a new image is provided
+                    string imagePath = campaign.ImagePath; // Keep existing image path by default
+                    if (ImagePath != null && ImagePath.Length > 0)
+                    {
+                        // Delete old image if it exists
+                        if (!string.IsNullOrEmpty(campaign.ImagePath))
+                        {
+                            var oldFilePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", campaign.ImagePath.TrimStart('/'));
+                            if (System.IO.File.Exists(oldFilePath))
+                            {
+                                System.IO.File.Delete(oldFilePath);
+                            }
+                        }
+
+                        // Save the new uploaded file
+                        var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "campaigns");
+                        if (!Directory.Exists(uploadsFolder))
+                        {
+                            Directory.CreateDirectory(uploadsFolder);
+                        }
+
+                        var fileName = Path.GetFileNameWithoutExtension(ImagePath.FileName);
+                        var extension = Path.GetExtension(ImagePath.FileName);
+                        var uniqueFileName = $"{fileName}_{DateTime.Now:yyyyMMddHHmmss}{extension}";
+                        var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                        using (var fileStream = new FileStream(filePath, FileMode.Create))
+                        {
+                            await ImagePath.CopyToAsync(fileStream);
+                        }
+
+                        // Store the relative path to be saved in the database
+                        imagePath = $"/images/campaigns/{uniqueFileName}";
+                    }
+
+                    // Update campaign properties
+                    campaign.CampaignName = viewModel.CampaignName;
+                    campaign.StartDate = viewModel.StartDate;
+                    campaign.EndDate = viewModel.EndDate;
+                    campaign.Description = viewModel.Description;
+                    campaign.TargetAmount = viewModel.TargetAmount;
+                    campaign.VoucherValue = viewModel.VoucherValue;
+                    campaign.VoucherValidity = viewModel.VoucherValidity;
+                    campaign.ImagePath = imagePath;
+                    campaign.IsActive = viewModel.IsActive;
+
+                    _context.Update(campaign);
+                    await _context.SaveChangesAsync();
+                    TempData["SuccessMessage"] = "Amount Reach Goal Campaign updated successfully!";
+                    return RedirectToAction("ViewCampaigns");
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!AmountReachGoalCampaignExists(viewModel.Id))
+                    {
+                        return NotFound();
+                    }
+                    else
+                    {
+                        throw;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    ModelState.AddModelError("", "An error occurred while updating the campaign: " + ex.Message);
+                }
+            }
+
+            ViewBag.CampaignType = "Amount Reach Goal";
+            return View("~/Views/Manufacturer/EditAmountReachGoalCampaign.cshtml", viewModel);
+        }
+
+        private bool AmountReachGoalCampaignExists(int id)
+        {
+            return _context.AmountReachGoalCampaigns.Any(e => e.Id == id);
+        }
+
+        // GET: Campaigns/EditSessionDurationRewardCampaign/5
+        public async Task<IActionResult> EditSessionDurationRewardCampaign(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var campaign = await _context.SessionDurationRewardCampaigns.FindAsync(id);
+            if (campaign == null)
+            {
+                return NotFound();
+            }
+
+            var viewModel = new SessionDurationRewardCampaignViewModel
+            {
+                Id = campaign.Id,
+                CampaignName = campaign.CampaignName,
+                StartDate = campaign.StartDate,
+                EndDate = campaign.EndDate,
+                Description = campaign.Description,
+                SessionDuration = campaign.SessionDuration,
+                VoucherValue = campaign.VoucherValue,
+                VoucherValidity = campaign.VoucherValidity,
+                IsActive = campaign.IsActive
+            };
+
+            ViewBag.CampaignType = "Session Duration Reward";
+            return View("~/Views/Manufacturer/EditSessionDurationRewardCampaign.cshtml", viewModel);
+        }
+
+        // POST: Campaigns/EditSessionDurationRewardCampaign/5
+        [HttpPost]
+        public async Task<IActionResult> EditSessionDurationRewardCampaign(int id, SessionDurationRewardCampaignViewModel viewModel, IFormFile ImagePath)
+        {
+            if (id != viewModel.Id)
+            {
+                return NotFound();
+            }
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    var campaign = await _context.SessionDurationRewardCampaigns.FindAsync(id);
+                    if (campaign == null)
+                    {
+                        return NotFound();
+                    }
+
+                    // Handle image upload if a new image is provided
+                    string imagePath = campaign.ImagePath; // Keep existing image path by default
+                    if (ImagePath != null && ImagePath.Length > 0)
+                    {
+                        // Delete old image if it exists
+                        if (!string.IsNullOrEmpty(campaign.ImagePath))
+                        {
+                            var oldFilePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", campaign.ImagePath.TrimStart('/'));
+                            if (System.IO.File.Exists(oldFilePath))
+                            {
+                                System.IO.File.Delete(oldFilePath);
+                            }
+                        }
+
+                        // Save the new uploaded file
+                        var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "campaigns");
+                        if (!Directory.Exists(uploadsFolder))
+                        {
+                            Directory.CreateDirectory(uploadsFolder);
+                        }
+
+                        var fileName = Path.GetFileNameWithoutExtension(ImagePath.FileName);
+                        var extension = Path.GetExtension(ImagePath.FileName);
+                        var uniqueFileName = $"{fileName}_{DateTime.Now:yyyyMMddHHmmss}{extension}";
+                        var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                        using (var fileStream = new FileStream(filePath, FileMode.Create))
+                        {
+                            await ImagePath.CopyToAsync(fileStream);
+                        }
+
+                        // Store the relative path to be saved in the database
+                        imagePath = $"/images/campaigns/{uniqueFileName}";
+                    }
+
+                    // Update campaign properties
+                    campaign.CampaignName = viewModel.CampaignName;
+                    campaign.StartDate = viewModel.StartDate;
+                    campaign.EndDate = viewModel.EndDate;
+                    campaign.Description = viewModel.Description;
+                    campaign.SessionDuration = viewModel.SessionDuration;
+                    campaign.VoucherValue = viewModel.VoucherValue;
+                    campaign.VoucherValidity = viewModel.VoucherValidity;
+                    campaign.ImagePath = imagePath;
+                    campaign.IsActive = viewModel.IsActive;
+
+                    _context.Update(campaign);
+                    await _context.SaveChangesAsync();
+                    TempData["SuccessMessage"] = "Session Duration Reward Campaign updated successfully!";
+                    return RedirectToAction("ViewCampaigns");
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!SessionDurationRewardCampaignExists(viewModel.Id))
+                    {
+                        return NotFound();
+                    }
+                    else
+                    {
+                        throw;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    ModelState.AddModelError("", "An error occurred while updating the campaign: " + ex.Message);
+                }
+            }
+
+            ViewBag.CampaignType = "Session Duration Reward";
+            return View("~/Views/Manufacturer/EditSessionDurationRewardCampaign.cshtml", viewModel);
+        }
+
+        private bool SessionDurationRewardCampaignExists(int id)
+        {
+            return _context.SessionDurationRewardCampaigns.Any(e => e.Id == id);
+        }
+
+        // DELETE: Campaigns/DeletePointsToCashCampaign/5
+        public async Task<IActionResult> DeletePointsToCashCampaign(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var campaign = await _context.PointsToCashCampaigns
+                .FirstOrDefaultAsync(m => m.Id == id);
+            if (campaign == null)
+            {
+                return NotFound();
+            }
+
+            return View("~/Views/Manufacturer/DeletePointsToCashCampaign.cshtml", campaign);
+        }
+
+        // POST: Campaigns/DeletePointsToCashCampaign/5
+        [HttpPost, ActionName("DeletePointsToCashCampaign")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeletePointsToCashCampaignConfirmed(int id)
+        {
+            var campaign = await _context.PointsToCashCampaigns.FindAsync(id);
+            if (campaign != null)
+            {
+                // Delete image file if it exists
+                if (!string.IsNullOrEmpty(campaign.ImagePath))
+                {
+                    var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", campaign.ImagePath.TrimStart('/'));
+                    if (System.IO.File.Exists(filePath))
+                    {
+                        System.IO.File.Delete(filePath);
+                    }
+                }
+
+                _context.PointsToCashCampaigns.Remove(campaign);
+                await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Points to Cash Campaign deleted successfully!";
+            }
+            return RedirectToAction("ViewCampaigns");
+        }
+
+        // DELETE: Campaigns/DeletePointsRewardCampaign/5
+        public async Task<IActionResult> DeletePointsRewardCampaign(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var campaign = await _context.PointsRewardCampaigns
+                .FirstOrDefaultAsync(m => m.Id == id);
+            if (campaign == null)
+            {
+                return NotFound();
+            }
+
+            return View("~/Views/Manufacturer/DeletePointsRewardCampaign.cshtml", campaign);
+        }
+
+        // POST: Campaigns/DeletePointsRewardCampaign/5
+        [HttpPost, ActionName("DeletePointsRewardCampaign")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeletePointsRewardCampaignConfirmed(int id)
+        {
+            var campaign = await _context.PointsRewardCampaigns.FindAsync(id);
+            if (campaign != null)
+            {
+                // Delete image file if it exists
+                if (!string.IsNullOrEmpty(campaign.ImagePath))
+                {
+                    var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", campaign.ImagePath.TrimStart('/'));
+                    if (System.IO.File.Exists(filePath))
+                    {
+                        System.IO.File.Delete(filePath);
+                    }
+                }
+
+                _context.PointsRewardCampaigns.Remove(campaign);
+                await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Points Reward Campaign deleted successfully!";
+            }
+            return RedirectToAction("ViewCampaigns");
+        }
+
+        // DELETE: Campaigns/DeleteFreeProductCampaign/5
+        public async Task<IActionResult> DeleteFreeProductCampaign(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var campaign = await _context.FreeProductCampaigns
+                .FirstOrDefaultAsync(m => m.Id == id);
+            if (campaign == null)
+            {
+                return NotFound();
+            }
+
+            return View("~/Views/Manufacturer/DeleteFreeProductCampaign.cshtml", campaign);
+        }
+
+        // POST: Campaigns/DeleteFreeProductCampaign/5
+        [HttpPost, ActionName("DeleteFreeProductCampaign")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteFreeProductCampaignConfirmed(int id)
+        {
+            var campaign = await _context.FreeProductCampaigns.FindAsync(id);
+            if (campaign != null)
+            {
+                // Delete image file if it exists
+                if (!string.IsNullOrEmpty(campaign.ImagePath))
+                {
+                    var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", campaign.ImagePath.TrimStart('/'));
+                    if (System.IO.File.Exists(filePath))
+                    {
+                        System.IO.File.Delete(filePath);
+                    }
+                }
+
+                _context.FreeProductCampaigns.Remove(campaign);
+                await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Free Product Campaign deleted successfully!";
+            }
+            return RedirectToAction("ViewCampaigns");
+        }
+
+        // DELETE: Campaigns/DeleteAmountReachGoalCampaign/5
+        public async Task<IActionResult> DeleteAmountReachGoalCampaign(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var campaign = await _context.AmountReachGoalCampaigns
+                .FirstOrDefaultAsync(m => m.Id == id);
+            if (campaign == null)
+            {
+                return NotFound();
+            }
+
+            return View("~/Views/Manufacturer/DeleteAmountReachGoalCampaign.cshtml", campaign);
+        }
+
+        // POST: Campaigns/DeleteAmountReachGoalCampaign/5
+        [HttpPost, ActionName("DeleteAmountReachGoalCampaign")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteAmountReachGoalCampaignConfirmed(int id)
+        {
+            var campaign = await _context.AmountReachGoalCampaigns.FindAsync(id);
+            if (campaign != null)
+            {
+                // Delete image file if it exists
+                if (!string.IsNullOrEmpty(campaign.ImagePath))
+                {
+                    var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", campaign.ImagePath.TrimStart('/'));
+                    if (System.IO.File.Exists(filePath))
+                    {
+                        System.IO.File.Delete(filePath);
+                    }
+                }
+
+                _context.AmountReachGoalCampaigns.Remove(campaign);
+                await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Amount Reach Goal Campaign deleted successfully!";
+            }
+            return RedirectToAction("ViewCampaigns");
+        }
+
+        // DELETE: Campaigns/DeleteSessionDurationRewardCampaign/5
+        public async Task<IActionResult> DeleteSessionDurationRewardCampaign(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var campaign = await _context.SessionDurationRewardCampaigns
+                .FirstOrDefaultAsync(m => m.Id == id);
+            if (campaign == null)
+            {
+                return NotFound();
+            }
+
+            return View("~/Views/Manufacturer/DeleteSessionDurationRewardCampaign.cshtml", campaign);
+        }
+
+        // POST: Campaigns/DeleteSessionDurationRewardCampaign/5
+        [HttpPost, ActionName("DeleteSessionDurationRewardCampaign")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteSessionDurationRewardCampaignConfirmed(int id)
+        {
+            var campaign = await _context.SessionDurationRewardCampaigns.FindAsync(id);
+            if (campaign != null)
+            {
+                // Delete image file if it exists
+                if (!string.IsNullOrEmpty(campaign.ImagePath))
+                {
+                    var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", campaign.ImagePath.TrimStart('/'));
+                    if (System.IO.File.Exists(filePath))
+                    {
+                        System.IO.File.Delete(filePath);
+                    }
+                }
+
+                _context.SessionDurationRewardCampaigns.Remove(campaign);
+                await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Session Duration Reward Campaign deleted successfully!";
+            }
+            return RedirectToAction("ViewCampaigns");
         }
     }
 }

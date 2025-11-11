@@ -41,7 +41,7 @@ namespace HaldiramPromotionalApp.Controllers
             
             ViewBag.MaterialImages = materialImages;
             
-            return View(viewModel);
+            return View("~/Views/Manufacturer/UploadMaterialImages.cshtml", viewModel);
         }
 
         [HttpPost]
@@ -118,7 +118,7 @@ namespace HaldiramPromotionalApp.Controllers
             
             ViewBag.MaterialImages = materialImages;
             
-            return View(viewModel);
+            return View("~/Views/Manufacturer/UploadMaterialImages.cshtml", viewModel);
         }
         
         [HttpPost]

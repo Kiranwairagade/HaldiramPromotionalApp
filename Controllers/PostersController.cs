@@ -29,7 +29,7 @@ namespace HaldiramPromotionalApp.Controllers
             var posters = await _context.Posters.ToListAsync();
             ViewBag.Posters = posters;
             
-            return View(viewModel);
+            return View("~/Views/Manufacturer/UploadPoster.cshtml", viewModel);
         }
 
         [HttpPost]
@@ -52,7 +52,7 @@ namespace HaldiramPromotionalApp.Controllers
                         var posters = await _context.Posters.ToListAsync();
                         ViewBag.Posters = posters;
                         
-                        return View(viewModel);
+                        return View("~/Views/Manufacturer/UploadPoster.cshtml", viewModel);
                     }
                     
                     // Create uploads directory if it doesn't exist
@@ -97,7 +97,7 @@ namespace HaldiramPromotionalApp.Controllers
             var existingPosters = await _context.Posters.ToListAsync();
             ViewBag.Posters = existingPosters;
             
-            return View(viewModel);
+            return View("~/Views/Manufacturer/UploadPoster.cshtml", viewModel);
         }
         
         [HttpPost]
