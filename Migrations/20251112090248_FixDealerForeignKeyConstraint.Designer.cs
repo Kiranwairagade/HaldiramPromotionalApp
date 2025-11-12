@@ -4,6 +4,7 @@ using HaldiramPromotionalApp.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HaldiramPromotionalApp.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251112090248_FixDealerForeignKeyConstraint")]
+    partial class FixDealerForeignKeyConstraint
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -241,6 +244,27 @@ namespace HaldiramPromotionalApp.Migrations
                     b.ToTable("MaterialMaster");
                 });
 
+            modelBuilder.Entity("HaldiramPromotionalApp.Models.MaterialPoints", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("MaterialId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Points")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MaterialId");
+
+                    b.ToTable("MaterialPoints");
+                });
+
             modelBuilder.Entity("HaldiramPromotionalApp.Models.Order", b =>
                 {
                     b.Property<int>("Id")
@@ -285,9 +309,6 @@ namespace HaldiramPromotionalApp.Migrations
                         .HasColumnType("int");
 
                     b.Property<int>("OrderId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Points")
                         .HasColumnType("int");
 
                     b.Property<int>("Quantity")
@@ -543,6 +564,17 @@ namespace HaldiramPromotionalApp.Migrations
                         .IsRequired();
 
                     b.Navigation("MaterialMaster");
+                });
+
+            modelBuilder.Entity("HaldiramPromotionalApp.Models.MaterialPoints", b =>
+                {
+                    b.HasOne("HaldiramPromotionalApp.Models.MaterialMaster", "Material")
+                        .WithMany()
+                        .HasForeignKey("MaterialId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Material");
                 });
 
             modelBuilder.Entity("HaldiramPromotionalApp.Models.Order", b =>

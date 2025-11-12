@@ -109,8 +109,8 @@
                                                name="MaterialPoints[@Model.AllMaterials[i].Id]" 
                                                class="ml-2 w-20 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm material-points"
                                                placeholder="Points"
-                                               min="1"
-                                               value="@(Model.MaterialPoints != null && Model.MaterialPoints.ContainsKey(Model.AllMaterials[i].Id) ? Model.MaterialPoints[Model.AllMaterials[i].Id].ToString() : "1")"
+                                               min="0"
+                                               value="@(Model.MaterialPoints != null && Model.MaterialPoints.ContainsKey(Model.AllMaterials[i].Id) ? Model.MaterialPoints[Model.AllMaterials[i].Id].ToString() : "0")"
                                                style="@(Model.SelectedMaterialIds.Contains(Model.AllMaterials[i].Id) ? "display: block;" : "display: none;")">
                                     </div>
                                 }
@@ -213,13 +213,16 @@
                     if (this.checked) {
                         pointsInput.style.display = 'block';
                         pointsInput.required = true;
+                        pointsInput.disabled = false; // Enable the input
                         // Set default value if empty
                         if (!pointsInput.value) {
-                            pointsInput.value = '1';
+                            pointsInput.value = '0';
                         }
                     } else {
                         pointsInput.style.display = 'none';
                         pointsInput.required = false;
+                        // Disable the input so it's not included in form submission
+                        pointsInput.disabled = true;
                         // Clear value when unchecked
                         pointsInput.value = '';
                     }
@@ -265,7 +268,7 @@
                 selectedMaterials.forEach(checkbox => {
                     const materialId = checkbox.value;
                     const pointsInput = document.getElementById('points_' + materialId);
-                    if (!pointsInput.value || pointsInput.value <= 0) {
+                    if (!pointsInput.value || pointsInput.value < 0) {
                         isValid = false;
                         pointsInput.classList.add('border-red-500');
                     } else {
@@ -275,7 +278,7 @@
                 
                 if (!isValid) {
                     e.preventDefault();
-                    alert('Please enter valid points values for all selected materials (minimum 1 point).');
+                    alert('Please enter valid points values for all selected materials (minimum 0 points).');
                     return false;
                 }
                 

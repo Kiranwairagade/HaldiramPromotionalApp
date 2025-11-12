@@ -1121,40 +1121,16 @@ namespace HaldiramPromotionalApp.Controllers
                 {
                     if (!PointsToCashCampaignExists(viewModel.Id))
                     {
-                        TempData["ErrorMessage"] = "Campaign not found.";
-                        return RedirectToAction("ViewCampaigns");
+                        return NotFound();
                     }
                     else
                     {
-                        TempData["ErrorMessage"] = "The campaign was modified by another user. Please try again.";
                         throw;
                     }
                 }
                 catch (Exception ex)
                 {
-                    TempData["ErrorMessage"] = "An error occurred while updating the campaign: " + ex.Message;
-                    // Log the exception for debugging
-                    System.Diagnostics.Debug.WriteLine($"Exception in EditPointsToCashCampaign: {ex}");
-                    if (ex.InnerException != null)
-                    {
-                        System.Diagnostics.Debug.WriteLine($"Inner exception: {ex.InnerException.Message}");
-                    }
-                }
-            }
-            else
-            {
-                // Log validation errors for debugging
-                foreach (var key in ModelState.Keys)
-                {
-                    var state = ModelState[key];
-                    if (state.Errors.Count > 0)
-                    {
-                        System.Diagnostics.Debug.WriteLine($"Validation error for {key}:");
-                        foreach (var error in state.Errors)
-                        {
-                            System.Diagnostics.Debug.WriteLine($"  - {error.ErrorMessage}");
-                        }
-                    }
+                    ModelState.AddModelError("", "An error occurred while updating the campaign: " + ex.Message);
                 }
             }
 
@@ -1423,8 +1399,7 @@ namespace HaldiramPromotionalApp.Controllers
         {
             if (id != viewModel.Id)
             {
-                TempData["ErrorMessage"] = "Invalid campaign ID.";
-                return RedirectToAction("ViewCampaigns");
+                return NotFound();
             }
 
             // Process only checked materials
@@ -1503,8 +1478,7 @@ namespace HaldiramPromotionalApp.Controllers
                     var campaign = await _context.FreeProductCampaigns.FindAsync(id);
                     if (campaign == null)
                     {
-                        TempData["ErrorMessage"] = "Campaign not found.";
-                        return RedirectToAction("ViewCampaigns");
+                        return NotFound();
                     }
 
                     // Handle image upload if a new image is provided
@@ -1587,40 +1561,16 @@ namespace HaldiramPromotionalApp.Controllers
                 {
                     if (!FreeProductCampaignExists(viewModel.Id))
                     {
-                        TempData["ErrorMessage"] = "Campaign not found.";
-                        return RedirectToAction("ViewCampaigns");
+                        return NotFound();
                     }
                     else
                     {
-                        TempData["ErrorMessage"] = "The campaign was modified by another user. Please try again.";
                         throw;
                     }
                 }
                 catch (Exception ex)
                 {
-                    TempData["ErrorMessage"] = "An error occurred while updating the campaign: " + ex.Message;
-                    // Log the exception for debugging
-                    System.Diagnostics.Debug.WriteLine($"Exception in EditFreeProductCampaign: {ex}");
-                    if (ex.InnerException != null)
-                    {
-                        System.Diagnostics.Debug.WriteLine($"Inner exception: {ex.InnerException.Message}");
-                    }
-                }
-            }
-            else
-            {
-                // Log validation errors for debugging
-                foreach (var key in ModelState.Keys)
-                {
-                    var state = ModelState[key];
-                    if (state.Errors.Count > 0)
-                    {
-                        System.Diagnostics.Debug.WriteLine($"Validation error for {key}:");
-                        foreach (var error in state.Errors)
-                        {
-                            System.Diagnostics.Debug.WriteLine($"  - {error.ErrorMessage}");
-                        }
-                    }
+                    ModelState.AddModelError("", "An error occurred while updating the campaign: " + ex.Message);
                 }
             }
 

@@ -133,11 +133,19 @@ namespace HaldiramPromotionalApp.Controllers
                     return BadRequest("User not found");
                 }
                 
-                // Create the order with user information
+                // Find the dealer associated with this user by matching phone numbers
+                var dealer = await _context.DealerMasters.FirstOrDefaultAsync(d => d.PhoneNo == user.phoneno);
+                if (dealer == null)
+                {
+                    return BadRequest("Dealer not found for this user");
+                }
+                
+                // Create the order with user information and dealer ID
                 var order = new Order
                 {
                     OrderDate = DateTime.Now,
                     UserId = user.Id,
+                    DealerId = dealer.Id, // Set the DealerId from the DealerMaster record
                     OrderStatus = "Pending",
                     TotalAmount = orderRequest.Items.Sum(i => i.Quantity * i.Price)
                 };
@@ -154,7 +162,8 @@ namespace HaldiramPromotionalApp.Controllers
                         MaterialId = item.MaterialId,
                         Quantity = item.Quantity,
                         UnitPrice = item.Price,
-                        TotalPrice = item.Quantity * item.Price
+                        TotalPrice = item.Quantity * item.Price,
+                        Points = item.Points // Set the Points property
                     };
                     
                     _context.OrderItems.Add(orderItem);
@@ -185,5 +194,6 @@ namespace HaldiramPromotionalApp.Controllers
         public int MaterialId { get; set; }
         public int Quantity { get; set; }
         public decimal Price { get; set; }
+        public int Points { get; set; } // Add Points property
     }
 }

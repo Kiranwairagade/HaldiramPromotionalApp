@@ -4,6 +4,7 @@ using HaldiramPromotionalApp.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HaldiramPromotionalApp.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251111123959_MakeDealerIdRequiredInOrder")]
+    partial class MakeDealerIdRequiredInOrder
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -105,7 +108,7 @@ namespace HaldiramPromotionalApp.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("DealerMasters");
+                    b.ToTable("DealerMaster");
                 });
 
             modelBuilder.Entity("HaldiramPromotionalApp.Models.FreeProductCampaign", b =>
@@ -285,9 +288,6 @@ namespace HaldiramPromotionalApp.Migrations
                         .HasColumnType("int");
 
                     b.Property<int>("OrderId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Points")
                         .HasColumnType("int");
 
                     b.Property<int>("Quantity")

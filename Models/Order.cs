@@ -26,6 +26,9 @@ namespace HaldiramPromotionalApp.Models
         [StringLength(100)]
         public string OrderStatus { get; set; } = "Pending";
 
+        // New field to store Dealer ID
+        public int DealerId { get; set; }
+
         // Navigation properties
         [ForeignKey("UserId")]
         public virtual User User { get; set; }

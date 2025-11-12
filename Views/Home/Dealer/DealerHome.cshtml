@@ -1,29 +1,73 @@
 @using Newtonsoft.Json
 @model HaldiramPromotionalApp.ViewModels.DealerDashboardViewModel
-@{
-    ViewData["Title"] = "Dealer Dashboard";
-}
 
 @{
+    ViewData["Title"] = "Dealer Dashboard";
+    // Set the total points in ViewData so it can be accessed in the layout
+    ViewData["TotalPoints"] = Model.TotalPoints;
+
     // Function to get category image URLs
     string GetCategoryImageUrl(string category)
     {
-        switch(category)
+        return category switch
         {
-            case "Dairy Products":
-                return "https://plus.unsplash.com/premium_photo-1695042864778-6d67ec3953e9?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=870";
-            case "Bakery Products":
-                return "https://images.unsplash.com/photo-1598373182133-52452f7691ef?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=870";
-            default:
-                return "https://images.unsplash.com/photo-1605020420320-3460820a7d67?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=870";
+            "Dairy Products" => "https://plus.unsplash.com/premium_photo-1695042864778-6d67ec3953e9?ixlib=rb-4.1.0&auto=format&fit=crop&q=80&w=870",
+            "Bakery Products" => "https://images.unsplash.com/photo-1598373182133-52452f7691ef?ixlib=rb-4.1.0&auto=format&fit=crop&q=80&w=870",
+            _ => "https://images.unsplash.com/photo-1605020420320-3460820a7d67?ixlib=rb-4.1.0&auto=format&fit=crop&q=80&w=870"
+        };
+    }
+
+    // Function to get points for a material from active campaigns
+    int GetPointsForMaterial(int materialId)
+    {
+        var points = 0;
+
+        // Check PointsToCash campaigns
+        foreach (var campaign in Model.Campaigns.DetailedPointsToCashCampaigns.Where(c => c.IsActive))
+        {
+            if (!string.IsNullOrEmpty(campaign.MaterialPoints))
+            {
+                try
+                {
+                    var materialPoints = JsonConvert.DeserializeObject<Dictionary<string, int>>(campaign.MaterialPoints);
+                    if (materialPoints != null && materialPoints.ContainsKey(materialId.ToString()))
+                    {
+                        points = Math.Max(points, materialPoints[materialId.ToString()]);
+                    }
+                }
+                catch
+                {
+                    // Ignore deserialization errors
+                }
+            }
         }
+
+        // Check PointsReward campaigns
+        foreach (var campaign in Model.Campaigns.DetailedPointsRewardCampaigns.Where(c => c.IsActive))
+        {
+            if (!string.IsNullOrEmpty(campaign.MaterialPoints))
+            {
+                try
+                {
+                    var materialPoints = JsonConvert.DeserializeObject<Dictionary<string, int>>(campaign.MaterialPoints);
+                    if (materialPoints != null && materialPoints.ContainsKey(materialId.ToString()))
+                    {
+                        points = Math.Max(points, materialPoints[materialId.ToString()]);
+                    }
+                }
+                catch
+                {
+                    // Ignore deserialization errors
+                }
+            }
+        }
+
+        return points;
     }
 }
 
-@{
-    // Add anti-forgery token for AJAX requests
-    @Html.AntiForgeryToken()
-}
+@Html.AntiForgeryToken()
+<link rel="stylesheet" href="~/css/DealerDashboard.css" />
 
 @if (Context.Session.GetString("UserName") == null || Context.Session.GetString("role") != "Dealer")
 {
@@ -36,931 +80,8 @@
 }
 else
 {
-    <style>
-        :root {
-            --primary: #4F46E5;
-            --primary-dark: #4338CA;
-            --primary-light: #EEF2FF;
-            --success: #10B981;
-            --success-light: #D1FAE5;
-            --danger: #EF4444;
-            --danger-light: #FEE2E2;
-            --gray-50: #F9FAFB;
-            --gray-100: #F3F4F6;
-            --gray-200: #E5E7EB;
-            --gray-500: #6B7280;
-            --gray-700: #374151;
-            --gray-800: #1F2937;
-            --gray-900: #111827;
-        }
-
-        body {
-            background: linear-gradient(135deg, #F9FAFB 0%, #EEF2FF 100%);
-            min-height: 100vh;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        .dashboard-container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 2rem 1.5rem;
-        }
-
-        .section-header {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--gray-900);
-            margin-bottom: 1.5rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .section-header::before {
-            content: '';
-            width: 4px;
-            height: 28px;
-            background: var(--primary);
-            border-radius: 2px;
-        }
-
-        /* Carousel Styles */
-        .carousel-container {
-            background: white;
-            border-radius: 1rem;
-            overflow: hidden;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            margin-bottom: 2.5rem;
-        }
-
-        .carousel-item-content {
-            position: relative;
-            height: 400px;
-        }
-
-        .carousel-gradient {
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.3) 50%, transparent 100%);
-        }
-
-        .carousel-text {
-            position: absolute;
-            bottom: 2rem;
-            left: 2rem;
-            right: 2rem;
-            color: white;
-        }
-
-        .carousel-title {
-            font-size: 2rem;
-            font-weight: 700;
-            margin-bottom: 0.75rem;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        }
-
-        .carousel-dates {
-            display: flex;
-            gap: 2rem;
-            font-size: 0.875rem;
-            opacity: 0.95;
-        }
-
-        .empty-state {
-            background: white;
-            border-radius: 1rem;
-            padding: 4rem 2rem;
-            text-align: center;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        }
-
-        .empty-state-icon {
-            font-size: 3rem;
-            color: var(--gray-200);
-            margin-bottom: 1rem;
-        }
-
-        /* Campaign Slider Styles */
-        .campaigns-section {
-            margin-bottom: 2.5rem;
-        }
-
-        .campaigns-slider-container {
-            position: relative;
-            overflow: hidden;
-        }
-
-        .campaigns-slider {
-            display: flex;
-            gap: 1.25rem;
-            overflow-x: auto;
-            padding: 0.5rem 0.5rem 1.5rem 0.5rem;
-            scrollbar-width: none; /* Firefox */
-            -ms-overflow-style: none; /* IE and Edge */
-        }
-
-        .campaigns-slider::-webkit-scrollbar {
-            display: none; /* Chrome, Safari, Opera*/
-        }
-
-        .campaign-card {
-            background: white;
-            border-radius: 0.75rem;
-            padding: 1.5rem;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
-            border: 1px solid var(--gray-100);
-            flex: 0 0 calc(320px); /* Fixed width for each card */
-            scroll-snap-align: start;
-        }
-
-        .campaign-card:hover {
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-            transform: translateY(-2px);
-        }
-
-        .campaign-image {
-            width: 100%;
-            height: 150px;
-            margin-bottom: 1rem;
-            border-radius: 0.5rem;
-            overflow: hidden;
-        }
-
-        .campaign-image img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .campaign-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: start;
-            margin-bottom: 1rem;
-        }
-
-        .campaign-title {
-            font-size: 1rem;
-            font-weight: 600;
-            color: var(--gray-900);
-            flex: 1;
-        }
-
-        .badge {
-            padding: 0.25rem 0.75rem;
-            border-radius: 9999px;
-            font-size: 0.75rem;
-            font-weight: 600;
-        }
-
-        .badge-active {
-            background: var(--success-light);
-            color: var(--success);
-        }
-
-        .badge-inactive {
-            background: var(--danger-light);
-            color: var(--danger);
-        }
-
-        .campaign-info {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-            margin-bottom: 1rem;
-        }
-
-        .details-btn {
-            color: var(--primary);
-            font-size: 0.875rem;
-            font-weight: 600;
-            background: none;
-            border: none;
-            cursor: pointer;
-            padding: 0;
-            transition: color 0.2s;
-        }
-
-        .details-btn:hover {
-            color: var(--primary-dark);
-        }
-
-        .campaign-details {
-            margin-top: 1rem;
-            padding-top: 1rem;
-            border-top: 1px solid var(--gray-100);
-        }
-
-        /* Product Cards */
-        .products-grid {
-            display: grid;
-            grid-template-columns: repeat(10, 1fr);
-            gap: 1rem;
-        }
-
-        .product-card {
-            background: white;
-            border-radius: 0.5rem;
-            overflow: hidden;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-            transition: all 0.2s ease;
-            border: 1px solid var(--gray-100);
-        }
-
-        .product-card:hover {
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            transform: translateY(-2px);
-        }
-
-        .product-image-wrapper {
-            width: 100%;
-            height: 120px;
-            background: var(--gray-50);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .product-image {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .product-content {
-            padding: 0.75rem;
-        }
-
-        .product-title {
-            font-size: 0.75rem;
-            font-weight: 600;
-            color: var(--gray-900);
-            margin-bottom: 0.25rem;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-
-        .product-shortname {
-            color: var(--gray-500);
-            font-weight: 400;
-            font-size: 0.65rem;
-        }
-
-        .product-sku {
-            font-size: 0.6rem;
-            color: var(--gray-500);
-            margin-bottom: 0.5rem;
-        }
-
-        .product-price-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 0.5rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 1px solid var(--gray-100);
-        }
-
-        .product-price {
-            font-size: 0.875rem;
-            font-weight: 700;
-            color: var(--gray-900);
-        }
-
-        .product-points {
-            font-size: 0.65rem;
-            font-weight: 600;
-            color: var(--primary);
-            background: var(--primary-light);
-            padding: 0.125rem 0.375rem;
-            border-radius: 0.25rem;
-        }
-
-        .quantity-section {
-            margin-bottom: 0.5rem;
-        }
-
-        .quantity-label {
-            font-size: 0.65rem;
-            color: var(--gray-700);
-            font-weight: 500;
-            display: block;
-            margin-bottom: 0.25rem;
-        }
-
-        .quantity-controls {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-        }
-
-        .quantity-btn {
-            width: 24px;
-            height: 24px;
-            border-radius: 0.25rem;
-            border: 1px solid var(--gray-200);
-            background: white;
-            color: var(--gray-700);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-size: 0.75rem;
-        }
-
-        .quantity-btn:hover {
-            background: var(--gray-50);
-            border-color: var(--primary);
-            color: var(--primary);
-        }
-
-        .quantity-input {
-            width: 40px;
-            height: 24px;
-            text-align: center;
-            border: 1px solid var(--gray-200);
-            border-radius: 0.25rem;
-            font-weight: 600;
-            color: var(--gray-900);
-            font-size: 0.75rem;
-        }
-
-        .quantity-input:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 2px var(--primary-light);
-        }
-
-        .add-to-cart-btn {
-            width: 100%;
-            padding: 0.5rem;
-            background: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 0.25rem;
-            font-weight: 600;
-            font-size: 0.7rem;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .add-to-cart-btn:hover {
-            background: var(--primary-dark);
-            transform: translateY(-1px);
-        }
-
-        .add-to-cart-btn:active {
-            transform: translateY(0);
-        }
-
-        /* Category Section - Updated Styles */
-        .categories-section {
-            margin-bottom: 2rem;
-        }
-
-        .category-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 1.5rem;
-            margin-top: 1rem;
-        }
-
-        .category-card {
-            position: relative;
-            height: 12rem;
-            border-radius: 1rem;
-            overflow: hidden;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-        }
-
-        .category-card:hover {
-            transform: scale(1.02);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-        }
-
-        .category-overlay {
-            position: absolute;
-            inset: 0;
-            background: rgba(255, 255, 255, 0.4);
-            backdrop-filter: blur(2px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .category-content {
-            text-align: center;
-            padding: 1rem;
-            
-            border-radius: 0.75rem;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            max-width: 80%;
-        }
-
-        .category-name {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--gray-800);
-            margin-bottom: 0.5rem;
-        }
-
-        .category-count {
-            font-size: 0.875rem;
-            color: var(--gray-600);
-        }
-
-        /* Cart Styles */
-        .cart-container {
-            position: fixed;
-            top: 0;
-            right: -400px;
-            width: 380px;
-            height: 100vh;
-            background: white;
-            box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
-            z-index: 1000;
-            transition: right 0.3s ease;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .cart-container.open {
-            right: 0;
-        }
-
-        .cart-header {
-            padding: 1rem;
-            border-bottom: 1px solid var(--gray-200);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .cart-title {
-            font-size: 1.25rem;
-            font-weight: 700;
-            color: var(--gray-900);
-        }
-
-        .close-cart {
-            background: none;
-            border: none;
-            font-size: 1.5rem;
-            cursor: pointer;
-            color: var(--gray-500);
-        }
-
-        .cart-items {
-            flex: 1;
-            overflow-y: auto;
-            padding: 1rem;
-        }
-
-        .cart-item {
-            display: flex;
-            gap: 1rem;
-            padding: 1rem 0;
-            border-bottom: 1px solid var(--gray-100);
-        }
-
-        .cart-item-image {
-            width: 60px;
-            height: 60px;
-            border-radius: 0.5rem;
-            overflow: hidden;
-            background: var(--gray-100);
-        }
-
-        .cart-item-image img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .cart-item-details {
-            flex: 1;
-        }
-
-        .cart-item-name {
-            font-weight: 600;
-            font-size: 0.875rem;
-            color: var(--gray-900);
-            margin-bottom: 0.25rem;
-        }
-
-        .cart-item-price {
-            font-size: 0.875rem;
-            color: var(--gray-700);
-            margin-bottom: 0.5rem;
-        }
-
-        .cart-item-actions {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .cart-item-quantity {
-            font-weight: 600;
-            color: var(--gray-900);
-        }
-
-        .remove-item {
-            color: var(--danger);
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 0.875rem;
-        }
-
-        .cart-footer {
-            padding: 1rem;
-            border-top: 1px solid var(--gray-200);
-        }
-
-        .cart-total {
-            display: flex;
-            justify-content: space-between;
-            font-size: 1.125rem;
-            font-weight: 700;
-            color: var(--gray-900);
-            margin-bottom: 1rem;
-        }
-
-        .checkout-btn {
-            width: 100%;
-            padding: 0.75rem;
-            background: var(--success);
-            color: white;
-            border: none;
-            border-radius: 0.5rem;
-            font-weight: 600;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .checkout-btn:hover {
-            background: #059669;
-            transform: translateY(-1px);
-        }
-
-        .cart-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 999;
-            display: none;
-        }
-
-        .cart-overlay.open {
-            display: block;
-        }
-
-        .cart-icon-container {
-            position: fixed;
-            bottom: 2rem;
-            right: 2rem;
-            width: 60px;
-            height: 60px;
-            background: var(--primary);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            z-index: 998;
-        }
-
-        .cart-icon {
-            color: white;
-            font-size: 1.5rem;
-        }
-
-        .cart-count {
-            position: absolute;
-            top: -5px;
-            right: -5px;
-            background: var(--danger);
-            color: white;
-            border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.75rem;
-            font-weight: 600;
-        }
-
-        /* Recent Order Styles */
-        .recent-order-container {
-            background: white;
-            border-radius: 1rem;
-            overflow: hidden;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            margin-bottom: 2.5rem;
-            padding: 1.5rem;
-        }
-
-        .order-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            flex-wrap: wrap;
-            gap: 1rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid var(--gray-200);
-            margin-bottom: 1.5rem;
-        }
-
-        .order-info {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .order-title {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--gray-900);
-            margin: 0;
-        }
-
-        .order-details {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-
-        .order-items-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 1.5rem;
-        }
-
-        @@media (max-width: 1400px) {
-            .products-grid {
-                grid-template-columns: repeat(8, 1fr);
-            }
-            
-            .campaign-card {
-                flex: 0 0 calc(300px);
-            }
-            
-            .order-items-grid {
-                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            }
-        }
-
-        @@media (max-width: 1200px) {
-            .products-grid {
-                grid-template-columns: repeat(6, 1fr);
-            }
-            
-            .campaign-card {
-                flex: 0 0 calc(280px);
-            }
-            
-            .category-grid {
-                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            }
-            
-            .order-items-grid {
-                grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-            }
-        }
-
-        @@media (max-width: 1024px) {
-            .products-grid {
-                grid-template-columns: repeat(5, 1fr);
-            }
-            
-            .product-image-wrapper {
-                height: 100px;
-            }
-            
-            .product-content {
-                padding: 0.625rem;
-            }
-            
-            .product-title {
-                font-size: 0.7rem;
-            }
-            
-            .product-sku {
-                font-size: 0.55rem;
-            }
-            
-            .product-price {
-                font-size: 0.8rem;
-            }
-            
-            .product-points {
-                font-size: 0.6rem;
-                padding: 0.1rem 0.3rem;
-            }
-            
-            .quantity-label {
-                font-size: 0.6rem;
-            }
-            
-            .quantity-btn {
-                width: 22px;
-                height: 22px;
-                font-size: 0.7rem;
-            }
-            
-            .quantity-input {
-                width: 35px;
-                height: 22px;
-                font-size: 0.7rem;
-            }
-            
-            .add-to-cart-btn {
-                padding: 0.4rem;
-                font-size: 0.65rem;
-            }
-            
-            .campaign-card {
-                flex: 0 0 calc(260px);
-            }
-            
-            .order-items-grid {
-                grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-            }
-        }
-
-        @@media (max-width: 768px) {
-            .dashboard-container {
-                padding: 1.5rem 1rem;
-            }
-
-            .carousel-item-content {
-                height: 300px;
-            }
-
-            .carousel-title {
-                font-size: 1.5rem;
-            }
-
-            .campaigns-grid,
-            .products-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            
-            .product-image-wrapper {
-                height: 110px;
-            }
-            
-            .product-content {
-                padding: 0.75rem;
-            }
-            
-            .product-title {
-                font-size: 0.75rem;
-            }
-            
-            .product-sku {
-                font-size: 0.6rem;
-            }
-            
-            .product-price {
-                font-size: 0.875rem;
-            }
-            
-            .product-points {
-                font-size: 0.65rem;
-                padding: 0.125rem 0.375rem;
-            }
-            
-            .quantity-label {
-                font-size: 0.65rem;
-            }
-            
-            .quantity-btn {
-                width: 24px;
-                height: 24px;
-                font-size: 0.75rem;
-            }
-            
-            .quantity-input {
-                width: 40px;
-                height: 24px;
-                font-size: 0.75rem;
-            }
-            
-            .add-to-cart-btn {
-                padding: 0.5rem;
-                font-size: 0.7rem;
-            }
-            
-            .cart-container {
-                width: 320px;
-            }
-            
-            .campaign-card {
-                flex: 0 0 calc(90vw - 2rem);
-            }
-            
-            .category-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .category-card {
-                height: 10rem;
-            }
-            
-            .order-header {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-            
-            .order-items-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
-        @@media (max-width: 480px) {
-            .products-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .product-image-wrapper {
-                height: 140px;
-            }
-            
-            .product-content {
-                padding: 1rem;
-            }
-            
-            .product-title {
-                font-size: 0.875rem;
-            }
-            
-            .product-sku {
-                font-size: 0.7rem;
-            }
-            
-            .product-price {
-                font-size: 1rem;
-            }
-            
-            .product-points {
-                font-size: 0.7rem;
-                padding: 0.25rem 0.5rem;
-            }
-            
-            .quantity-label {
-                font-size: 0.75rem;
-            }
-            
-            .quantity-btn {
-                width: 30px;
-                height: 30px;
-                font-size: 0.875rem;
-            }
-            
-            .quantity-input {
-                width: 50px;
-                height: 30px;
-                font-size: 0.875rem;
-            }
-            
-            .add-to-cart-btn {
-                padding: 0.75rem;
-                font-size: 0.875rem;
-            }
-            
-            .cart-container {
-                width: 100%;
-            }
-            
-            .campaign-card {
-                flex: 0 0 calc(95vw - 1rem);
-            }
-            
-            .order-items-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
-
     <div class="dashboard-container">
+
         <!-- Posters Carousel -->
         @if (Model.Posters != null && Model.Posters.Any())
         {
@@ -979,14 +100,16 @@ else
                                 <div class="carousel-text">
                                     <h3 class="carousel-title">@poster.Message</h3>
                                     <div class="carousel-dates">
-                                        <span>📅 From: @poster.ShowFrom.ToString("dd MMM yyyy")</span>
-                                        <span>📅 Until: @poster.ShowUntil.ToString("dd MMM yyyy")</span>
-                                    </div>
+    <span>From: @poster.ShowFrom.ToString("dd/MM/yyyy")</span>
+    <span>Until: @poster.ShowUntil.ToString("dd/MM/yyyy")</span>
+</div>
+
                                 </div>
                             </div>
                         </div>
                     }
                 </div>
+
                 @if (Model.Posters.Count > 1)
                 {
                     <button class="carousel-control-prev" type="button" data-bs-target="#posterCarousel" data-bs-slide="prev">
@@ -1009,1014 +132,588 @@ else
         else
         {
             <div class="empty-state">
-                <div class="empty-state-icon">📢</div>
-                <p style="color: var(--gray-500); font-size: 1.125rem;">No updates available at the moment.</p>
+                <div class="empty-state-icon">No updates available at the moment.</div>
             </div>
         }
-    </div>
 
-    <!-- Campaigns Section -->
-    <div class="campaigns-section">
-        <h2 class="section-header">Active Campaigns</h2>
-        @if (Model.Campaigns.DetailedPointsToCashCampaigns.Any() || 
-             Model.Campaigns.DetailedPointsRewardCampaigns.Any() || 
-             Model.Campaigns.DetailedFreeProductCampaigns.Any() || 
-             Model.Campaigns.AmountReachGoalCampaigns.Any() || 
-             Model.Campaigns.SessionDurationRewardCampaigns.Any())
-        {
-            <div class="campaigns-slider-container">
-                <div class="campaigns-slider">
-                    @foreach (var campaign in Model.Campaigns.DetailedPointsToCashCampaigns)
-                    {
-                        <div class="campaign-card">
-                            <div class="campaign-image">
-                                @if (!string.IsNullOrEmpty(campaign.ImagePath))
-                                {
-                                    <img src="@campaign.ImagePath" alt="@campaign.CampaignName" onerror="this.onerror=null;this.src='https://placehold.co/600x400/cccccc/000000?text=No+Image+Available';" />
-                                }
-                                else
-                                {
-                                    <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background-color: #f3f4f6;">
-                                        <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                        </svg>
-                                    </div>
-                                }
-                            </div>
-                            <div class="campaign-header">
-                                <h3 class="campaign-title">@campaign.CampaignName</h3>
-                                <span class="badge @(campaign.IsActive ? "badge-active" : "badge-inactive")">
-                                    @(campaign.IsActive ? "Active" : "Inactive")
-                                </span>
-                            </div>
-                            <div class="campaign-info">
-                                <div class="info-row">
-                                    <span class="info-label">Start Date:</span>
-                                    <span class="info-value">@campaign.StartDate.ToString("dd MMM yyyy")</span>
+        <!-- Active Campaigns -->
+        <div class="campaigns-section">
+            <h2 class="section-header">Active Campaigns</h2>
+            @{
+                var hasCampaigns = Model.Campaigns.DetailedPointsToCashCampaigns.Any() ||
+                                   Model.Campaigns.DetailedPointsRewardCampaigns.Any() ||
+                                   Model.Campaigns.DetailedFreeProductCampaigns.Any() ||
+                                   Model.Campaigns.AmountReachGoalCampaigns.Any() ||
+                                   Model.Campaigns.SessionDurationRewardCampaigns.Any();
+            }
+
+            @if (hasCampaigns)
+            {
+                <div class="campaigns-slider-container">
+                    <div class="campaigns-slider">
+                        <!-- Points to Cash -->
+                        @foreach (var c in Model.Campaigns.DetailedPointsToCashCampaigns)
+                        {
+                            <div class="campaign-card">
+                                <div class="campaign-image">
+                                    <img src="@(c.ImagePath ?? "https://placehold.co/600x400/cccccc/000000?text=No+Image")" alt="@c.CampaignName" onerror="this.onerror=null;this.src='https://placehold.co/600x400/cccccc/000000?text=No+Image';">
                                 </div>
-                                <div class="info-row">
-                                    <span class="info-label">End Date:</span>
-                                    <span class="info-value">@campaign.EndDate.ToString("dd MMM yyyy")</span>
+                                <div class="campaign-header">
+                                    <h3 class="campaign-title">@c.CampaignName</h3>
+                                    <span class="badge @(c.IsActive ? "badge-active" : "badge-inactive")">
+                                        @(c.IsActive ? "Active" : "Inactive")
+                                    </span>
                                 </div>
-                                <div class="info-row">
-                                    <span class="info-label">Validity:</span>
-                                    <span class="info-value">@campaign.VoucherValidity days</span>
-                                </div>
-                            </div>
-                            <button type="button" class="details-btn" onclick="showDetails('pointsToCash-@campaign.Id')">
-                                Show Details →
-                            </button>
-                            <div id="pointsToCash-@campaign.Id" class="campaign-details hidden">
                                 <div class="campaign-info">
-                                    <div class="info-row">
-                                        <span class="info-label">Threshold:</span>
-                                        <span class="info-value">@campaign.VoucherGenerationThreshold points</span>
-                                    </div>
-                                    <div class="info-row">
-                                        <span class="info-label">Voucher Value:</span>
-                                        <span class="info-value">₹@campaign.VoucherValue</span>
-                                    </div>
-                                    @if (!string.IsNullOrEmpty(campaign.Description))
+                                    <div class="info-row"><span class="info-label">Start:</span> <span class="date-value">@c.StartDate.ToString("dd MMM yyyy")</span></div>
+                                    <div class="info-row"><span class="info-label">End:</span> <span class="date-value">@c.EndDate.ToString("dd MMM yyyy")</span></div>
+                                   
+                                </div>
+                                <button type="button" class="details-btn" onclick="showDetails('pointsToCash-@c.Id')">Show Details</button>
+                                <div id="pointsToCash-@c.Id" class="campaign-details hidden">
+                                    <div class="info-row"><span class="info-label">Threshold:</span> @c.VoucherGenerationThreshold points</div>
+                                    <div class="info-row"><span class="info-label">Voucher:</span> ₹@c.VoucherValue</div>
+                                    @if (!string.IsNullOrEmpty(c.Description))
                                     {
-                                        <div style="margin-top: 0.75rem;">
-                                            <span class="info-label" style="display: block; margin-bottom: 0.25rem;">Description:</span>
-                                            <p style="color: var(--gray-700); font-size: 0.875rem;">@campaign.Description</p>
-                                        </div>
+                                        <div class="mt-3"><span class="info-label d-block mb-1">Description:</span><p class="text-muted small">@c.Description</p></div>
+                                        <div class="info-row"><span class="info-label">Validity:</span> @c.VoucherValidity days</div>
                                     }
                                 </div>
                             </div>
-                        </div>
-                    }
+                        }
 
-                    @foreach (var campaign in Model.Campaigns.DetailedPointsRewardCampaigns)
-                    {
-                        <div class="campaign-card">
-                            <div class="campaign-image">
-                                @if (!string.IsNullOrEmpty(campaign.ImagePath))
-                                {
-                                    <img src="@campaign.ImagePath" alt="@campaign.CampaignName" onerror="this.onerror=null;this.src='https://placehold.co/600x400/cccccc/000000?text=No+Image+Available';" />
-                                }
-                                else
-                                {
-                                    <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background-color: #f3f4f6;">
-                                        <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                        </svg>
-                                    </div>
-                                }
-                            </div>
-                            <div class="campaign-header">
-                                <h3 class="campaign-title">@campaign.CampaignName</h3>
-                                <span class="badge @(campaign.IsActive ? "badge-active" : "badge-inactive")">
-                                    @(campaign.IsActive ? "Active" : "Inactive")
-                                </span>
-                            </div>
-                            <div class="campaign-info">
-                                <div class="info-row">
-                                    <span class="info-label">Start Date:</span>
-                                    <span class="info-value">@campaign.StartDate.ToString("dd MMM yyyy")</span>
+                        <!-- Points Reward -->
+                        @foreach (var c in Model.Campaigns.DetailedPointsRewardCampaigns)
+                        {
+                            <div class="campaign-card">
+                                <div class="campaign-image">
+                                    <img src="@(c.ImagePath ?? "https://placehold.co/600x400/cccccc/000000?text=No+Image")" alt="@c.CampaignName" onerror="this.onerror=null;this.src='https://placehold.co/600x400/cccccc/000000?text=No+Image';">
                                 </div>
-                                <div class="info-row">
-                                    <span class="info-label">End Date:</span>
-                                    <span class="info-value">@campaign.EndDate.ToString("dd MMM yyyy")</span>
+                                <div class="campaign-header">
+                                    <h3 class="campaign-title">@c.CampaignName</h3>
+                                    <span class="badge @(c.IsActive ? "badge-active" : "badge-inactive")">
+                                        @(c.IsActive ? "Active" : "Inactive")
+                                    </span>
                                 </div>
-                                <div class="info-row">
-                                    <span class="info-label">Validity:</span>
-                                    <span class="info-value">@campaign.VoucherValidity days</span>
-                                </div>
-                            </div>
-                            <button type="button" class="details-btn" onclick="showDetails('pointsReward-@campaign.Id')">
-                                Show Details →
-                            </button>
-                            <div id="pointsReward-@campaign.Id" class="campaign-details hidden">
                                 <div class="campaign-info">
-                                    <div class="info-row">
-                                        <span class="info-label">Threshold:</span>
-                                        <span class="info-value">@campaign.VoucherGenerationThreshold points</span>
-                                    </div>
-                                    @if (campaign.RewardProduct != null)
+                                    <div class="info-row"><span class="info-label">Start:</span> <span class="date-value">@c.StartDate.ToString("dd MMM yyyy")</span></div>
+                                    <div class="info-row"><span class="info-label">End:</span> <span class="date-value">@c.EndDate.ToString("dd MMM yyyy")</span></div>
+                                
+                                </div>
+                                <button type="button" class="details-btn" onclick="showDetails('pointsReward-@c.Id')">Show Details</button>
+                                <div id="pointsReward-@c.Id" class="campaign-details hidden">
+                                    <div class="info-row"><span class="info-label">Threshold:</span> @c.VoucherGenerationThreshold points</div>
+                                    @if (c.RewardProduct != null)
                                     {
-                                        <div style="margin-top: 0.75rem;">
-                                            <span class="info-label" style="display: block; margin-bottom: 0.25rem;">Reward Product:</span>
-                                            <p style="color: var(--gray-900); font-weight: 600; font-size: 0.875rem;">@campaign.RewardProduct.ProductName</p>
-                                        </div>
+                                        <div class="mt-3"><span class="info-label d-block mb-1">Reward:</span><strong>@c.RewardProduct.ProductName</strong></div>
                                     }
-                                    @if (!string.IsNullOrEmpty(campaign.Description))
+                                    @if (!string.IsNullOrEmpty(c.Description))
                                     {
-                                        <div style="margin-top: 0.75rem;">
-                                            <span class="info-label" style="display: block; margin-bottom: 0.25rem;">Description:</span>
-                                            <p style="color: var(--gray-700); font-size: 0.875rem;">@campaign.Description</p>
-                                        </div>
+                                        <div class="mt-3"><span class="info-label d-block mb-1">Description:</span><p class="text-muted small">@c.Description</p></div>
+                                        <div class="info-row"><span class="info-label">Validity:</span> @c.VoucherValidity days</div>
                                     }
                                 </div>
                             </div>
-                        </div>
-                    }
+                        }
 
-                    @foreach (var campaign in Model.Campaigns.DetailedFreeProductCampaigns)
-                    {
-                        <div class="campaign-card">
-                            <div class="campaign-image">
-                                @if (!string.IsNullOrEmpty(campaign.ImagePath))
-                                {
-                                    <img src="@campaign.ImagePath" alt="@campaign.CampaignName" onerror="this.onerror=null;this.src='https://placehold.co/600x400/cccccc/000000?text=No+Image+Available';" />
-                                }
-                                else
-                                {
-                                    <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background-color: #f3f4f6;">
-                                        <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                        </svg>
-                                    </div>
-                                }
-                            </div>
-                            <div class="campaign-header">
-                                <h3 class="campaign-title">@campaign.CampaignName</h3>
-                                <span class="badge @(campaign.IsActive ? "badge-active" : "badge-inactive")">
-                                    @(campaign.IsActive ? "Active" : "Inactive")
-                                </span>
-                            </div>
-                            <div class="campaign-info">
-                                <div class="info-row">
-                                    <span class="info-label">Start Date:</span>
-                                    <span class="info-value">@campaign.StartDate.ToString("dd MMM yyyy")</span>
+                        <!-- Free Product -->
+                        @foreach (var c in Model.Campaigns.DetailedFreeProductCampaigns)
+                        {
+                            <div class="campaign-card">
+                                <div class="campaign-image">
+                                    <img src="@(c.ImagePath ?? "https://placehold.co/600x400/cccccc/000000?text=No+Image")" alt="@c.CampaignName" onerror="this.onerror=null;this.src='https://placehold.co/600x400/cccccc/000000?text=No+Image';">
                                 </div>
-                                <div class="info-row">
-                                    <span class="info-label">End Date:</span>
-                                    <span class="info-value">@campaign.EndDate.ToString("dd MMM yyyy")</span>
+                                <div class="campaign-header">
+                                    <h3 class="campaign-title">@c.CampaignName</h3>
+                                    <span class="badge @(c.IsActive ? "badge-active" : "badge-inactive")">
+                                        @(c.IsActive ? "Active" : "Inactive")
+                                    </span>
                                 </div>
-                            </div>
-                            <button type="button" class="details-btn" onclick="showDetails('freeProduct-@campaign.Id')">
-                                Show Details →
-                            </button>
-                            <div id="freeProduct-@campaign.Id" class="campaign-details hidden">
                                 <div class="campaign-info">
-                                    @if (campaign.FreeProductDetails != null && campaign.FreeProductDetails.Any())
+                                    <div class="info-row"><span class="info-label">Start:</span> @c.StartDate.ToString("dd/MM/yyyy")</div>
+                                    <div class="info-row"><span class="info-label">End:</span> @c.EndDate.ToString("dd/MM/yyyy")</div>
+                                </div>
+                                <button type="button" class="details-btn" onclick="showDetails('freeProduct-@c.Id')">Show Details</button>
+                                <div id="freeProduct-@c.Id" class="campaign-details hidden">
+                                    @if (c.FreeProductDetails?.Any() == true)
                                     {
-                                        <div style="margin-top: 0.75rem;">
-                                            <span class="info-label" style="display: block; margin-bottom: 0.25rem;">Free Products:</span>
-                                            @foreach (var kvp in campaign.FreeProductDetails)
+                                        <div class="mt-3">
+                                            <span class="info-label d-block mb-1">Free Products:</span>
+                                            @foreach (var kvp in c.FreeProductDetails)
                                             {
-                                                <p style="color: var(--gray-900); font-weight: 600; font-size: 0.875rem;">@kvp.Value.FreeProductName (Qty: @kvp.Value.FreeQuantity)</p>
+                                                <p class="mb-1"><strong>@kvp.Value.FreeProductName</strong> (Qty: @kvp.Value.FreeQuantity)</p>
                                             }
                                         </div>
                                     }
-                                    @if (!string.IsNullOrEmpty(campaign.Description))
+                                    @if (!string.IsNullOrEmpty(c.Description))
                                     {
-                                        <div style="margin-top: 0.75rem;">
-                                            <span class="info-label" style="display: block; margin-bottom: 0.25rem;">Description:</span>
-                                            <p style="color: var(--gray-700); font-size: 0.875rem;">@campaign.Description</p>
-                                        </div>
+                                        <div class="mt-3"><span class="info-label d-block mb-1">Description:</span><p class="text-muted small">@c.Description</p></div>
                                     }
                                 </div>
                             </div>
-                        </div>
-                    }
+                        }
 
-                    @foreach (var campaign in Model.Campaigns.AmountReachGoalCampaigns)
-                    {
-                        <div class="campaign-card">
-                            <div class="campaign-image">
-                                @if (!string.IsNullOrEmpty(campaign.ImagePath))
-                                {
-                                    <img src="@campaign.ImagePath" alt="@campaign.CampaignName" onerror="this.onerror=null;this.src='https://placehold.co/600x400/cccccc/000000?text=No+Image+Available';" />
-                                }
-                                else
-                                {
-                                    <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background-color: #f3f4f6;">
-                                        <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                        </svg>
-                                    </div>
-                                }
-                            </div>
-                            <div class="campaign-header">
-                                <h3 class="campaign-title">@campaign.CampaignName</h3>
-                                <span class="badge @(campaign.IsActive ? "badge-active" : "badge-inactive")">
-                                    @(campaign.IsActive ? "Active" : "Inactive")
-                                </span>
-                            </div>
-                            <div class="campaign-info">
-                                <div class="info-row">
-                                    <span class="info-label">Start Date:</span>
-                                    <span class="info-value">@campaign.StartDate.ToString("dd MMM yyyy")</span>
+                        <!-- Amount Reach -->
+                        @foreach (var c in Model.Campaigns.AmountReachGoalCampaigns)
+                        {
+                            <div class="campaign-card">
+                                <div class="campaign-image">
+                                    <img src="@(c.ImagePath ?? "https://placehold.co/600x400/cccccc/000000?text=No+Image")" alt="@c.CampaignName" onerror="this.onerror=null;this.src='https://placehold.co/600x400/cccccc/000000?text=No+Image';">
                                 </div>
-                                <div class="info-row">
-                                    <span class="info-label">End Date:</span>
-                                    <span class="info-value">@campaign.EndDate.ToString("dd MMM yyyy")</span>
+                                <div class="campaign-header">
+                                    <h3 class="campaign-title">@c.CampaignName</h3>
+                                    <span class="badge @(c.IsActive ? "badge-active" : "badge-inactive")">
+                                        @(c.IsActive ? "Active" : "Inactive")
+                                    </span>
                                 </div>
-                                <div class="info-row">
-                                    <span class="info-label">Target Amount:</span>
-                                    <span class="info-value">₹@campaign.TargetAmount</span>
-                                </div>
-                                <div class="info-row">
-                                    <span class="info-label">Voucher Value:</span>
-                                    <span class="info-value">₹@campaign.VoucherValue</span>
-                                </div>
-                                <div class="info-row">
-                                    <span class="info-label">Validity:</span>
-                                    <span class="info-value">@campaign.VoucherValidity days</span>
-                                </div>
-                            </div>
-                            <button type="button" class="details-btn" onclick="showDetails('amountReach-@campaign.Id')">
-                                Show Details →
-                            </button>
-                            <div id="amountReach-@campaign.Id" class="campaign-details hidden">
                                 <div class="campaign-info">
-                                    @if (!string.IsNullOrEmpty(campaign.Description))
+                                    <div class="info-row"><span class="info-label">Start:</span> @c.StartDate.ToString("dd/MM/yyyy")</div>
+                                    <div class="info-row"><span class="info-label">End:</span> @c.EndDate.ToString("dd/MM/yyyy")</div>
+                                    
+                                </div>
+                                <button type="button" class="details-btn" onclick="showDetails('amountReach-@c.Id')">Show Details</button>
+                                <div id="amountReach-@c.Id" class="campaign-details hidden">
+                                    @if (!string.IsNullOrEmpty(c.Description))
                                     {
-                                        <div style="margin-top: 0.75rem;">
-                                            <span class="info-label" style="display: block; margin-bottom: 0.25rem;">Description:</span>
-                                            <p style="color: var(--gray-700); font-size: 0.875rem;">@campaign.Description</p>
-                                        </div>
+                                        <div class="mt-3"><span class="info-label d-block mb-1">Description:</span><p class="text-muted small">@c.Description</p></div>
+                                        <div class="info-row"><span class="info-label">Target:</span> ₹@c.TargetAmount</div>
+                                        <div class="info-row"><span class="info-label">Voucher:</span> ₹@c.VoucherValue</div>
+                                        <div class="info-row"><span class="info-label">Validity:</span> @c.VoucherValidity days</div>
                                     }
                                 </div>
                             </div>
+                        }
+
+                        <!-- Session Duration -->
+                        @foreach (var c in Model.Campaigns.SessionDurationRewardCampaigns)
+                        {
+                            <div class="campaign-card">
+                                <div class="campaign-image">
+                                    <img src="@(c.ImagePath ?? "https://placehold.co/600x400/cccccc/000000?text=No+Image")" alt="@c.CampaignName" onerror="this.onerror=null;this.src='https://placehold.co/600x400/cccccc/000000?text=No+Image';">
+                                </div>
+                                <div class="campaign-header">
+                                    <h3 class="campaign-title">@c.CampaignName</h3>
+                                    <span class="badge @(c.IsActive ? "badge-active" : "badge-inactive")">
+                                        @(c.IsActive ? "Active" : "Inactive")
+                                    </span>
+                                </div>
+                                <div class="campaign-info">
+                                    <div class="info-row"><span class="info-label">Start:</span> @c.StartDate.ToString("dd/MM/yyyy")</div>
+                                    <div class="info-row"><span class="info-label">End:</span> @c.EndDate.ToString("dd/MM/yyyy")</div>
+                                   
+                                </div>
+                                <button type="button" class="details-btn" onclick="showDetails('sessionDuration-@c.Id')">Show Details</button>
+                                <div id="sessionDuration-@c.Id" class="campaign-details hidden">
+                                    @if (!string.IsNullOrEmpty(c.Description))
+                                    {
+                                        <div class="mt-3"><span class="info-label d-block mb-1">Description:</span><p class="text-muted small">@c.Description</p></div>
+                                        <div class="info-row"><span class="info-label">Session:</span> @c.SessionDuration mins</div>
+                                        <div class="info-row"><span class="info-label">Voucher:</span> ₹@c.VoucherValue</div>
+                                        <div class="info-row"><span class="info-label">Validity:</span> @c.VoucherValidity days</div>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="empty-state">
+                    <div class="empty-state-icon">No active campaigns at the moment.</div>
+                </div>
+            }
+        </div>
+
+        <!-- Recent Order -->
+        <div class="campaigns-section">
+            <h2 class="section-header">Recent Order</h2>
+            @if (Model.RecentOrder != null)
+            {
+                <div class="recent-order-container">
+                    <div class="order-header">
+                        <div class="order-info">
+                            <h3 class="order-title">Order #@Model.RecentOrder.Id</h3>
+                            <span class="badge badge-active">@Model.RecentOrder.OrderStatus</span>
                         </div>
-                    }
-                    
-                    @foreach (var campaign in Model.Campaigns.SessionDurationRewardCampaigns)
-                    {
-                        <div class="campaign-card">
-                            <div class="campaign-image">
-                                @if (!string.IsNullOrEmpty(campaign.ImagePath))
-                                {
-                                    <img src="@campaign.ImagePath" alt="@campaign.CampaignName" onerror="this.onerror=null;this.src='https://placehold.co/600x400/cccccc/000000?text=No+Image+Available';" />
-                                }
-                                else
-                                {
-                                    <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background-color: #f3f4f6;">
-                                        <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                        </svg>
+                        <div class="order-details">
+                            <div class="info-row"><span class="info-label">Date:</span> @Model.RecentOrder.OrderDate.ToString("dd/MM/yyyy")</div>
+                            <div class="info-row"><span class="info-label">Total:</span> ₹@Model.RecentOrder.TotalAmount</div>
+                        </div>
+                    </div>
+
+                    <div class="order-items-grid">
+                        @foreach (var item in Model.RecentOrder.OrderItems)
+                        {
+                            var materialImage = Model.MaterialImages?.FirstOrDefault(mi => mi.MaterialMasterId == item.MaterialId);
+                            <div class="product-card" data-material-id="@item.MaterialId">
+                                <div class="product-image-wrapper">
+                                    <img src="@(materialImage?.ImagePath ?? "https://placehold.co/600x600/cccccc/000000?text=No+Image")"
+                                         alt="@item.Material?.Materialname" class="product-image"
+                                         onerror="this.onerror=null;this.src='https://placehold.co/600x600/cccccc/000000?text=No+Image';">
+                                </div>
+                                <div class="product-content">
+                                    <h3 class="product-title">@(item.Material?.Materialname ?? "Unknown")</h3>
+                                    <p class="product-sku">SKU: @(item.Material?.material3partycode ?? "N/A")</p>
+                                    <div class="product-price-row">
+                                        <span class="product-price">₹@item.UnitPrice</span>
+                                        <span class="product-points">Pts: @((int)(item.UnitPrice / 10))</span>
                                     </div>
-                                }
-                            </div>
-                            <div class="campaign-header">
-                                <h3 class="campaign-title">@campaign.CampaignName</h3>
-                                <span class="badge @(campaign.IsActive ? "badge-active" : "badge-inactive")">
-                                    @(campaign.IsActive ? "Active" : "Inactive")
-                                </span>
-                            </div>
-                            <div class="campaign-info">
-                                <div class="info-row">
-                                    <span class="info-label">Start Date:</span>
-                                    <span class="info-value">@campaign.StartDate.ToString("dd MMM yyyy")</span>
-                                </div>
-                                <div class="info-row">
-                                    <span class="info-label">End Date:</span>
-                                    <span class="info-value">@campaign.EndDate.ToString("dd MMM yyyy")</span>
-                                </div>
-                                <div class="info-row">
-                                    <span class="info-label">Session Duration:</span>
-                                    <span class="info-value">@campaign.SessionDuration minutes</span>
-                                </div>
-                                <div class="info-row">
-                                    <span class="info-label">Voucher Value:</span>
-                                    <span class="info-value">₹@campaign.VoucherValue</span>
-                                </div>
-                                <div class="info-row">
-                                    <span class="info-label">Validity:</span>
-                                    <span class="info-value">@campaign.VoucherValidity days</span>
-                                </div>
-                            </div>
-                            <button type="button" class="details-btn" onclick="showDetails('sessionDuration-@campaign.Id')">
-                                Show Details →
-                            </button>
-                            <div id="sessionDuration-@campaign.Id" class="campaign-details hidden">
-                                <div class="campaign-info">
-                                    @if (!string.IsNullOrEmpty(campaign.Description))
-                                    {
-                                        <div style="margin-top: 0.75rem;">
-                                            <span class="info-label" style="display: block; margin-bottom: 0.25rem;">Description:</span>
-                                            <p style="color: var(--gray-700); font-size: 0.875rem;">@campaign.Description</p>
+                                    <div class="quantity-section">
+                                        <label class="quantity-label">Qty:</label>
+                                        <div class="quantity-controls">
+                                            <button class="quantity-btn" onclick="changeQuantity(this, -1, @item.MaterialId)">-</button>
+                                            <input type="number" class="quantity-input" value="@item.Quantity" min="1" data-material-id="@item.MaterialId">
+                                            <button class="quantity-btn" onclick="changeQuantity(this, 1, @item.MaterialId)">+</button>
                                         </div>
-                                    }
+                                    </div>
+                                    <button class="add-to-cart-btn" onclick="updateCartItem(@item.MaterialId, this)" style="margin-top:0.5rem;">
+                                        Update in Cart
+                                    </button>
+                                </div>
+                            </div>
+                        }
+                    </div>
+
+                    <button type="button" class="checkout-btn" style="margin-top:1rem;width:100%" onclick="reorderWithUpdatedQuantities()">
+                        Reorder All Items
+                    </button>
+                </div>
+            }
+            else
+            {
+                <div class="empty-state">
+                    <div class="empty-state-icon">No previous orders found.</div>
+                </div>
+            }
+        </div>
+
+        <!-- Categories -->
+        <div class="categories-section">
+            <h2 class="section-header">Shop by Category</h2>
+            @if (Model.Materials?.Any() == true)
+            {
+                var categories = Model.Materials.Select(m => m.Category).Distinct().ToList();
+                <div class="category-grid">
+                    @foreach (var category in categories)
+                    {
+                        var count = Model.Materials.Count(m => m.Category == category);
+                        <div class="category-card" style="background-image:url('@GetCategoryImageUrl(category)')" onclick="showCategoryProducts('@category')">
+                            <div class="category-overlay">
+                                <div class="category-content">
+                                    <h3 class="category-name">@category</h3>
+                                    <p class="category-count">@count items</p>
                                 </div>
                             </div>
                         </div>
                     }
                 </div>
-            </div>
-        }
-        else
-        {
-            <div class="empty-state">
-                <div class="empty-state-icon">🎉</div>
-                <p style="color: var(--gray-500); font-size: 1.125rem;">No active campaigns at the moment.</p>
-            </div>
-        }
-    </div>
-
-    <!-- Recent Order Section -->
-    <div class="campaigns-section">
-        <h2 class="section-header">Recent Order</h2>
-        @if (Model.RecentOrder != null)
-        {
-            <div class="recent-order-container">
-                <div class="order-header">
-                    <div class="order-info">
-                        <h3 class="order-title">Order #@Model.RecentOrder.Id</h3>
-                        <span class="badge badge-active">
-                            @Model.RecentOrder.OrderStatus
-                        </span>
-                    </div>
-                    <div class="order-details">
-                        <div class="info-row">
-                            <span class="info-label">Order Date:</span>
-                            <span class="info-value">@Model.RecentOrder.OrderDate.ToString("dd MMM yyyy HH:mm")</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">Total Amount:</span>
-                            <span class="info-value">₹@Model.RecentOrder.TotalAmount.ToString("F2")</span>
-                        </div>
-                    </div>
+            }
+            else
+            {
+                <div class="empty-state">
+                    <div class="empty-state-icon">No categories available.</div>
                 </div>
-                
-                <div class="order-items-grid">
-                    @foreach (var item in Model.RecentOrder.OrderItems)
+            }
+        </div>
+
+        <!-- Category Products (Hidden by default) -->
+        <div id="categoryProductsSection" class="products-section" style="display:none;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+                <h2 class="section-header" id="categorySectionTitle">Category Products</h2>
+                <button class="add-to-cart-btn" onclick="hideCategoryProducts()" style="padding:0.5rem 1rem;font-size:0.9rem;">Back</button>
+            </div>
+            <div id="categoryProductsGrid" class="products-grid"></div>
+        </div>
+
+        <!-- All Products -->
+        <div class="products-section" id="allProductsSection">
+            <h2 class="section-header">All Products</h2>
+            @if (Model.Materials?.Any() == true)
+            {
+                <div class="products-grid">
+                    @foreach (var m in Model.Materials)
                     {
-                        <div class="product-card" data-material-id="@item.MaterialId">
+                        var img = Model.MaterialImages?.FirstOrDefault(mi => mi.MaterialMaster?.material3partycode == m.material3partycode);
+                        <div class="product-card" data-category="@m.Category">
                             <div class="product-image-wrapper">
-                                @if (item.Material != null)
-                                {
-                                    var materialImage = Model.MaterialImages?.FirstOrDefault(mi => mi.MaterialMasterId == item.Material.Id);
-                                    @if (materialImage != null && !string.IsNullOrEmpty(materialImage.ImagePath))
-                                    {
-                                        <img src="@materialImage.ImagePath" alt="@item.Material.Materialname" class="product-image" onerror="this.onerror=null;this.src='https://placehold.co/600x600/cccccc/000000?text=No+Image+Available';">
-                                    }
-                                    else
-                                    {
-                                        <img src="https://placehold.co/600x600/cccccc/000000?text=No+Image+Available" alt="@item.Material.Materialname" class="product-image">
-                                    }
-                                }
-                                else
-                                {
-                                    <img src="https://placehold.co/600x600/cccccc/000000?text=No+Image+Available" alt="Product" class="product-image">
-                                }
+                                <img src="@(img?.ImagePath ?? "https://placehold.co/600x600/cccccc/000000?text=No+Image")"
+                                     alt="@m.Materialname" class="product-image"
+                                     onerror="this.onerror=null;this.src='https://placehold.co/600x600/cccccc/000000?text=No+Image';">
                             </div>
                             <div class="product-content">
-                                <h3 class="product-title">@(item.Material?.Materialname ?? "Unknown Product")</h3>
-                                <p class="product-sku">SKU: @(item.Material?.material3partycode ?? "N/A")</p>
+                                <h3 class="product-title">@m.Materialname</h3>
+                                <p class="product-shortname">@m.ShortName</p>
+                                <p class="product-sku">SKU: @m.material3partycode</p>
                                 <div class="product-price-row">
-                                    <span class="product-price">₹@item.UnitPrice.ToString("F2")</span>
-                                    <span class="product-points">Pts: @((int)(item.UnitPrice / 10))</span>
+                                    <span class="product-price">₹@m.dealerprice</span>
+                                    <span class="product-points">Pts: @GetPointsForMaterial(m.Id)</span>
                                 </div>
                                 <div class="quantity-section">
                                     <label class="quantity-label">Qty:</label>
                                     <div class="quantity-controls">
-                                        <button class="quantity-btn" onclick="changeQuantity(this, -1, @item.MaterialId)">-</button>
-                                        <input type="number" class="quantity-input" value="@item.Quantity" min="1" data-material-id="@item.MaterialId" onchange="updateItemQuantity(this, @item.MaterialId)">
-                                        <button class="quantity-btn" onclick="changeQuantity(this, 1, @item.MaterialId)">+</button>
+                                        <button class="quantity-btn" onclick="changeQuantity(this, -1)">-</button>
+                                        <input type="number" class="quantity-input" value="1" min="1" onchange="updateQuantity(this)">
+                                        <button class="quantity-btn" onclick="changeQuantity(this, 1)">+</button>
                                     </div>
                                 </div>
-                                <button class="add-to-cart-btn" onclick="updateCartItem(@item.MaterialId, this)" style="margin-top: 0.5rem;">
-                                    Update in Cart
+                                <button class="add-to-cart-btn" onclick="addToCart(this, '@m.material3partycode', '@m.Materialname', @m.dealerprice, @m.Id)">
+                                    Add to Cart
                                 </button>
                             </div>
                         </div>
                     }
                 </div>
-                
-                <button type="button" class="checkout-btn" style="margin-top: 1rem; width: 100%;" onclick="reorderWithUpdatedQuantities()">
-                    <i class="fas fa-shopping-cart"></i> Reorder All Items
-                </button>
-            </div>
-        }
-        else
-        {
-            <div class="empty-state">
-                <div class="empty-state-icon">📋</div>
-                <p style="color: var(--gray-500); font-size: 1.125rem;">No previous orders found.</p>
-            </div>
-        }
-    </div>
-
-    <!-- Categories Section -->
-    <div class="categories-section">
-        <h2 class="section-header">Shop by Category</h2>
-        <div class="category-grid">
-            @if (Model.Materials != null && Model.Materials.Any())
-            {
-                var categories = Model.Materials.Select(m => m.Category).Distinct().ToList();
-                foreach (var category in categories)
-                {
-                    var categoryMaterials = Model.Materials.Where(m => m.Category == category).ToList();
-                    var categoryCount = categoryMaterials.Count;
-                    var imageUrl = GetCategoryImageUrl(category);
-                    
-                    <div class="category-card" style="background-image: url('@imageUrl'); background-size: cover; background-position: center; background-repeat: no-repeat;" onclick="showCategoryProducts('@category')">
-                        <div class="category-overlay">
-                            <div class="category-content">
-                                <h3 class="category-name">@category</h3>
-                                <p class="category-count">@categoryCount items</p>
-                            </div>
-                        </div>
-                    </div>
-                }
             }
             else
             {
                 <div class="empty-state">
-                    <div class="empty-state-icon">🏷️</div>
-                    <p style="color: var(--gray-500); font-size: 1.125rem;">No categories available at the moment.</p>
+                    <div class="empty-state-icon">No products available.</div>
                 </div>
             }
         </div>
-    </div>
 
-    <!-- Category Products Section (Hidden by default) -->
-    <div id="categoryProductsSection" class="products-section" style="display: none;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-            <h2 class="section-header" id="categorySectionTitle">Category Products</h2>
-            <button class="add-to-cart-btn" onclick="hideCategoryProducts()" style="padding: 0.5rem 1rem; font-size: 0.9rem;">
-                Back to All Products
-            </button>
-        </div>
-        <div id="categoryProductsGrid" class="products-grid">
-            <!-- Category products will be loaded here dynamically -->
-        </div>
-    </div>
-
-    <!-- Products Section (Always shows all products) -->
-    <div class="products-section" id="allProductsSection">
-        <h2 class="section-header">All Products</h2>
-        @if (Model.Materials != null && Model.Materials.Any())
-        {
-            <div class="products-grid">
-                @foreach (var material in Model.Materials)
-                {
-                    var materialImage = Model.MaterialImages?.FirstOrDefault(mi => mi.MaterialMaster?.material3partycode == material.material3partycode);
-                    <div class="product-card" data-category="@material.Category">
-                        <div class="product-image-wrapper">
-                            @if (materialImage != null && !string.IsNullOrEmpty(materialImage.ImagePath))
-                            {
-                                <img src="@materialImage.ImagePath" alt="@material.Materialname" class="product-image" onerror="this.onerror=null;this.src='https://placehold.co/600x600/cccccc/000000?text=No+Image+Available';">
-                            }
-                            else
-                            {
-                                <img src="https://placehold.co/600x600/cccccc/000000?text=No+Image+Available" alt="@material.Materialname" class="product-image">
-                            }
-                        </div>
-                        <div class="product-content">
-                            <h3 class="product-title">@material.Materialname</h3>
-                            <p class="product-shortname">@material.ShortName</p>
-                            <p class="product-sku">SKU: @material.material3partycode</p>
-                            <div class="product-price-row">
-                                <span class="product-price">₹@material.dealerprice</span>
-                                <span class="product-points">Pts: @((int)(material.dealerprice / 10))</span>
-                            </div>
-                            <div class="quantity-section">
-                                <label class="quantity-label">Qty:</label>
-                                <div class="quantity-controls">
-                                    <button class="quantity-btn" onclick="changeQuantity(this, -1)">-</button>
-                                    <input type="number" class="quantity-input" value="1" min="1" onchange="updateQuantity(this)">
-                                    <button class="quantity-btn" onclick="changeQuantity(this, 1)">+</button>
-                                </div>
-                            </div>
-                            <button class="add-to-cart-btn" onclick="addToCart(this, '@material.material3partycode', '@material.Materialname', @material.dealerprice, @material.Id)">
-                                Add to Cart
-                            </button>
-                        </div>
-                    </div>
-                }
+        <!-- Cart -->
+        <div class="cart-container" id="cartContainer">
+            <div class="cart-header">
+                <h3 class="cart-title">Your Cart</h3>
+                <button class="close-cart" onclick="toggleCart()">×</button>
             </div>
-        }
-        else
-        {
-            <div class="empty-state">
-                <div class="empty-state-icon">📦</div>
-                <p style="color: var(--gray-500); font-size: 1.125rem;">No products available at the moment.</p>
+            <div class="cart-items" id="cartItems"></div>
+            <div class="cart-footer">
+                <div class="cart-total">
+                    <span>Total:</span>
+                    <span id="cartTotal">₹0.00</span>
+                </div>
+                <button class="checkout-btn" onclick="checkout()">Proceed to Checkout</button>
             </div>
-        }
-    </div>
-
-    <!-- Cart Container -->
-    <div class="cart-container" id="cartContainer">
-        <div class="cart-header">
-            <h3 class="cart-title">Your Cart</h3>
-            <button class="close-cart" onclick="toggleCart()">&times;</button>
         </div>
-        <div class="cart-items" id="cartItems">
-            <!-- Cart items will be dynamically added here -->
-        </div>
-        <div class="cart-footer">
-            <div class="cart-total">
-                <span>Total:</span>
-                <span id="cartTotal">₹0.00</span>
-            </div>
-            <button class="checkout-btn" onclick="checkout()">Proceed to Checkout</button>
+        <div class="cart-overlay" id="cartOverlay" onclick="toggleCart()"></div>
+        <div class="cart-icon-container" onclick="toggleCart()">
+            <i class="fas fa-shopping-cart cart-icon"></i>
+            <span class="cart-count" id="cartCount">0</span>
         </div>
     </div>
 
-    <!-- Cart Overlay -->
-    <div class="cart-overlay" id="cartOverlay" onclick="toggleCart()"></div>
-
-    <!-- Cart Icon -->
-    <div class="cart-icon-container" onclick="toggleCart()">
-        <i class="fas fa-shopping-cart cart-icon"></i>
-        <span class="cart-count" id="cartCount">0</span>
-    </div>
-
+    <!-- JavaScript -->
     <script>
-        // Pass materials data to JavaScript
         const materialsData = @Html.Raw(Json.Serialize(Model.Materials));
         const materialImagesData = @Html.Raw(Json.Serialize(Model.MaterialImages));
-        
-        // Debug: Log the structure of materialsData to console
-        console.log('Materials Data:', materialsData);
-        console.log('Material Images Data:', materialImagesData);
-        
-        // Cart functionality
         let cart = [];
-        
-        function changeQuantity(button, change, materialId) {
-            const input = button.parentElement.querySelector('.quantity-input');
-            let value = parseInt(input.value) + change;
-            if (value < 1) value = 1;
-            input.value = value;
-        }
-        
-        function updateQuantity(input) {
-            let value = parseInt(input.value);
-            if (isNaN(value) || value < 1) value = 1;
-            input.value = value;
-        }
-        
-        // New function to update item quantity in the recent order section
-        function updateItemQuantity(input, materialId) {
-            let value = parseInt(input.value);
-            if (isNaN(value) || value < 1) value = 1;
-            input.value = value;
-        }
-        
-        // New function to update cart item with specified quantity
-        function updateCartItem(materialId, button) {
-            const input = button.parentElement.querySelector('.quantity-input');
-            const quantity = parseInt(input.value) || 1;
-            
-            // Find the material in the materialsData array
-            const material = materialsData.find(m => m.Id == materialId);
-            
-            if (material) {
-                // Check if item already exists in cart
-                const existingItemIndex = cart.findIndex(item => item.materialId == materialId);
-                
-                if (existingItemIndex > -1) {
-                    // Update quantity if item exists
-                    cart[existingItemIndex].quantity = quantity;
-                } else {
-                    // Add new item to cart
-                    cart.push({
-                        sku: material.material3partycode,
-                        name: material.Materialname,
-                        price: material.dealerprice,
-                        quantity: quantity,
-                        materialId: materialId
-                    });
-                }
-                
-                updateCartDisplay();
-                
-                // Show feedback
-                const originalText = button.textContent;
-                button.textContent = 'Updated!';
-                button.style.background = 'var(--success)';
-                setTimeout(() => {
-                    button.textContent = originalText;
-                    button.style.background = '';
-                }, 1000);
+
+        // Create a JavaScript object to store material points data
+        const materialPointsData = {
+            @foreach (var material in Model.Materials)
+            {
+                @:@material.Id: @GetPointsForMaterial(material.Id),
             }
-        }
-        
-        function addToCart(button, sku, name, price, materialId) {
-            const existingItem = cart.find(item => item.sku === sku);
-            const quantityInput = button.parentElement.querySelector('.quantity-input');
-            const itemQuantity = parseInt(quantityInput.value);
+        };
+
+        // Create a JavaScript version of GetPointsForMaterial function
+        function getPointsForMaterialJS(materialId) {
+            // Return the points from our pre-calculated data
+            if (materialPointsData[materialId] !== undefined) {
+                return materialPointsData[materialId];
+            }
             
-            if (existingItem) {
-                existingItem.quantity += itemQuantity;
+            // Fallback to simple calculation based on dealer price
+            const material = materialsData.find(m => m.Id == materialId);
+            if (!material) return 0;
+            
+            return Math.floor(material.dealerprice / 10);
+        }
+
+        function changeQuantity(btn, delta, materialId) {
+            const input = btn.parentElement.querySelector('.quantity-input');
+            let val = parseInt(input.value) + delta;
+            if (val < 1) val = 1;
+            input.value = val;
+        }
+
+        function updateQuantity(input) {
+            let val = parseInt(input.value);
+            if (isNaN(val) || val < 1) val = 1;
+            input.value = val;
+        }
+
+        function updateCartItem(materialId, btn) {
+            const input = btn.parentElement.querySelector('.quantity-input');
+            const qty = parseInt(input.value) || 1;
+            const material = materialsData.find(m => m.Id == materialId);
+            if (!material) return;
+
+            const idx = cart.findIndex(i => i.materialId == materialId);
+            if (idx > -1) {
+                cart[idx].quantity = qty;
             } else {
                 cart.push({
-                    sku: sku,
-                    name: name,
-                    price: price,
-                    quantity: itemQuantity,
+                    sku: material.material3partycode,
+                    name: material.Materialname,
+                    price: material.dealerprice,
+                    quantity: qty,
                     materialId: materialId
                 });
             }
-            
             updateCartDisplay();
-            quantityInput.value = 1; // Reset quantity input
-            
-            // Show feedback
-            const originalText = button.textContent;
-            button.textContent = 'Added!';
-            button.style.background = 'var(--success)';
-            setTimeout(() => {
-                button.textContent = originalText;
-                button.style.background = '';
-            }, 1000);
+            btn.textContent = 'Updated!';
+            btn.style.background = 'var(--success)';
+            setTimeout(() => { btn.textContent = 'Update in Cart'; btn.style.background = ''; }, 1000);
         }
-        
+
+        function addToCart(btn, sku, name, price, materialId) {
+            const input = btn.parentElement.querySelector('.quantity-input');
+            const qty = parseInt(input.value) || 1;
+            const item = cart.find(i => i.sku === sku);
+            if (item) item.quantity += qty;
+            else cart.push({ sku, name, price, quantity: qty, materialId });
+            updateCartDisplay();
+            input.value = 1;
+            btn.textContent = 'Added!';
+            btn.style.background = 'var(--success)';
+            setTimeout(() => { btn.textContent = 'Add to Cart'; btn.style.background = ''; }, 1000);
+        }
+
         function updateCartDisplay() {
-            const cartItems = document.getElementById('cartItems');
-            const cartCount = document.getElementById('cartCount');
-            const cartTotal = document.getElementById('cartTotal');
-            
-            // Update cart count
-            const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-            cartCount.textContent = totalItems;
-            
-            // Update cart items
+            const itemsDiv = document.getElementById('cartItems');
+            const countSpan = document.getElementById('cartCount');
+            const totalSpan = document.getElementById('cartTotal');
+
+            const totalItems = cart.reduce((s, i) => s + i.quantity, 0);
+            countSpan.textContent = totalItems;
+
             if (cart.length === 0) {
-                cartItems.innerHTML = '<p style="text-align: center; color: var(--gray-500); padding: 2rem;">Your cart is empty</p>';
-                cartTotal.textContent = '₹0.00';
+                itemsDiv.innerHTML = '<p style="text-align:center;color:var(--gray-500);padding:2rem;">Your cart is empty</p>';
+                totalSpan.textContent = '₹0.00';
                 return;
             }
-            
-            let itemsHtml = '';
+
+            let html = '';
             let total = 0;
-            
+            let totalPoints = 0;
             cart.forEach(item => {
                 const itemTotal = item.price * item.quantity;
                 total += itemTotal;
                 
-                itemsHtml += `
+                // Calculate points for this item using JavaScript function
+                const pointsPerUnit = getPointsForMaterialJS(item.materialId);
+                const itemPoints = pointsPerUnit * item.quantity;
+                totalPoints += itemPoints;
+                
+                html += `
                     <div class="cart-item">
-                        <div class="cart-item-image">
-                            <img src="https://placehold.co/60x60/cccccc/000000?text=Product" alt="${item.name}">
-                        </div>
+                        <div class="cart-item-image"><img src="https://placehold.co/60x60/cccccc/000000?text=Product" alt="${item.name}"></div>
                         <div class="cart-item-details">
                             <h4 class="cart-item-name">${item.name}</h4>
                             <p class="cart-item-price">₹${item.price} × ${item.quantity}</p>
+                            <p class="cart-item-points">Points: ${itemPoints}</p>
                             <div class="cart-item-actions">
                                 <span class="cart-item-quantity">Qty: ${item.quantity}</span>
                                 <button class="remove-item" onclick="removeFromCart('${item.sku}')">Remove</button>
                             </div>
                         </div>
-                    </div>
-                `;
+                    </div>`;
             });
-            
-            cartItems.innerHTML = itemsHtml;
-            cartTotal.textContent = `₹${total.toFixed(2)}`;
+            itemsDiv.innerHTML = html;
+            totalSpan.textContent = `₹${total.toFixed(2)} (Pts: ${totalPoints})`;
         }
-        
+
         function removeFromCart(sku) {
-            cart = cart.filter(item => item.sku !== sku);
+            cart = cart.filter(i => i.sku !== sku);
             updateCartDisplay();
         }
-        
+
         function toggleCart() {
-            const cartContainer = document.getElementById('cartContainer');
-            const cartOverlay = document.getElementById('cartOverlay');
-            
-            if (cartContainer.classList.contains('open')) {
-                cartContainer.classList.remove('open');
-                cartOverlay.classList.remove('open');
-            } else {
-                cartContainer.classList.add('open');
-                cartOverlay.classList.add('open');
-            }
+            document.getElementById('cartContainer').classList.toggle('open');
+            document.getElementById('cartOverlay').classList.toggle('open');
         }
-        
-        // Simplified checkout function that uses logged-in user's information
-        function checkout() {
-            if (cart.length === 0) {
-                alert('Your cart is empty!');
-                return;
-            }
-            
-            // Confirm order placement
-            if (confirm('Place order with your saved information?')) {
-                placeOrder();
-            }
-        }
-        
-        // Direct order placement function that takes order data
-        async function placeOrderDirect(orderData) {
-            // Check if order data is valid
-            if (!orderData || !orderData.items || orderData.items.length === 0) {
-                alert('Order request is invalid or empty');
-                return;
-            }
-            
-            try {
-                const response = await fetch('/Orders/Create', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
-                    },
-                    body: JSON.stringify(orderData)
-                });
-                
-                // Check if response is JSON
-                const contentType = response.headers.get('content-type');
-                if (contentType && contentType.indexOf('application/json') !== -1) {
-                    const result = await response.json();
-                    
-                    if (response.ok) {
-                        alert(`Order placed successfully! Order ID: ${result.OrderId}`);
-                        // Clear cart
-                        cart = [];
-                        updateCartDisplay();
-                    } else {
-                        alert('Error placing order: ' + (result.Message || 'Unknown error'));
-                    }
-                } else {
-                    // Handle non-JSON response (likely an error page)
-                    const text = await response.text();
-                    console.error('Non-JSON response:', text);
-                    alert('Error placing order. Server returned: ' + text);
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('Error placing order. Please try again.');
-            }
-        }
-        
-        // Direct order placement function that takes order data
-        async function placeOrderDirect(orderData) {
-            // Debug: Log the received order data
-            console.log('Received order data:', orderData);
-            
-            // Check if order data is valid
-            if (!orderData || !orderData.items || orderData.items.length === 0) {
-                console.log('Order data validation failed');
-                alert('Order request is invalid or empty');
-                return;
-            }
-            
-            try {
-                const response = await fetch('/Orders/Create', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
-                    },
-                    body: JSON.stringify(orderData)
-                });
-                
-                // Check if response is JSON
-                const contentType = response.headers.get('content-type');
-                if (contentType && contentType.indexOf('application/json') !== -1) {
-                    const result = await response.json();
-                    
-                    if (response.ok) {
-                        alert(`Order placed successfully! Order ID: ${result.OrderId}`);
-                        // Clear cart
-                        cart = [];
-                        updateCartDisplay();
-                    } else {
-                        alert('Error placing order: ' + (result.Message || 'Unknown error'));
-                    }
-                } else {
-                    // Handle non-JSON response (likely an error page)
-                    const text = await response.text();
-                    console.error('Non-JSON response:', text);
-                    alert('Error placing order. Server returned: ' + text);
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('Error placing order. Please try again.');
-            }
-        }
-        
+
         async function placeOrder() {
-            // Prepare order data using minimal required fields
-            // In a real application, the server would get the user info from the session
-            const orderData = {
-                // Customer information will be retrieved from the logged-in user on the server side
-                items: cart.map(item => ({
-                    // Use the actual material ID from the item data
-                    MaterialId: item.materialId || 1, // Fallback to 1 if not set
-                    Quantity: item.quantity,
-                    Price: item.price
-                }))
+            if (cart.length === 0) return alert('Cart is empty!');
+            if (!confirm('Place order with saved details?')) return;
+
+            // Calculate points for each item in the cart
+            const data = { 
+                items: cart.map(i => { 
+                    // Find the material to get its points
+                    const pointsPerUnit = getPointsForMaterialJS(i.materialId);
+                    return {
+                        MaterialId: i.materialId, 
+                        Quantity: i.quantity, 
+                        Price: i.price,
+                        Points: pointsPerUnit * i.quantity // Total points for this item (points per unit * quantity)
+                    };
+                }) 
             };
             
             try {
-                const response = await fetch('/Orders/Create', {
+                const res = await fetch('/Orders/Create', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
                     },
-                    body: JSON.stringify(orderData)
+                    body: JSON.stringify(data)
                 });
-                
-                // Check if response is JSON
-                const contentType = response.headers.get('content-type');
-                if (contentType && contentType.indexOf('application/json') !== -1) {
-                    const result = await response.json();
-                    
-                    if (response.ok) {
-                        alert(`Order placed successfully! Order ID: ${result.OrderId}`);
-                        // Clear cart
-                        cart = [];
-                        updateCartDisplay();
-                    } else {
-                        alert('Error placing order: ' + (result.Message || 'Unknown error'));
-                    }
-                } else {
-                    // Handle non-JSON response (likely an error page)
-                    const text = await response.text();
-                    console.error('Non-JSON response:', text);
-                    alert('Error placing order. Server returned: ' + text);
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('Error placing order. Please try again.');
+                if (!res.ok) throw new Error('Failed');
+                const json = await res.json();
+                alert(`Order placed! ID: ${json.OrderId}`);
+                cart = []; updateCartDisplay();
+            } catch (e) {
+                alert('Error placing order.');
             }
         }
-        
-        // Reorder function to add all items from a previous order to the cart
-        function reorder(orderId) {
-            if (confirm('Add all items from this order to your cart?')) {
-                fetch('/Orders/GetOrderDetails/' + orderId)
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error('Order not found');
-                        }
-                        return response.json();
-                    })
-                    .then(data => {
-                        // Clear current cart
-                        cart = [];
-                        
-                        // Add each item from the order to the cart
-                        data.orderItems.forEach(item => {
-                            cart.push({
-                                sku: item.material.material3partycode,
-                                name: item.material.materialname,
-                                price: item.unitPrice,
-                                quantity: item.quantity,
-                                materialId: item.materialId
-                            });
-                        });
-                        
-                        // Update cart display
-                        updateCartDisplay();
-                        
-                        // Show success message
-                        alert('Previous order items added to cart!');
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        alert('Error loading order details: ' + error.message);
-                    });
-            }
+
+        function checkout() {
+            if (cart.length === 0) return alert('Cart is empty!');
+            if (confirm('Proceed to checkout?')) placeOrder();
         }
-        
-        // Reorder function that uses the updated quantities from the recent order section
+
         function reorderWithUpdatedQuantities() {
-            // Get all product cards in the recent order section
-            const productCards = document.querySelectorAll('.recent-order-container .product-card');
-            
-            // Check if there are any products to reorder
-            if (productCards.length === 0) {
-                alert('No items found to reorder!');
-                return;
-            }
-            
-            // Clear current cart
+            const cards = document.querySelectorAll('.recent-order-container .product-card');
+            if (cards.length === 0) return alert('No items to reorder!');
+
             cart = [];
-            
-            // Add each item with its updated quantity to the cart
-            productCards.forEach(card => {
-                const materialId = parseInt(card.getAttribute('data-material-id'));
-                const quantityInput = card.querySelector('.quantity-input');
-                const quantity = parseInt(quantityInput.value) || 1;
-                
-                // Find the material in the materialsData array
-                const material = materialsData.find(m => m.Id == materialId);
-                
-                if (material) {
+            cards.forEach(card => {
+                const mid = card.getAttribute('data-material-id');
+                const qty = parseInt(card.querySelector('.quantity-input').value) || 1;
+                const m = materialsData.find(x => x.Id == mid);
+                if (m) {
                     cart.push({
-                        sku: material.material3partycode,
-                        name: material.Materialname,
-                        price: material.dealerprice,
-                        quantity: quantity,
-                        materialId: materialId
+                        sku: m.material3partycode,
+                        name: m.Materialname,
+                        price: m.dealerprice,
+                        quantity: qty,
+                        materialId: mid
                     });
                 }
             });
-            
-            // Debug: Log the cart contents
-            console.log('Cart contents:', cart);
-            
-            // Check if cart has items before placing order
-            if (cart.length === 0) {
-                alert('No items found to reorder!');
-                return;
-            }
-            
-            if (confirm('Place order with the updated quantities?')) {
-                // Prepare order data using the same structure as placeOrder function
-                const orderData = {
-                    items: cart.map(item => ({
-                        MaterialId: item.materialId,
-                        Quantity: item.quantity,
-                        Price: item.price
-                    }))
-                };
-                
-                // Debug: Log the order data
-                console.log('Order data being sent:', orderData);
-                
-                // Place the order with the updated quantities
-                placeOrderDirect(orderData);
-            }
+
+            if (cart.length === 0) return alert('No valid items!');
+            if (confirm('Place reorder with updated quantities?')) placeOrder();
         }
-        
-        // Campaign details toggle
+
         function showDetails(id) {
-            var detailsDiv = document.getElementById(id);
-            if (detailsDiv.classList.contains('hidden')) {
-                detailsDiv.classList.remove('hidden');
-            } else {
-                detailsDiv.classList.add('hidden');
-            }
+            document.getElementById(id).classList.toggle('hidden');
         }
-        
-        document.addEventListener('DOMContentLoaded', function() {
-            var carouselElement = document.getElementById('posterCarousel');
-            if (carouselElement && typeof bootstrap !== 'undefined' && bootstrap.Carousel) {
-                new bootstrap.Carousel(carouselElement, {
-                    interval: 5000,
-                    pause: 'hover'
-                });
-            }
-        });
-        
-        // Category filtering functions
-        function showCategoryProducts(categoryName) {
-            // Get all materials for this category
-            const categoryMaterials = materialsData.filter(material => material.Category === categoryName);
-            
-            // Update the section title
-            document.getElementById('categorySectionTitle').textContent = categoryName + ' Products';
-            
-            // Generate HTML for category products
-            let productsHtml = '';
-            categoryMaterials.forEach(material => {
-                const materialImage = materialImagesData?.find(mi => mi.MaterialMaster?.material3partycode === material.material3partycode);
-                const imageUrl = materialImage?.ImagePath || 'https://placehold.co/600x600/cccccc/000000?text=No+Image+Available';
-                
-                productsHtml += `
-                    <div class="product-card" data-category="${material.Category}">
+
+        function showCategoryProducts(cat) {
+            const filtered = materialsData.filter(m => m.Category === cat);
+            document.getElementById('categorySectionTitle').textContent = cat + ' Products';
+            let html = '';
+            filtered.forEach(m => {
+                const img = materialImagesData?.find(i => i.MaterialMaster?.material3partycode === m.material3partycode)?.ImagePath || 'https://placehold.co/600x600/cccccc/000000?text=No+Image';
+                html += `
+                    <div class="product-card" data-category="${m.Category}">
                         <div class="product-image-wrapper">
-                            <img src="${imageUrl}" alt="${material.Materialname}" class="product-image" onerror="this.onerror=null;this.src='https://placehold.co/600x600/cccccc/000000?text=No+Image+Available';">
+                            <img src="${img}" alt="${m.Materialname}" class="product-image" onerror="this.onerror=null;this.src='https://placehold.co/600x600/cccccc/000000?text=No+Image';">
                         </div>
                         <div class="product-content">
-                            <h3 class="product-title">${material.Materialname}</h3>
-                            <p class="product-shortname">${material.ShortName}</p>
-                            <p class="product-sku">SKU: ${material.material3partycode}</p>
+                            <h3 class="product-title">${m.Materialname}</h3>
+                            <p class="product-shortname">${m.ShortName}</p>
+                            <p class="product-sku">SKU: ${m.material3partycode}</p>
                             <div class="product-price-row">
-                                <span class="product-price">₹${material.dealerprice}</span>
-                                <span class="product-points">Pts: ${Math.floor(material.dealerprice / 10)}</span>
+                                <span class="product-price">₹${m.dealerprice}</span>
+                                <span class="product-points">Pts: ${Math.floor(m.dealerprice / 10)}</span>
                             </div>
                             <div class="quantity-section">
                                 <label class="quantity-label">Qty:</label>
@@ -2026,33 +723,27 @@ else
                                     <button class="quantity-btn" onclick="changeQuantity(this, 1)">+</button>
                                 </div>
                             </div>
-                            <button class="add-to-cart-btn" onclick="addToCart(this, '${material.material3partycode}', '${material.Materialname}', ${material.dealerprice}, ${material.Id})">
+                            <button class="add-to-cart-btn" onclick="addToCart(this, '${m.material3partycode}', '${m.Materialname}', ${m.dealerprice}, ${m.Id})">
                                 Add to Cart
                             </button>
                         </div>
-                    </div>
-                `;
+                    </div>`;
             });
-            
-            // Update the category products grid
-            document.getElementById('categoryProductsGrid').innerHTML = productsHtml;
-            
-            // Hide the all products section and show the category products section
+            document.getElementById('categoryProductsGrid').innerHTML = html;
             document.getElementById('allProductsSection').style.display = 'none';
             document.getElementById('categoryProductsSection').style.display = 'block';
         }
-        
+
         function hideCategoryProducts() {
-            // Hide the category products section and show the all products section
             document.getElementById('categoryProductsSection').style.display = 'none';
             document.getElementById('allProductsSection').style.display = 'block';
         }
-        
-        // Set first category as active by default
-        document.addEventListener('DOMContentLoaded', function() {
-            const firstCategoryCard = document.querySelector('.category-card');
-            if (firstCategoryCard) {
-                firstCategoryCard.classList.add('active');
+
+        // Initialize Carousel
+        document.addEventListener('DOMContentLoaded', () => {
+            const el = document.getElementById('posterCarousel');
+            if (el && typeof bootstrap !== 'undefined') {
+                new bootstrap.Carousel(el, { interval: 5000, pause: 'hover' });
             }
         });
     </script>

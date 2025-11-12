@@ -29,6 +29,11 @@ namespace HaldiramPromotionalApp.Models
         [Column(TypeName = "decimal(18,2)")]
         public decimal TotalPrice { get; set; }
 
+        // New property to store points for this material in the order
+        [Required]
+        [Display(Name = "Points")]
+        public int Points { get; set; } = 0;
+
         // Navigation properties
         [ForeignKey("OrderId")]
         public virtual Order Order { get; set; }

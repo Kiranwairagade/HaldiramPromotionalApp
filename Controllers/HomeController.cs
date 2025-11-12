@@ -62,6 +62,24 @@ namespace HaldiramPromotionalApp.Controllers
             var userName = HttpContext.Session.GetString("UserName");
             var user = await _context.Users.FirstOrDefaultAsync(u => u.phoneno == userName);
             
+            // Get the dealer information for this user
+            DealerMaster dealer = null;
+            if (user != null)
+            {
+                // Assuming the DealerMaster.PhoneNo corresponds to the User.phoneno for dealers
+                dealer = await _context.DealerMasters.FirstOrDefaultAsync(d => d.PhoneNo == user.phoneno);
+            }
+            
+            // Calculate total points for the dealer
+            var totalPoints = 0;
+            if (dealer != null)
+            {
+                // Sum all points from order items for this dealer
+                totalPoints = await _context.OrderItems
+                    .Where(oi => oi.Order.DealerId == dealer.Id)
+                    .SumAsync(oi => (int?)oi.Points) ?? 0;
+            }
+            
             var viewModel = new DealerDashboardViewModel
             {
                 // Get all posters
@@ -82,7 +100,8 @@ namespace HaldiramPromotionalApp.Controllers
                             VoucherValidity = c.VoucherValidity,
                             Description = c.Description,
                             IsActive = c.IsActive,
-                            ImagePath = c.ImagePath
+                            ImagePath = c.ImagePath,
+                            MaterialPoints = c.MaterialPoints // Include MaterialPoints JSON data
                             // MaterialDetails will be populated separately if needed
                         }).ToListAsync(),
                         
@@ -98,7 +117,8 @@ namespace HaldiramPromotionalApp.Controllers
                             Description = c.Description,
                             IsActive = c.IsActive,
                             RewardProductId = c.RewardProductId,
-                            ImagePath = c.ImagePath
+                            ImagePath = c.ImagePath,
+                            MaterialPoints = c.MaterialPoints // Include MaterialPoints JSON data
                             // MaterialDetails and RewardProduct will be populated separately if needed
                         }).ToListAsync(),
                         
@@ -147,13 +167,16 @@ namespace HaldiramPromotionalApp.Controllers
                 Materials = await _context.MaterialMaster.ToListAsync(),
                 MaterialImages = await _context.MaterialImages.Include(m => m.MaterialMaster).ToListAsync(),
                 
-                // Get the most recent order for the logged-in user
-                RecentOrder = user != null ? await _context.Orders
+                // Get the most recent order for the logged-in dealer
+                RecentOrder = dealer != null ? await _context.Orders
                     .Include(o => o.OrderItems)
                     .ThenInclude(oi => oi.Material)
-                    .Where(o => o.UserId == user.Id)
+                    .Where(o => o.DealerId == dealer.Id)
                     .OrderByDescending(o => o.OrderDate)
-                    .FirstOrDefaultAsync() : null
+                    .FirstOrDefaultAsync() : null,
+                    
+                // Set the total points for the dealer
+                TotalPoints = totalPoints
             };
             
             return View("~/Views/Home/Dealer/DealerHome.cshtml", viewModel);

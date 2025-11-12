@@ -24,5 +24,7 @@ namespace HaldiramPromotionalApp.Data
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderItem> OrderItems { get; set; }
         public DbSet<User> Users { get; set; }
+        public DbSet<DealerMaster> DealerMasters { get; set; }
+        // public DbSet<MaterialPoints> MaterialPoints { get; set; }
     }
 }

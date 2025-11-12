@@ -4,6 +4,7 @@ using HaldiramPromotionalApp.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HaldiramPromotionalApp.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251111125522_AddForeignKeyToOrdersDealerId")]
+    partial class AddForeignKeyToOrdersDealerId
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -105,7 +108,7 @@ namespace HaldiramPromotionalApp.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("DealerMasters");
+                    b.ToTable("DealerMaster");
                 });
 
             modelBuilder.Entity("HaldiramPromotionalApp.Models.FreeProductCampaign", b =>
@@ -268,6 +271,8 @@ namespace HaldiramPromotionalApp.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("DealerId");
+
                     b.HasIndex("UserId");
 
                     b.ToTable("Orders");
@@ -285,9 +290,6 @@ namespace HaldiramPromotionalApp.Migrations
                         .HasColumnType("int");
 
                     b.Property<int>("OrderId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Points")
                         .HasColumnType("int");
 
                     b.Property<int>("Quantity")
@@ -547,11 +549,19 @@ namespace HaldiramPromotionalApp.Migrations
 
             modelBuilder.Entity("HaldiramPromotionalApp.Models.Order", b =>
                 {
+                    b.HasOne("HaldiramPromotionalApp.Models.DealerMaster", "Dealer")
+                        .WithMany()
+                        .HasForeignKey("DealerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("HaldiramPromotionalApp.Models.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Dealer");
 
                     b.Navigation("User");
                 });
