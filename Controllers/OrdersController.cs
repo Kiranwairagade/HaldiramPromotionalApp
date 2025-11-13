@@ -17,9 +17,33 @@ namespace HaldiramPromotionalApp.Controllers
         // GET: Orders
         public async Task<IActionResult> Index()
         {
+            // Get the logged-in user's information from session
+            var userName = HttpContext.Session.GetString("UserName");
+            var userRole = HttpContext.Session.GetString("role");
+            
+            // Validate that user is logged in and is a dealer
+            if (string.IsNullOrEmpty(userName) || userRole != "Dealer")
+            {
+                return Unauthorized("You must be logged in as a dealer to access orders.");
+            }
+            
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.phoneno == userName);
+            if (user == null)
+            {
+                return BadRequest("User not found");
+            }
+            
+            // Find the dealer associated with this user by matching phone numbers
+            var dealer = await _context.DealerMasters.FirstOrDefaultAsync(d => d.PhoneNo == user.phoneno);
+            if (dealer == null)
+            {
+                return BadRequest("Dealer not found for this user");
+            }
+            
             var orders = await _context.Orders
                 .Include(o => o.OrderItems)
                 .ThenInclude(oi => oi.Material)
+                .Where(o => o.DealerId == dealer.Id) // Filter by dealer ID
                 .ToListAsync();
             return View("~/Views/Dealer/Orders/Index.cshtml", orders);
         }

@@ -3,6 +3,7 @@
 
 @{
     ViewData["Title"] = "Upload Material Image";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 
 <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -59,46 +60,74 @@
                     </div>
                 }
 
-                <form asp-action="Upload" enctype="multipart/form-data" method="post" class="space-y-4">
-                    @Html.AntiForgeryToken()
-                    
-                    <div>
-                        <label asp-for="MaterialMasterId" class="block text-xs font-medium text-gray-700 mb-1">Material</label>
-                        <select asp-for="MaterialMasterId" class="mt-1 block w-full px-2 py-1 text-xs border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" asp-items="ViewBag.Materials">
-                            <option value="">-- Select Material --</option>
-                        </select>
-                        <span asp-validation-for="MaterialMasterId" class="text-red-500 text-xs"></span>
-                    </div>
-                    
-                    <div>
-                        <label asp-for="ImageFile" class="block text-xs font-medium text-gray-700 mb-1">Material Image</label>
-                        <div class="mt-1 flex justify-center px-4 pt-3 pb-4 border border-gray-300 border-dashed rounded-md">
-                            <div class="space-y-1 text-center">
-                                <svg class="mx-auto h-8 w-8 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
-                                    <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                </svg>
-                                <div class="flex text-xs text-gray-600">
-                                    <label asp-for="ImageFile" class="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none focus-within:ring-1 focus-within:ring-offset-1 focus-within:ring-indigo-500">
-                                        <span>Upload a file</span>
-                                        <input asp-for="ImageFile" type="file" class="sr-only" accept=".jpg,.jpeg,.png,.gif" />
-                                    </label>
-                                    <p class="pl-1">or drag and drop</p>
-                                </div>
-                                <p class="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+                @{
+                    var materials = ViewBag.Materials as SelectList ?? new SelectList(new List<SelectListItem>());
+                }
+                
+                @if (materials.Any())
+                {
+                    <form asp-action="Upload" enctype="multipart/form-data" method="post" class="space-y-4">
+                        @Html.AntiForgeryToken()
+                        
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Materials</label>
+                            <div class="mb-2">
+                                <input type="text" id="materialSearch" placeholder="Search materials..." class="w-full px-3 py-2 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500">
                             </div>
+                            <div class="border border-gray-300 rounded-md p-3 max-h-60 overflow-y-auto" id="materialsContainer">
+                                @foreach (var item in materials)
+                                {
+                                    <div class="flex items-center mb-2 material-item" data-name="@item.Text.ToLower()">
+                                        <input type="checkbox" id="material_@item.Value" name="MaterialMasterIds" value="@item.Value" class="h-4 w-4 text-indigo-600 border-gray-300 rounded">
+                                        <label for="material_@item.Value" class="ml-2 block text-xs text-gray-700">
+                                            @item.Text
+                                        </label>
+                                    </div>
+                                }
+                            </div>
+                            <span asp-validation-for="MaterialMasterIds" class="text-red-500 text-xs"></span>
                         </div>
-                        <span asp-validation-for="ImageFile" class="text-red-500 text-xs"></span>
+                        
+                        <div>
+                            <label asp-for="ImageFile" class="block text-xs font-medium text-gray-700 mb-1">Material Image</label>
+                            <div class="mt-1 flex justify-center px-4 pt-3 pb-4 border border-gray-300 border-dashed rounded-md">
+                                <div class="space-y-1 text-center">
+                                    <svg class="mx-auto h-8 w-8 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+                                        <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                    </svg>
+                                    <div class="flex text-xs text-gray-600">
+                                        <label asp-for="ImageFile" class="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none focus-within:ring-1 focus-within:ring-offset-1 focus-within:ring-indigo-500">
+                                            <span>Upload a file</span>
+                                            <input asp-for="ImageFile" type="file" class="sr-only" accept=".jpg,.jpeg,.png,.gif" />
+                                        </label>
+                                        <p class="pl-1">or drag and drop</p>
+                                    </div>
+                                    <p class="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+                                </div>
+                            </div>
+                            <span asp-validation-for="ImageFile" class="text-red-500 text-xs"></span>
+                        </div>
+                        
+                        <div class="flex justify-end space-x-2">
+                            <button type="submit" class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-indigo-500">
+                                <svg class="-ml-0.5 mr-1 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                </svg>
+                                Upload Image
+                            </button>
+                        </div>
+                    </form>
+                }
+                else
+                {
+                    <div class="text-center py-6">
+                        <svg class="mx-auto h-8 w-8 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        <h3 class="mt-1 text-xs font-medium text-gray-900">All materials have images</h3>
+                        <p class="mt-1 text-xs text-gray-500">No materials available for image upload. Delete existing images to upload new ones.</p>
                     </div>
-                    
-                    <div class="flex justify-end space-x-2">
-                        <button type="submit" class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-indigo-500">
-                            <svg class="-ml-0.5 mr-1 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-                            </svg>
-                            Upload Image
-                        </button>
-                    </div>
-                </form>
+                }
             </div>
         </div>
         
@@ -167,4 +196,30 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
+    
+    <script>
+        // Add select all functionality if needed
+        document.addEventListener('DOMContentLoaded', function() {
+            // You can add JavaScript for select all/deselect all functionality here if needed
+            
+            // Material search functionality
+            const searchInput = document.getElementById('materialSearch');
+            const materialItems = document.querySelectorAll('.material-item');
+            
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    const searchTerm = this.value.toLowerCase().trim();
+                    
+                    materialItems.forEach(item => {
+                        const materialName = item.getAttribute('data-name');
+                        if (materialName.includes(searchTerm)) {
+                            item.style.display = '';
+                        } else {
+                            item.style.display = 'none';
+                        }
+                    });
+                });
+            }
+        });
+    </script>
 }

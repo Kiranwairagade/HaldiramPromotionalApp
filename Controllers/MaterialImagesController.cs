@@ -22,9 +22,10 @@ namespace HaldiramPromotionalApp.Controllers
         {
             var viewModel = new MaterialImageViewModel();
             
-            // Get all active materials for the dropdown
-            var materials = await _context.MaterialMaster
+            // Get all active materials
+            var allActiveMaterials = await _context.MaterialMaster
                 .Where(m => m.isactive)
+                .OrderBy(m => m.Materialname)
                 .Select(m => new
                 {
                     m.Id,
@@ -32,11 +33,43 @@ namespace HaldiramPromotionalApp.Controllers
                 })
                 .ToListAsync();
             
-            ViewBag.Materials = new SelectList(materials, "Id", "DisplayName");
+            // Log the count of all active materials for debugging
+            System.Diagnostics.Debug.WriteLine($"Total active materials: {allActiveMaterials.Count}");
+            
+            // Get IDs of materials that currently have images
+            var materialsWithImages = await _context.MaterialImages
+                .Select(mi => mi.MaterialMasterId)
+                .Distinct()
+                .ToListAsync();
+            
+            // Log the count of materials with images for debugging
+            System.Diagnostics.Debug.WriteLine($"Materials with images: {materialsWithImages.Count}");
+            
+            // Filter to only show materials that don't have images
+            var materials = allActiveMaterials
+                .Where(m => !materialsWithImages.Contains(m.Id))
+                .ToList();
+            
+            // Log the count of materials without images for debugging
+            System.Diagnostics.Debug.WriteLine($"Materials without images: {materials.Count}");
+            
+            // Create SelectList with proper value and text fields
+            var selectList = new List<SelectListItem>();
+            foreach (var material in materials)
+            {
+                selectList.Add(new SelectListItem
+                {
+                    Value = material.Id.ToString(),
+                    Text = material.DisplayName
+                });
+            }
+            
+            ViewBag.Materials = new SelectList(selectList, "Value", "Text");
             
             // Get all existing material images to display
             var materialImages = await _context.MaterialImages
                 .Include(mi => mi.MaterialMaster)
+                .OrderByDescending(mi => mi.CreatedAt) // Show newest images first
                 .ToListAsync();
             
             ViewBag.MaterialImages = materialImages;
@@ -50,7 +83,12 @@ namespace HaldiramPromotionalApp.Controllers
         {
             if (ModelState.IsValid)
             {
-                if (viewModel.ImageFile != null && viewModel.ImageFile.Length > 0)
+                // Check if at least one material is selected
+                if (viewModel.MaterialMasterIds == null || !viewModel.MaterialMasterIds.Any())
+                {
+                    ModelState.AddModelError("MaterialMasterIds", "Please select at least one material.");
+                }
+                else if (viewModel.ImageFile != null && viewModel.ImageFile.Length > 0)
                 {
                     // Validate file type
                     var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
@@ -70,7 +108,7 @@ namespace HaldiramPromotionalApp.Controllers
                         }
                         
                         // Generate unique filename
-                        var fileName = $"material_{viewModel.MaterialMasterId}_{Guid.NewGuid()}{fileExtension}";
+                        var fileName = $"material_{string.Join("_", viewModel.MaterialMasterIds)}_{Guid.NewGuid()}{fileExtension}";
                         var filePath = Path.Combine(uploadsFolder, fileName);
                         
                         // Save file
@@ -79,17 +117,27 @@ namespace HaldiramPromotionalApp.Controllers
                             await viewModel.ImageFile.CopyToAsync(stream);
                         }
                         
-                        // Save to database
-                        var materialImage = new MaterialImage
+                        // Save to database for each selected material
+                        foreach (var materialId in viewModel.MaterialMasterIds)
                         {
-                            MaterialMasterId = viewModel.MaterialMasterId,
-                            ImagePath = $"/uploads/materials/{fileName}"
-                        };
+                            var materialImage = new MaterialImage
+                            {
+                                MaterialMasterId = materialId,
+                                ImagePath = $"/uploads/materials/{fileName}"
+                            };
+                            
+                            _context.MaterialImages.Add(materialImage);
+                        }
                         
-                        _context.MaterialImages.Add(materialImage);
                         await _context.SaveChangesAsync();
                         
-                        TempData["SuccessMessage"] = "Material image uploaded successfully!";
+                        // Get the names of the materials for the success message
+                        var materialNames = await _context.MaterialMaster
+                            .Where(m => viewModel.MaterialMasterIds.Contains(m.Id))
+                            .Select(m => m.Materialname)
+                            .ToListAsync();
+                        
+                        TempData["SuccessMessage"] = $"{viewModel.MaterialMasterIds.Count} material image(s) uploaded successfully for: {string.Join(", ", materialNames)}";
                         return RedirectToAction("Upload");
                     }
                 }
@@ -100,8 +148,10 @@ namespace HaldiramPromotionalApp.Controllers
             }
             
             // Repopulate dropdown if model state is invalid
-            var materials = await _context.MaterialMaster
+            // Get all active materials
+            var allActiveMaterials = await _context.MaterialMaster
                 .Where(m => m.isactive)
+                .OrderBy(m => m.Materialname)
                 .Select(m => new
                 {
                     m.Id,
@@ -109,11 +159,43 @@ namespace HaldiramPromotionalApp.Controllers
                 })
                 .ToListAsync();
             
-            ViewBag.Materials = new SelectList(materials, "Id", "DisplayName");
+            // Log the count of all active materials for debugging
+            System.Diagnostics.Debug.WriteLine($"Total active materials: {allActiveMaterials.Count}");
+            
+            // Get IDs of materials that currently have images
+            var materialsWithImages = await _context.MaterialImages
+                .Select(mi => mi.MaterialMasterId)
+                .Distinct()
+                .ToListAsync();
+            
+            // Log the count of materials with images for debugging
+            System.Diagnostics.Debug.WriteLine($"Materials with images: {materialsWithImages.Count}");
+            
+            // Filter to only show materials that don't have images
+            var materials = allActiveMaterials
+                .Where(m => !materialsWithImages.Contains(m.Id))
+                .ToList();
+            
+            // Log the count of materials without images for debugging
+            System.Diagnostics.Debug.WriteLine($"Materials without images: {materials.Count}");
+            
+            // Create SelectList with proper value and text fields
+            var selectList = new List<SelectListItem>();
+            foreach (var material in materials)
+            {
+                selectList.Add(new SelectListItem
+                {
+                    Value = material.Id.ToString(),
+                    Text = material.DisplayName
+                });
+            }
+            
+            ViewBag.Materials = new SelectList(selectList, "Value", "Text");
             
             // Get all existing material images to display
             var materialImages = await _context.MaterialImages
                 .Include(mi => mi.MaterialMaster)
+                .OrderByDescending(mi => mi.CreatedAt) // Show newest images first
                 .ToListAsync();
             
             ViewBag.MaterialImages = materialImages;
@@ -125,7 +207,10 @@ namespace HaldiramPromotionalApp.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
         {
-            var materialImage = await _context.MaterialImages.FindAsync(id);
+            var materialImage = await _context.MaterialImages
+                .Include(mi => mi.MaterialMaster)
+                .FirstOrDefaultAsync(mi => mi.Id == id);
+                
             if (materialImage == null)
             {
                 TempData["ErrorMessage"] = "Material image not found.";
@@ -145,7 +230,7 @@ namespace HaldiramPromotionalApp.Controllers
                 _context.MaterialImages.Remove(materialImage);
                 await _context.SaveChangesAsync();
                 
-                TempData["SuccessMessage"] = "Material image deleted successfully!";
+                TempData["SuccessMessage"] = $"Material image for '{materialImage.MaterialMaster?.Materialname}' deleted successfully!";
             }
             catch (Exception ex)
             {

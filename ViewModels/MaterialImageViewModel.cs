@@ -5,9 +5,9 @@ namespace HaldiramPromotionalApp.ViewModels
 {
     public class MaterialImageViewModel
     {
-        [Required]
-        [Display(Name = "Material")]
-        public int MaterialMasterId { get; set; }
+        [Display(Name = "Materials")]
+        [MinLength(1, ErrorMessage = "Please select at least one material.")]
+        public List<int> MaterialMasterIds { get; set; } = new List<int>();
         
         [Required]
         [Display(Name = "Material Image")]

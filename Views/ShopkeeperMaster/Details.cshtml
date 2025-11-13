@@ -1,0 +1,53 @@
+@model HaldiramPromotionalApp.Models.ShopkeeperMaster
+
+@{
+    ViewData["Title"] = "Shopkeeper Details";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <div class="px-4 py-3 border-b border-gray-200 sm:px-6">
+            <h1 class="text-lg font-medium text-gray-900">Shopkeeper Details</h1>
+            <p class="mt-1 text-xs text-gray-500">View the details of the shopkeeper</p>
+        </div>
+
+        <div class="p-4 sm:p-6">
+            <dl class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <dt class="text-xs font-medium text-gray-500">Name</dt>
+                    <dd class="mt-1 text-sm text-gray-900">@Html.DisplayFor(model => model.Name)</dd>
+                </div>
+                
+                <div>
+                    <dt class="text-xs font-medium text-gray-500">Store Location</dt>
+                    <dd class="mt-1 text-sm text-gray-900">@Html.DisplayFor(model => model.StoreLocation)</dd>
+                </div>
+                
+                <div>
+                    <dt class="text-xs font-medium text-gray-500">Store Type</dt>
+                    <dd class="mt-1 text-sm text-gray-900">@Html.DisplayFor(model => model.StoreType)</dd>
+                </div>
+                
+                <div>
+                    <dt class="text-xs font-medium text-gray-500">Username</dt>
+                    <dd class="mt-1 text-sm text-gray-900">@Html.DisplayFor(model => model.Username)</dd>
+                </div>
+                
+                <div>
+                    <dt class="text-xs font-medium text-gray-500">Phone Number</dt>
+                    <dd class="mt-1 text-sm text-gray-900">@Html.DisplayFor(model => model.PhoneNumber)</dd>
+                </div>
+            </dl>
+            
+            <div class="mt-6 flex justify-end space-x-2">
+                <a asp-action="Index" class="py-2 px-4 border border-gray-300 rounded-md shadow-sm text-xs font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-500">
+                    Back to List
+                </a>
+                <a asp-action="Edit" asp-route-id="@Model.Id" class="py-2 px-4 border border-transparent rounded-md shadow-sm text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-500">
+                    Edit
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

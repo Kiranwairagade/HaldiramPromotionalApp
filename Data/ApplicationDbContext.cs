@@ -1,4 +1,4 @@
-﻿using HaldiramPromotionalApp.Models;
+﻿﻿using HaldiramPromotionalApp.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace HaldiramPromotionalApp.Data
@@ -25,6 +25,7 @@ namespace HaldiramPromotionalApp.Data
         public DbSet<OrderItem> OrderItems { get; set; }
         public DbSet<User> Users { get; set; }
         public DbSet<DealerMaster> DealerMasters { get; set; }
+        public DbSet<ShopkeeperMaster> ShopkeeperMasters { get; set; }
         // public DbSet<MaterialPoints> MaterialPoints { get; set; }
     }
 }

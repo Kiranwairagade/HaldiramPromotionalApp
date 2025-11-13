@@ -357,7 +357,7 @@ else
                                     <p class="product-sku">SKU: @(item.Material?.material3partycode ?? "N/A")</p>
                                     <div class="product-price-row">
                                         <span class="product-price">₹@item.UnitPrice</span>
-                                        <span class="product-points">Pts: @((int)(item.UnitPrice / 10))</span>
+                                        <span class="product-points">Pts: @item.Points</span>
                                     </div>
                                     <div class="quantity-section">
                                         <label class="quantity-label">Qty:</label>
@@ -421,7 +421,7 @@ else
         <div id="categoryProductsSection" class="products-section" style="display:none;">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
                 <h2 class="section-header" id="categorySectionTitle">Category Products</h2>
-                <button class="add-to-cart-btn" onclick="hideCategoryProducts()" style="padding:0.5rem 1rem;font-size:0.9rem;">Back</button>
+                <button class="btn btn-secondary" onclick="hideCategoryProducts()" style="padding:0.5rem 1rem;font-size:0.9rem;">Back</button>
             </div>
             <div id="categoryProductsGrid" class="products-grid"></div>
         </div>
@@ -493,6 +493,30 @@ else
             <i class="fas fa-shopping-cart cart-icon"></i>
             <span class="cart-count" id="cartCount">0</span>
         </div>
+        
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+            <a href="@Url.Action("ViewCampaigns", "Home")" class="nav-item @(ViewContext.RouteData.Values["action"]?.ToString() == "ViewCampaigns" && ViewContext.RouteData.Values["controller"]?.ToString() == "Home" ? "active" : "")">
+                <i class="fas fa-bullhorn"></i>
+                <span>Campaigns</span>
+            </a>
+            <a href="@Url.Action("Index", "Orders")" class="nav-item @(ViewContext.RouteData.Values["action"]?.ToString() == "Index" && ViewContext.RouteData.Values["controller"]?.ToString() == "Orders" ? "active" : "")">
+                <i class="fas fa-shopping-bag"></i>
+                <span>Orders</span>
+            </a>
+            <a href="@Url.Action("PointsDetails", "Home")" class="nav-item">
+                <i class="fas fa-coins"></i>
+                <span>Points</span>
+            </a>
+            <a href="#" class="nav-item" onclick="alert('Vouchers feature coming soon')">
+                <i class="fas fa-ticket-alt"></i>
+                <span>Vouchers</span>
+            </a>
+            <a href="#" class="nav-item" onclick="alert('History feature coming soon')">
+                <i class="fas fa-history"></i>
+                <span>History</span>
+            </a>
+        </nav>
     </div>
 
     <!-- JavaScript -->

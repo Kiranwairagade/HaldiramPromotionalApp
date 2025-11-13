@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Text.Json;
 using HaldiramPromotionalApp.Data;
 using HaldiramPromotionalApp.Models;
 using HaldiramPromotionalApp.ViewModels;
@@ -374,11 +375,297 @@ namespace HaldiramPromotionalApp.Controllers
             }
         }
         
-        public ActionResult Logout()
+        public async Task<IActionResult> Logout()
         {
             HttpContext.Session.Clear();
             HttpContext.Session.Remove("UserName");
             return RedirectToAction("Login");
+        }
+
+        public async Task<IActionResult> PointsDetails()
+        {
+            // Check if user is logged in and is a Dealer
+            if (HttpContext.Session.GetString("UserName") == null || HttpContext.Session.GetString("role") != "Dealer")
+            {
+                return RedirectToAction("Login");
+            }
+
+            try
+            {
+                // Get the logged-in user's information
+                var userName = HttpContext.Session.GetString("UserName");
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.phoneno == userName);
+
+                // Get the dealer information for this user
+                DealerMaster dealer = null;
+                if (user != null)
+                {
+                    // Assuming the DealerMaster.PhoneNo corresponds to the User.phoneno for dealers
+                    dealer = await _context.DealerMasters.FirstOrDefaultAsync(d => d.PhoneNo == user.phoneno);
+                }
+
+                if (dealer == null)
+                {
+                    // If no dealer found, redirect to login
+                    return RedirectToAction("Login");
+                }
+
+                // Get all order items for this dealer with related data
+                var orderItems = await _context.OrderItems
+                    .Include(oi => oi.Order)
+                    .Include(oi => oi.Material)
+                    .Where(oi => oi.Order.DealerId == dealer.Id)
+                    .OrderByDescending(oi => oi.Order.OrderDate)
+                    .ToListAsync();
+
+                // Pass the order items to the view
+                // The view will calculate the summary statistics
+                return View("~/Views/Home/PointsDetails.cshtml", orderItems);
+            }
+            catch (Exception ex)
+            {
+                // Log the exception (in a real application, you would use a proper logging framework)
+                System.Diagnostics.Debug.WriteLine($"Error in PointsDetails action: {ex.Message}");
+                // Redirect to dealer home page if there's an error
+                return RedirectToAction("DealerHome");
+            }
+        }
+
+        public async Task<IActionResult> ViewCampaigns()
+        {
+            // Check if user is logged in and is a Dealer
+            if (HttpContext.Session.GetString("UserName") == null || HttpContext.Session.GetString("role") != "Dealer")
+            {
+                return RedirectToAction("Login");
+            }
+
+            try
+            {
+                // Fetch campaigns with related data
+                var pointsToCashCampaigns = await _context.PointsToCashCampaigns.ToListAsync();
+                var pointsRewardCampaigns = await _context.PointsRewardCampaigns
+                    .Include(p => p.RewardProduct)
+                    .ToListAsync();
+                var freeProductCampaigns = await _context.FreeProductCampaigns.ToListAsync();
+                var amountReachGoalCampaigns = await _context.AmountReachGoalCampaigns.ToListAsync();
+                var sessionDurationRewardCampaigns = await _context.SessionDurationRewardCampaigns.ToListAsync();
+
+                // Fetch all materials for reference
+                var allMaterials = await _context.MaterialMaster.Where(m => m.isactive).ToDictionaryAsync(m => m.Id, m => m);
+                var allProducts = await _context.Products.Where(p => p.IsActive).ToDictionaryAsync(p => p.Id, p => p);
+
+                // Process PointsToCashCampaigns to include material names
+                var detailedPointsToCashCampaigns = new List<DetailedPointsToCashCampaign>();
+                foreach (var campaign in pointsToCashCampaigns)
+                {
+                    var detailedCampaign = new DetailedPointsToCashCampaign
+                    {
+                        Id = campaign.Id,
+                        CampaignName = campaign.CampaignName,
+                        StartDate = campaign.StartDate,
+                        EndDate = campaign.EndDate,
+                        VoucherGenerationThreshold = campaign.VoucherGenerationThreshold,
+                        VoucherValue = campaign.VoucherValue,
+                        VoucherValidity = campaign.VoucherValidity,
+                        Description = campaign.Description,
+                        IsActive = campaign.IsActive,
+                        ImagePath = campaign.ImagePath
+                    };
+
+                    // Process materials
+                    if (!string.IsNullOrEmpty(campaign.Materials))
+                    {
+                        try
+                        {
+                            var materialIds = campaign.Materials.Split(',').Select(int.Parse).ToList();
+                            var materialPoints = !string.IsNullOrEmpty(campaign.MaterialPoints) ?
+                                JsonSerializer.Deserialize<Dictionary<int, int>>(campaign.MaterialPoints) :
+                                new Dictionary<int, int>();
+
+                            foreach (var materialId in materialIds)
+                            {
+                                if (allMaterials.ContainsKey(materialId))
+                                {
+                                    detailedCampaign.MaterialDetails.Add(new MaterialDetail
+                                    {
+                                        MaterialId = materialId,
+                                        MaterialName = allMaterials[materialId].Materialname,
+                                        Points = materialPoints.ContainsKey(materialId) ? materialPoints[materialId] : 0
+                                    });
+                                }
+                            }
+                        }
+                        catch
+                        {
+                            // Handle deserialization error
+                        }
+                    }
+
+                    detailedPointsToCashCampaigns.Add(detailedCampaign);
+                }
+
+                // Process PointsRewardCampaigns to include material names
+                var detailedPointsRewardCampaigns = new List<DetailedPointsRewardCampaign>();
+                foreach (var campaign in pointsRewardCampaigns)
+                {
+                    var detailedCampaign = new DetailedPointsRewardCampaign
+                    {
+                        Id = campaign.Id,
+                        CampaignName = campaign.CampaignName,
+                        StartDate = campaign.StartDate,
+                        EndDate = campaign.EndDate,
+                        VoucherGenerationThreshold = campaign.VoucherGenerationThreshold,
+                        VoucherValidity = campaign.VoucherValidity,
+                        Description = campaign.Description,
+                        IsActive = campaign.IsActive,
+                        RewardProductId = campaign.RewardProductId,
+                        RewardProduct = campaign.RewardProduct,
+                        ImagePath = campaign.ImagePath
+                    };
+
+                    // Process materials
+                    if (!string.IsNullOrEmpty(campaign.Materials))
+                    {
+                        try
+                        {
+                            var materialIds = campaign.Materials.Split(',').Select(int.Parse).ToList();
+                            var materialPoints = !string.IsNullOrEmpty(campaign.MaterialPoints) ?
+                                JsonSerializer.Deserialize<Dictionary<int, int>>(campaign.MaterialPoints) :
+                                new Dictionary<int, int>();
+
+                            foreach (var materialId in materialIds)
+                            {
+                                if (allMaterials.ContainsKey(materialId))
+                                {
+                                    detailedCampaign.MaterialDetails.Add(new MaterialDetail
+                                    {
+                                        MaterialId = materialId,
+                                        MaterialName = allMaterials[materialId].Materialname,
+                                        Points = materialPoints.ContainsKey(materialId) ? materialPoints[materialId] : 0
+                                    });
+                                }
+                            }
+                        }
+                        catch
+                        {
+                            // Handle deserialization error
+                        }
+                    }
+
+                    detailedPointsRewardCampaigns.Add(detailedCampaign);
+                }
+
+                // Process FreeProductCampaigns to include material names and free product details
+                var detailedFreeProductCampaigns = new List<DetailedFreeProductCampaign>();
+                foreach (var campaign in freeProductCampaigns)
+                {
+                    var detailedCampaign = new DetailedFreeProductCampaign
+                    {
+                        Id = campaign.Id,
+                        CampaignName = campaign.CampaignName,
+                        StartDate = campaign.StartDate,
+                        EndDate = campaign.EndDate,
+                        Description = campaign.Description,
+                        IsActive = campaign.IsActive,
+                        ImagePath = campaign.ImagePath
+                    };
+
+                    // Process materials
+                    if (!string.IsNullOrEmpty(campaign.Materials))
+                    {
+                        try
+                        {
+                            var materialIds = campaign.Materials.Split(',').Select(int.Parse).ToList();
+                            var materialQuantities = !string.IsNullOrEmpty(campaign.MaterialQuantities) ?
+                                JsonSerializer.Deserialize<Dictionary<int, int>>(campaign.MaterialQuantities) :
+                                new Dictionary<int, int>();
+                            var freeProducts = !string.IsNullOrEmpty(campaign.FreeProducts) ?
+                                JsonSerializer.Deserialize<Dictionary<int, int>>(campaign.FreeProducts) :
+                                new Dictionary<int, int>();
+                            var freeQuantities = !string.IsNullOrEmpty(campaign.FreeQuantities) ?
+                                JsonSerializer.Deserialize<Dictionary<int, int>>(campaign.FreeQuantities) :
+                                new Dictionary<int, int>();
+
+                            foreach (var materialId in materialIds)
+                            {
+                                if (allMaterials.ContainsKey(materialId))
+                                {
+                                    detailedCampaign.MaterialDetails.Add(new MaterialDetail
+                                    {
+                                        MaterialId = materialId,
+                                        MaterialName = allMaterials[materialId].Materialname,
+                                        Quantity = materialQuantities.ContainsKey(materialId) ? materialQuantities[materialId] : 0
+                                    });
+                                }
+                            }
+
+                            foreach (var kvp in freeProducts)
+                            {
+                                var materialId = kvp.Key;
+                                var freeProductId = kvp.Value;
+
+                                if (allProducts.ContainsKey(freeProductId))
+                                {
+                                    detailedCampaign.FreeProductDetails[materialId] = new MaterialFreeProductDetail
+                                    {
+                                        FreeProductId = freeProductId,
+                                        FreeProductName = allProducts[freeProductId].ProductName,
+                                        FreeQuantity = freeQuantities.ContainsKey(materialId) ? freeQuantities[materialId] : 0
+                                    };
+                                }
+                            }
+                        }
+                        catch
+                        {
+                            // Handle deserialization error
+                        }
+                    }
+
+                    detailedFreeProductCampaigns.Add(detailedCampaign);
+                }
+
+                var viewModel = new ViewCampaignsViewModel
+                {
+                    DetailedPointsToCashCampaigns = detailedPointsToCashCampaigns,
+                    DetailedPointsRewardCampaigns = detailedPointsRewardCampaigns,
+                    DetailedFreeProductCampaigns = detailedFreeProductCampaigns,
+                    AmountReachGoalCampaigns = amountReachGoalCampaigns.Select(c => new AmountReachGoalCampaign
+                    {
+                        Id = c.Id,
+                        CampaignName = c.CampaignName,
+                        StartDate = c.StartDate,
+                        EndDate = c.EndDate,
+                        Description = c.Description,
+                        TargetAmount = c.TargetAmount,
+                        VoucherValue = c.VoucherValue,
+                        VoucherValidity = c.VoucherValidity,
+                        IsActive = c.IsActive,
+                        ImagePath = c.ImagePath
+                    }).ToList(),
+                    SessionDurationRewardCampaigns = sessionDurationRewardCampaigns.Select(c => new SessionDurationRewardCampaign
+                    {
+                        Id = c.Id,
+                        CampaignName = c.CampaignName,
+                        StartDate = c.StartDate,
+                        EndDate = c.EndDate,
+                        Description = c.Description,
+                        SessionDuration = c.SessionDuration,
+                        VoucherValue = c.VoucherValue,
+                        VoucherValidity = c.VoucherValidity,
+                        IsActive = c.IsActive,
+                        ImagePath = c.ImagePath
+                    }).ToList()
+                };
+
+                return View("~/Views/Home/Dealer/ViewCampaigns.cshtml", viewModel);
+            }
+            catch (Exception ex)
+            {
+                // Log the exception (in a real application, you would use a proper logging framework)
+                System.Diagnostics.Debug.WriteLine($"Error in ViewCampaigns action: {ex.Message}");
+                // Redirect to dealer home page if there's an error
+                return RedirectToAction("DealerHome");
+            }
         }
 
     }
