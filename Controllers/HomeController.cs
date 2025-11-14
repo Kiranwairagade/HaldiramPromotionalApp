@@ -2,9 +2,14 @@ using System.Diagnostics;
 using System.Text.Json;
 using HaldiramPromotionalApp.Data;
 using HaldiramPromotionalApp.Models;
+using HaldiramPromotionalApp.Services;
 using HaldiramPromotionalApp.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using QRCoder;
+using System.Drawing;
+using System.Drawing.Imaging;
+using System.IO;
 
 namespace HaldiramPromotionalApp.Controllers
 {
@@ -12,11 +17,13 @@ namespace HaldiramPromotionalApp.Controllers
     {
         private readonly ILogger<HomeController> _logger;
         private readonly ApplicationDbContext _context;
+        private readonly INotificationService _notificationService;
 
-        public HomeController(ILogger<HomeController> logger, ApplicationDbContext context)
+        public HomeController(ILogger<HomeController> logger, ApplicationDbContext context, INotificationService notificationService)
         {
             _logger = logger;
             _context = context;
+            _notificationService = notificationService;
         }
 
         public async Task<IActionResult> Index()
@@ -37,6 +44,12 @@ namespace HaldiramPromotionalApp.Controllers
                 if (userRole == "Admin")
                 {
                     return RedirectToAction("AdminDashboard");
+                }
+                
+                // If user is a Shopkeeper, redirect to shopkeeper dashboard
+                if (userRole == "Shopkeeper")
+                {
+                    return RedirectToAction("ShopkeeperHome");
                 }
             }
             
@@ -81,6 +94,131 @@ namespace HaldiramPromotionalApp.Controllers
                     .SumAsync(oi => (int?)oi.Points) ?? 0;
             }
             
+            // Log dealer information for debugging
+            System.Diagnostics.Debug.WriteLine($"Dealer: {dealer?.Id}, Total Points: {totalPoints}");
+            
+            // Check if dealer qualifies for any automatic voucher generation
+            if (dealer != null && totalPoints > 0)
+            {
+                // Check PointsToCash campaigns for automatic voucher generation
+                var pointsToCashCampaigns = await _context.PointsToCashCampaigns
+                    .Where(c => c.IsActive && c.StartDate <= DateTime.Now && c.EndDate >= DateTime.Now)
+                    .ToListAsync();
+                
+                // Log campaign count for debugging
+                System.Diagnostics.Debug.WriteLine($"Found {pointsToCashCampaigns.Count} active PointsToCash campaigns");
+                
+                foreach (var campaign in pointsToCashCampaigns)
+                {
+                    // Log campaign information for debugging
+                    System.Diagnostics.Debug.WriteLine($"Checking campaign {campaign.Id}: {campaign.CampaignName}, Threshold: {campaign.VoucherGenerationThreshold}, Dealer Points: {totalPoints}");
+                    
+                    // Check if dealer has enough points for this campaign
+                    if (totalPoints >= campaign.VoucherGenerationThreshold)
+                    {
+                        // Check if dealer already has a voucher for this campaign
+                        var existingVoucher = await _context.Vouchers
+                            .AnyAsync(v => v.DealerId == dealer.Id && v.CampaignId == campaign.Id && v.CampaignType == "PointsToCash");
+
+                        if (!existingVoucher)
+                        {
+                            // Generate voucher
+                            var voucherCode = $"PTC{dealer.Id}{campaign.Id}{DateTime.Now:yyyyMMddHHmmss}";
+                            var voucher = new Voucher
+                            {
+                                VoucherCode = voucherCode,
+                                DealerId = dealer.Id,
+                                CampaignType = "PointsToCash",
+                                CampaignId = campaign.Id,
+                                VoucherValue = campaign.VoucherValue,
+                                PointsUsed = campaign.VoucherGenerationThreshold,
+                                IssueDate = DateTime.Now,
+                                ExpiryDate = DateTime.Now.AddDays(campaign.VoucherValidity),
+                                QRCodeData = $"{voucherCode}|{dealer.Id}|{campaign.VoucherValue}|{DateTime.Now.AddDays(campaign.VoucherValidity):yyyy-MM-dd}"
+                            };
+
+                            _context.Vouchers.Add(voucher);
+                            await _context.SaveChangesAsync();
+                            
+                            // Log successful voucher creation for debugging
+                            System.Diagnostics.Debug.WriteLine($"Created PointsToCash voucher {voucherCode} for dealer {dealer.Id} and campaign {campaign.Id}");
+                            
+                            // Create notification for voucher generation
+                            await _notificationService.CreateVoucherNotificationAsync(user.Id, voucherCode, campaign.VoucherValue, voucher.Id);
+                        }
+                        else
+                        {
+                            // Log that voucher already exists
+                            System.Diagnostics.Debug.WriteLine($"Dealer {dealer.Id} already has a voucher for PointsToCash campaign {campaign.Id}");
+                        }
+                    }
+                    else
+                    {
+                        // Log insufficient points
+                        System.Diagnostics.Debug.WriteLine($"Dealer {dealer.Id} has {totalPoints} points, but needs {campaign.VoucherGenerationThreshold} for campaign {campaign.Id}");
+                    }
+                }
+
+                // Check PointsReward campaigns for automatic voucher generation
+                var pointsRewardCampaigns = await _context.PointsRewardCampaigns
+                    .Where(c => c.IsActive && c.StartDate <= DateTime.Now && c.EndDate >= DateTime.Now)
+                    .ToListAsync();
+                
+                // Log campaign count for debugging
+                System.Diagnostics.Debug.WriteLine($"Found {pointsRewardCampaigns.Count} active PointsReward campaigns");
+
+                foreach (var campaign in pointsRewardCampaigns)
+                {
+                    // Log campaign information for debugging
+                    System.Diagnostics.Debug.WriteLine($"Checking campaign {campaign.Id}: {campaign.CampaignName}, Threshold: {campaign.VoucherGenerationThreshold}, Dealer Points: {totalPoints}");
+                    
+                    // Check if dealer has enough points for this campaign
+                    if (totalPoints >= campaign.VoucherGenerationThreshold)
+                    {
+                        // Check if dealer already has a voucher for this campaign
+                        var existingVoucher = await _context.Vouchers
+                            .AnyAsync(v => v.DealerId == dealer.Id && v.CampaignId == campaign.Id && v.CampaignType == "PointsReward");
+
+                        if (!existingVoucher)
+                        {
+                            // Generate voucher
+                            var voucherCode = $"PTR{dealer.Id}{campaign.Id}{DateTime.Now:yyyyMMddHHmmss}";
+                            var voucher = new Voucher
+                            {
+                                VoucherCode = voucherCode,
+                                DealerId = dealer.Id,
+                                CampaignType = "PointsReward",
+                                CampaignId = campaign.Id,
+                                VoucherValue = 100, // Default value for reward vouchers
+                                PointsUsed = campaign.VoucherGenerationThreshold,
+                                IssueDate = DateTime.Now,
+                                ExpiryDate = DateTime.Now.AddDays(campaign.VoucherValidity),
+                                QRCodeData = $"{voucherCode}|{dealer.Id}|100|{DateTime.Now.AddDays(campaign.VoucherValidity):yyyy-MM-dd}"
+                            };
+
+                            _context.Vouchers.Add(voucher);
+                            await _context.SaveChangesAsync();
+                            
+                            // Log successful voucher creation for debugging
+                            System.Diagnostics.Debug.WriteLine($"Created PointsReward voucher {voucherCode} for dealer {dealer.Id} and campaign {campaign.Id}");
+                            
+                            // Create notification for voucher generation
+                            await _notificationService.CreateVoucherNotificationAsync(user.Id, voucherCode, 100, voucher.Id);
+                        }
+                        else
+                        {
+                            // Log that voucher already exists
+                            System.Diagnostics.Debug.WriteLine($"Dealer {dealer.Id} already has a voucher for PointsReward campaign {campaign.Id}");
+                        }
+                    }
+                    else
+                    {
+                        // Log insufficient points
+                        System.Diagnostics.Debug.WriteLine($"Dealer {dealer.Id} has {totalPoints} points, but needs {campaign.VoucherGenerationThreshold} for campaign {campaign.Id}");
+                    }
+                }
+            }
+
             var viewModel = new DealerDashboardViewModel
             {
                 // Get all posters
@@ -175,12 +313,101 @@ namespace HaldiramPromotionalApp.Controllers
                     .Where(o => o.DealerId == dealer.Id)
                     .OrderByDescending(o => o.OrderDate)
                     .FirstOrDefaultAsync() : null,
+                
+                // Get the most recent DealerBasicOrders for the logged-in dealer
+                RecentDealerBasicOrders = dealer != null ? await _context.DealerBasicOrders
+                    .Where(dbo => dbo.DealerId == dealer.Id)
+                    .OrderByDescending(dbo => dbo.Id) // Assuming Id is sequential, otherwise add a date field
+                    .Take(10) // Limit to 10 most recent orders
+                    .ToListAsync() : new List<DealerBasicOrder>(),
                     
                 // Set the total points for the dealer
                 TotalPoints = totalPoints
             };
             
             return View("~/Views/Home/Dealer/DealerHome.cshtml", viewModel);
+        }
+
+        public async Task<IActionResult> ShopkeeperHome(bool showProductForm = false, int voucherId = 0)
+        {
+            // Check if user is logged in and is a Shopkeeper
+            if (HttpContext.Session.GetString("UserName") == null || HttpContext.Session.GetString("role") != "Shopkeeper")
+            {
+                return RedirectToAction("Login");
+            }
+
+            try
+            {
+                // Get the logged-in user's information
+                var userName = HttpContext.Session.GetString("UserName");
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.phoneno == userName);
+
+                // Get the shopkeeper information for this user
+                ShopkeeperMaster shopkeeper = null;
+                if (user != null)
+                {
+                    // Assuming the ShopkeeperMaster.PhoneNumber corresponds to the User.phoneno for shopkeepers
+                    shopkeeper = await _context.ShopkeeperMasters.FirstOrDefaultAsync(s => s.PhoneNumber == user.phoneno);
+                }
+
+                if (shopkeeper == null)
+                {
+                    // If no shopkeeper found, redirect to login
+                    return RedirectToAction("Login");
+                }
+
+                // Get all vouchers that can be redeemed by this shopkeeper (not redeemed yet and not expired)
+                var vouchers = await _context.Vouchers
+                    .Where(v => !v.IsRedeemed && v.ExpiryDate > DateTime.Now)
+                    .OrderByDescending(v => v.IssueDate)
+                    .ToListAsync();
+
+                // Get redemption history (recently redeemed vouchers)
+                // Include dealer information for better context
+                var redemptionHistory = await _context.Vouchers
+                    .Include(v => v.Dealer)
+                    .Where(v => v.IsRedeemed)
+                    .OrderByDescending(v => v.RedeemedDate)
+                    .Take(20) // Limit to 20 most recent redemptions
+                    .ToListAsync();
+
+                // Generate QR code data for each voucher
+                var voucherQRCodeData = new Dictionary<int, string>();
+                foreach (var voucher in vouchers)
+                {
+                    if (string.IsNullOrEmpty(voucher.QRCodeData))
+                    {
+                        // Generate QR code data if not present
+                        voucher.QRCodeData = $"{voucher.VoucherCode}|{voucher.DealerId}|{voucher.VoucherValue}|{voucher.ExpiryDate:yyyy-MM-dd}";
+                        _context.Vouchers.Update(voucher);
+                    }
+
+                    // Generate QR code image
+                    voucherQRCodeData[voucher.Id] = GenerateQRCodeBase64(voucher.QRCodeData);
+                }
+
+                // Save any changes to QR code data
+                await _context.SaveChangesAsync();
+
+                var viewModel = new VoucherViewModel
+                {
+                    Vouchers = vouchers,
+                    VoucherQRCodeData = voucherQRCodeData,
+                    Shopkeeper = shopkeeper,
+                    RedemptionHistory = redemptionHistory, // Add redemption history to the view model
+                    ShowProductForm = showProductForm,
+                    VoucherId = voucherId
+                };
+
+                return View("~/Views/Home/Shopkeeper/ShopkeeperHome.cshtml", viewModel);
+            }
+            catch (Exception ex)
+            {
+                // Log the exception
+                System.Diagnostics.Debug.WriteLine($"Error in ShopkeeperHome action: {ex.Message}");
+                // Redirect to login if there's an error
+                return RedirectToAction("Login");
+            }
         }
 
         public IActionResult AdminDashboard()
@@ -197,6 +424,70 @@ namespace HaldiramPromotionalApp.Controllers
         public IActionResult Privacy()
         {
             return View();
+        }
+
+        // Test action to seed DealerBasicOrders data
+        public async Task<IActionResult> SeedDealerBasicOrders()
+        {
+            // Check if user is logged in and is an Admin
+            if (HttpContext.Session.GetString("UserName") == null || HttpContext.Session.GetString("role") != "Admin")
+            {
+                return RedirectToAction("Login");
+            }
+
+            try
+            {
+                // Get a test dealer
+                var dealer = await _context.DealerMasters.FirstOrDefaultAsync();
+                if (dealer == null)
+                {
+                    ViewBag.Message = "No dealer found in the database.";
+                    return View("Index");
+                }
+
+                // Create test DealerBasicOrders
+                var testOrders = new List<DealerBasicOrder>
+                {
+                    new DealerBasicOrder
+                    {
+                        DealerId = dealer.Id,
+                        MaterialName = "Test Product 1",
+                        SapCode = "TP001",
+                        ShortCode = "TST1",
+                        Quantity = 5,
+                        Rate = 10.50m
+                    },
+                    new DealerBasicOrder
+                    {
+                        DealerId = dealer.Id,
+                        MaterialName = "Test Product 2",
+                        SapCode = "TP002",
+                        ShortCode = "TST2",
+                        Quantity = 3,
+                        Rate = 15.75m
+                    },
+                    new DealerBasicOrder
+                    {
+                        DealerId = dealer.Id,
+                        MaterialName = "Test Product 3",
+                        SapCode = "TP003",
+                        ShortCode = "TST3",
+                        Quantity = 2,
+                        Rate = 20.00m
+                    }
+                };
+
+                _context.DealerBasicOrders.AddRange(testOrders);
+                await _context.SaveChangesAsync();
+
+                ViewBag.Message = "Successfully added 3 test DealerBasicOrders to the database.";
+                return View("Index");
+            }
+            catch (Exception ex)
+            {
+                ViewBag.Message = $"Error seeding DealerBasicOrders: {ex.Message}";
+                return View("Index");
+            }
         }
 
         public async Task<IActionResult> SeedMaterials()
@@ -350,6 +641,11 @@ namespace HaldiramPromotionalApp.Controllers
                         // Admin gets access to admin dashboard
                         return RedirectToAction("AdminDashboard");
                     }
+                    else if (obj.Role == "Shopkeeper")
+                    {
+                        // Shopkeeper gets access to shopkeeper dashboard
+                        return RedirectToAction("ShopkeeperHome");
+                    }
                     return RedirectToAction("Index");
                 }
                 else
@@ -371,11 +667,15 @@ namespace HaldiramPromotionalApp.Controllers
                 {
                     return RedirectToAction("AdminDashboard");
                 }
+                else if (userRole == "Shopkeeper")
+                {
+                    return RedirectToAction("ShopkeeperHome");
+                }
                 return RedirectToAction("Index");
             }
         }
         
-        public async Task<IActionResult> Logout()
+        public IActionResult Logout()
         {
             HttpContext.Session.Clear();
             HttpContext.Session.Remove("UserName");
@@ -668,5 +968,739 @@ namespace HaldiramPromotionalApp.Controllers
             }
         }
 
+        public async Task<IActionResult> Vouchers()
+        {
+            // Check if user is logged in and is a Dealer
+            if (HttpContext.Session.GetString("UserName") == null || HttpContext.Session.GetString("role") != "Dealer")
+            {
+                return RedirectToAction("Login");
+            }
+
+            try
+            {
+                // Get the logged-in user's information
+                var userName = HttpContext.Session.GetString("UserName");
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.phoneno == userName);
+
+                // Get the dealer information for this user
+                DealerMaster dealer = null;
+                if (user != null)
+                {
+                    // Assuming the DealerMaster.PhoneNo corresponds to the User.phoneno for dealers
+                    dealer = await _context.DealerMasters.FirstOrDefaultAsync(d => d.PhoneNo == user.phoneno);
+                }
+
+                if (dealer == null)
+                {
+                    // If no dealer found, redirect to login
+                    return RedirectToAction("Login");
+                }
+
+                // Get all vouchers for this dealer
+                var vouchers = await _context.Vouchers
+                    .Where(v => v.DealerId == dealer.Id)
+                    .OrderByDescending(v => v.IssueDate)
+                    .ToListAsync();
+                
+                // Log voucher count for debugging
+                System.Diagnostics.Debug.WriteLine($"Found {vouchers.Count} vouchers for dealer {dealer.Id}");
+
+                // Ensure all vouchers have QR code data
+                var voucherQRCodeData = new Dictionary<int, string>();
+                foreach (var voucher in vouchers)
+                {
+                    if (string.IsNullOrEmpty(voucher.QRCodeData))
+                    {
+                        // Generate QR code data if not present
+                        voucher.QRCodeData = $"{voucher.VoucherCode}|{dealer.Id}|{voucher.VoucherValue}|{voucher.ExpiryDate:yyyy-MM-dd}";
+                        _context.Vouchers.Update(voucher);
+                    }
+                    
+                    // Generate QR code image
+                    voucherQRCodeData[voucher.Id] = GenerateQRCodeBase64(voucher.QRCodeData);
+                }
+                
+                // Save any changes to QR code data
+                await _context.SaveChangesAsync();
+
+                // Calculate total points for the dealer
+                var totalPoints = await _context.OrderItems
+                    .Where(oi => oi.Order.DealerId == dealer.Id)
+                    .SumAsync(oi => (int?)oi.Points) ?? 0;
+                
+                // Log total points for debugging
+                System.Diagnostics.Debug.WriteLine($"Dealer {dealer.Id} has {totalPoints} total points");
+
+                var viewModel = new VoucherViewModel
+                {
+                    Vouchers = vouchers,
+                    TotalPoints = totalPoints,
+                    Dealer = dealer,
+                    VoucherQRCodeData = voucherQRCodeData
+                };
+
+                return View("~/Views/Home/Dealer/Vouchers.cshtml", viewModel);
+            }
+            catch (Exception ex)
+            {
+                // Log the exception (in a real application, you would use a proper logging framework)
+                System.Diagnostics.Debug.WriteLine($"Error in Vouchers action: {ex.Message}");
+                // Redirect to dealer home page if there's an error
+                return RedirectToAction("DealerHome");
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> GenerateVoucher(int campaignId, string campaignType, int pointsToUse)
+        {
+            // Check if user is logged in and is a Dealer
+            if (HttpContext.Session.GetString("UserName") == null || HttpContext.Session.GetString("role") != "Dealer")
+            {
+                return RedirectToAction("Login");
+            }
+
+            try
+            {
+                // Get the logged-in user's information
+                var userName = HttpContext.Session.GetString("UserName");
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.phoneno == userName);
+
+                // Get the dealer information for this user
+                DealerMaster dealer = null;
+                if (user != null)
+                {
+                    // Assuming the DealerMaster.PhoneNo corresponds to the User.phoneno for dealers
+                    dealer = await _context.DealerMasters.FirstOrDefaultAsync(d => d.PhoneNo == user.phoneno);
+                }
+
+                if (dealer == null)
+                {
+                    // If no dealer found, redirect to login
+                    return RedirectToAction("Login");
+                }
+
+                // Validate that the dealer has enough points
+                var totalPoints = await _context.OrderItems
+                    .Where(oi => oi.Order.DealerId == dealer.Id)
+                    .SumAsync(oi => (int?)oi.Points) ?? 0;
+
+                if (totalPoints < pointsToUse)
+                {
+                    TempData["ErrorMessage"] = "Insufficient points to generate this voucher.";
+                    return RedirectToAction("Vouchers");
+                }
+
+                // Get campaign details to determine voucher value
+                decimal voucherValue = 0;
+                int voucherValidity = 30; // Default validity
+
+                if (campaignType == "PointsToCash")
+                {
+                    var campaign = await _context.PointsToCashCampaigns.FirstOrDefaultAsync(c => c.Id == campaignId);
+                    if (campaign != null)
+                    {
+                        voucherValue = campaign.VoucherValue;
+                        voucherValidity = campaign.VoucherValidity;
+                    }
+                }
+                else if (campaignType == "PointsReward")
+                {
+                    var campaign = await _context.PointsRewardCampaigns.FirstOrDefaultAsync(c => c.Id == campaignId);
+                    if (campaign != null)
+                    {
+                        voucherValidity = campaign.VoucherValidity;
+                        // For PointsReward campaigns, we might want to set a default value or calculate based on reward product
+                        voucherValue = 100; // Default value
+                    }
+                }
+
+                // Generate unique voucher code
+                var voucherCode = $"V{dealer.Id}{DateTime.Now:yyyyMMddHHmmss}";
+
+                // Create voucher
+                var voucher = new Voucher
+                {
+                    VoucherCode = voucherCode,
+                    DealerId = dealer.Id,
+                    CampaignType = campaignType,
+                    CampaignId = campaignId,
+                    VoucherValue = voucherValue,
+                    PointsUsed = pointsToUse,
+                    IssueDate = DateTime.Now,
+                    ExpiryDate = DateTime.Now.AddDays(voucherValidity),
+                    QRCodeData = $"{voucherCode}|{dealer.Id}|{voucherValue}|{DateTime.Now.AddDays(voucherValidity):yyyy-MM-dd}"
+                };
+
+                _context.Vouchers.Add(voucher);
+                await _context.SaveChangesAsync();
+
+                TempData["SuccessMessage"] = $"Voucher generated successfully! Code: {voucherCode}";
+                return RedirectToAction("Vouchers");
+            }
+            catch (Exception ex)
+            {
+                // Log the exception
+                System.Diagnostics.Debug.WriteLine($"Error in GenerateVoucher action: {ex.Message}");
+                TempData["ErrorMessage"] = "Error generating voucher. Please try again.";
+                return RedirectToAction("Vouchers");
+            }
+        }
+
+        private string GenerateQRCodeBase64(string data)
+        {
+            try
+            {
+                using (var qrGenerator = new QRCodeGenerator())
+                using (var qrCodeData = qrGenerator.CreateQrCode(data, QRCodeGenerator.ECCLevel.Q))
+                using (var qrCode = new Base64QRCode(qrCodeData))
+                {
+                    return qrCode.GetGraphic(20); // 20 pixels per module
+                }
+            }
+            catch
+            {
+                // Return a default/base64 encoded placeholder if QR generation fails
+                return "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg=="; // 1x1 transparent PNG
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> RedeemVoucher(string voucherCode)
+        {
+            // Check if user is logged in
+            if (HttpContext.Session.GetString("UserName") == null)
+            {
+                return RedirectToAction("Login");
+            }
+
+            // Get user role
+            var userRole = HttpContext.Session.GetString("role");
+
+            try
+            {
+                // Handle redemption based on user role
+                if (userRole == "Dealer")
+                {
+                    // Existing dealer redemption logic
+                    // Get the logged-in user's information
+                    var userName = HttpContext.Session.GetString("UserName");
+                    var user = await _context.Users.FirstOrDefaultAsync(u => u.phoneno == userName);
+
+                    // Get the dealer information for this user
+                    DealerMaster dealer = null;
+                    if (user != null)
+                    {
+                        // Assuming the DealerMaster.PhoneNo corresponds to the User.phoneno for dealers
+                        dealer = await _context.DealerMasters.FirstOrDefaultAsync(d => d.PhoneNo == user.phoneno);
+                    }
+
+                    if (dealer == null)
+                    {
+                        // If no dealer found, redirect to login
+                        return RedirectToAction("Login");
+                    }
+
+                    // Find the voucher
+                    var voucher = await _context.Vouchers.FirstOrDefaultAsync(v => v.VoucherCode == voucherCode && v.DealerId == dealer.Id);
+
+                    if (voucher == null)
+                    {
+                        TempData["ErrorMessage"] = "Voucher not found.";
+                        return RedirectToAction("Vouchers");
+                    }
+
+                    // Check if voucher is already redeemed
+                    if (voucher.IsRedeemed)
+                    {
+                        TempData["ErrorMessage"] = "This voucher has already been redeemed.";
+                        return RedirectToAction("Vouchers");
+                    }
+
+                    // Check if voucher is expired
+                    if (DateTime.Now > voucher.ExpiryDate)
+                    {
+                        TempData["ErrorMessage"] = "This voucher has expired.";
+                        return RedirectToAction("Vouchers");
+                    }
+
+                    // Redeem the voucher
+                    voucher.IsRedeemed = true;
+                    voucher.RedeemedDate = DateTime.Now;
+
+                    _context.Vouchers.Update(voucher);
+                    await _context.SaveChangesAsync();
+
+                    TempData["SuccessMessage"] = $"Voucher {voucher.VoucherCode} redeemed successfully!";
+                    return RedirectToAction("Vouchers");
+                }
+                else if (userRole == "Shopkeeper")
+                {
+                    // Shopkeeper redemption logic
+                    // Get the logged-in user's information
+                    var userName = HttpContext.Session.GetString("UserName");
+                    var user = await _context.Users.FirstOrDefaultAsync(u => u.phoneno == userName);
+
+                    // Get the shopkeeper information for this user
+                    ShopkeeperMaster shopkeeper = null;
+                    if (user != null)
+                    {
+                        // Assuming the ShopkeeperMaster.PhoneNumber corresponds to the User.phoneno for shopkeepers
+                        shopkeeper = await _context.ShopkeeperMasters.FirstOrDefaultAsync(s => s.PhoneNumber == user.phoneno);
+                    }
+
+                    if (shopkeeper == null)
+                    {
+                        // If no shopkeeper found, redirect to login
+                        return RedirectToAction("Login");
+                    }
+
+                    // Find the voucher (shopkeeper can redeem any valid voucher)
+                    var voucher = await _context.Vouchers.FirstOrDefaultAsync(v => v.VoucherCode == voucherCode);
+
+                    if (voucher == null)
+                    {
+                        TempData["ErrorMessage"] = "Voucher not found.";
+                        return RedirectToAction("ShopkeeperHome");
+                    }
+
+                    // Check if voucher is already redeemed
+                    if (voucher.IsRedeemed)
+                    {
+                        TempData["ErrorMessage"] = "This voucher has already been redeemed.";
+                        return RedirectToAction("ShopkeeperHome");
+                    }
+
+                    // Check if voucher is expired
+                    if (DateTime.Now > voucher.ExpiryDate)
+                    {
+                        TempData["ErrorMessage"] = "This voucher has expired.";
+                        return RedirectToAction("ShopkeeperHome");
+                    }
+
+                    // Redeem the voucher
+                    voucher.IsRedeemed = true;
+                    voucher.RedeemedDate = DateTime.Now;
+
+                    _context.Vouchers.Update(voucher);
+                    await _context.SaveChangesAsync();
+
+                    // If this is a Points-to-Cash voucher, show product details form
+                    if (voucher.CampaignType == "PointsToCash")
+                    {
+                        TempData["SuccessMessage"] = $"Voucher {voucher.VoucherCode} redeemed successfully! Please enter product details.";
+                        return RedirectToAction("ShopkeeperHome", new { showProductForm = true, voucherId = voucher.Id });
+                    }
+                    else
+                    {
+                        TempData["SuccessMessage"] = $"Voucher {voucher.VoucherCode} redeemed successfully!";
+                        return RedirectToAction("ShopkeeperHome");
+                    }
+                }
+                else
+                {
+                    // For other roles, redirect to index
+                    TempData["ErrorMessage"] = "You don't have permission to redeem vouchers.";
+                    return RedirectToAction("Index");
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log the exception
+                System.Diagnostics.Debug.WriteLine($"Error in RedeemVoucher action: {ex.Message}");
+                TempData["ErrorMessage"] = "Error redeeming voucher. Please try again.";
+
+                // Redirect based on user role
+                if (userRole == "Dealer")
+                {
+                    return RedirectToAction("Vouchers");
+                }
+                else if (userRole == "Shopkeeper")
+                {
+                    return RedirectToAction("ShopkeeperHome");
+                }
+                else
+                {
+                    return RedirectToAction("Index");
+                }
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> RedeemVoucherByQR([FromBody] QRScanModel model)
+        {
+            // Check if user is logged in
+            if (HttpContext.Session.GetString("UserName") == null)
+            {
+                return Json(new { success = false, message = "You must be logged in to redeem vouchers." });
+            }
+            
+            // Get user role
+            var userRole = HttpContext.Session.GetString("role");
+            
+            if (userRole != "Shopkeeper")
+            {
+                return Json(new { success = false, message = "Only shopkeepers can redeem vouchers." });
+            }
+            
+            try
+            {
+                // Parse the QR code data
+                // Expected format: {VoucherCode}|{DealerId}|{VoucherValue}|{ExpiryDate}
+                var qrDataParts = model.QrData.Split('|');
+                if (qrDataParts.Length != 4)
+                {
+                    return Json(new { success = false, message = "Invalid QR code format." });
+                }
+                
+                var voucherCode = qrDataParts[0];
+                
+                // Find the voucher by code
+                var voucher = await _context.Vouchers.FirstOrDefaultAsync(v => v.VoucherCode == voucherCode);
+                
+                if (voucher == null)
+                {
+                    return Json(new { success = false, message = "Voucher not found." });
+                }
+                
+                // Check if voucher is already redeemed
+                if (voucher.IsRedeemed)
+                {
+                    return Json(new { success = false, message = "This voucher has already been redeemed." });
+                }
+
+                // Check if voucher is expired
+                if (DateTime.Now > voucher.ExpiryDate)
+                {
+                    return Json(new { success = false, message = "This voucher has expired." });
+                }
+
+                // Redeem the voucher
+                voucher.IsRedeemed = true;
+                voucher.RedeemedDate = DateTime.Now;
+
+                _context.Vouchers.Update(voucher);
+                await _context.SaveChangesAsync();
+
+                // If this is a Points-to-Cash voucher, show product details form
+                if (voucher.CampaignType == "PointsToCash")
+                {
+                    // Return special response to indicate Points-to-Cash voucher redemption
+                    return Json(new { success = true, message = $"Voucher {voucher.VoucherCode} redeemed successfully!", requiresProductDetails = true, voucherId = voucher.Id });
+                }
+                else
+                {
+                    return Json(new { success = true, message = $"Voucher {voucher.VoucherCode} redeemed successfully!" });
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log the exception
+                System.Diagnostics.Debug.WriteLine($"Error in RedeemVoucherByQR action: {ex.Message}");
+                return Json(new { success = false, message = "Error redeeming voucher. Please try again." });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> SaveProductDetails(int voucherId, string ProductName, string ProductDescription, decimal ProductPrice, int Quantity)
+        {
+            // Check if user is logged in and is a Shopkeeper
+            if (HttpContext.Session.GetString("UserName") == null || HttpContext.Session.GetString("role") != "Shopkeeper")
+            {
+                return RedirectToAction("Login");
+            }
+
+            try
+            {
+                // In a real implementation, you would save these product details to a database
+                // For now, we'll just show a success message
+                
+                // Find the voucher to get its details
+                var voucher = await _context.Vouchers.FirstOrDefaultAsync(v => v.Id == voucherId);
+                
+                if (voucher == null)
+                {
+                    TempData["ErrorMessage"] = "Voucher not found.";
+                    return RedirectToAction("ShopkeeperHome");
+                }
+                
+                // Here you would typically save the product details to a database table
+                // For example:
+                // var productDetails = new RedeemedProduct 
+                // { 
+                //     VoucherId = voucherId, 
+                //     ProductName = ProductName, 
+                //     Description = ProductDescription, 
+                //     Price = ProductPrice, 
+                //     Quantity = Quantity,
+                //     RedemptionDate = DateTime.Now
+                // };
+                // _context.RedeemedProducts.Add(productDetails);
+                // await _context.SaveChangesAsync();
+                
+                TempData["SuccessMessage"] = $"Voucher {voucher.VoucherCode} redeemed successfully! Product details saved.";
+                return RedirectToAction("ShopkeeperHome");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error saving product details: {ex.Message}");
+                TempData["ErrorMessage"] = "Error saving product details. Please try again.";
+                return RedirectToAction("ShopkeeperHome");
+            }
+        }
+
+        // API endpoint to get notifications for the logged-in dealer
+        [HttpGet]
+        public async Task<IActionResult> GetNotifications()
+        {
+            // Check if user is logged in and is a Dealer
+            if (HttpContext.Session.GetString("UserName") == null || HttpContext.Session.GetString("role") != "Dealer")
+            {
+                return Json(new { success = false, message = "Unauthorized" });
+            }
+
+            try
+            {
+                // Get the logged-in user's information
+                var userName = HttpContext.Session.GetString("UserName");
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.phoneno == userName);
+
+                if (user == null)
+                {
+                    return Json(new { success = false, message = "User not found" });
+                }
+
+                // Get unread notifications for the user
+                var notifications = await _context.Notifications
+                    .Where(n => n.UserId == user.Id && !n.IsRead)
+                    .OrderByDescending(n => n.CreatedDate)
+                    .Select(n => new
+                    {
+                        id = n.Id,
+                        title = n.Title,
+                        message = n.Message,
+                        type = n.Type,
+                        time = n.CreatedDate.ToString("yyyy-MM-dd"),
+                        badge = GetBadgeText(n.Type)
+                    })
+                    .ToListAsync();
+
+                return Json(new { success = true, notifications });
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error in GetNotifications action: {ex.Message}");
+                return Json(new { success = false, message = "Error retrieving notifications" });
+            }
+        }
+
+        // API endpoint to check if there are any notifications in the database
+        [HttpGet]
+        public async Task<IActionResult> CheckNotifications()
+        {
+            try
+            {
+                var count = await _context.Notifications.CountAsync();
+                var sample = await _context.Notifications.Take(5).ToListAsync();
+                
+                return Json(new { 
+                    success = true, 
+                    totalNotifications = count,
+                    sampleNotifications = sample.Select(n => new {
+                        n.Id,
+                        n.Title,
+                        n.Message,
+                        n.Type,
+                        n.UserId,
+                        CreatedDate = n.CreatedDate.ToString("yyyy-MM-dd HH:mm:ss"),
+                        n.IsRead
+                    }).ToList()
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        // API endpoint to get notifications for testing
+        [HttpGet]
+        public async Task<IActionResult> TestNotifications()
+        {
+            try
+            {
+                // Get the logged-in user's information
+                var userName = HttpContext.Session.GetString("UserName");
+                var userRole = HttpContext.Session.GetString("role");
+
+                if (string.IsNullOrEmpty(userName) || userRole != "Dealer")
+                {
+                    return Json(new { success = false, message = "Unauthorized" });
+                }
+
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.phoneno == userName);
+                if (user == null)
+                {
+                    return Json(new { success = false, message = "User not found" });
+                }
+
+                // Get all notifications for the user (both read and unread)
+                var notifications = await _context.Notifications
+                    .Where(n => n.UserId == user.Id)
+                    .OrderByDescending(n => n.CreatedDate)
+                    .ToListAsync();
+
+                return Json(new { 
+                    success = true, 
+                    count = notifications.Count,
+                    notifications = notifications.Select(n => new {
+                        n.Id,
+                        n.Title,
+                        n.Message,
+                        n.Type,
+                        CreatedDate = n.CreatedDate.ToString("yyyy-MM-dd HH:mm:ss"),
+                        n.IsRead
+                    }).ToList()
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        // API endpoint to create test notifications (for testing purposes)
+        [HttpPost]
+        public async Task<IActionResult> CreateTestNotifications()
+        {
+            // Check if user is logged in and is a Dealer
+            if (HttpContext.Session.GetString("UserName") == null || HttpContext.Session.GetString("role") != "Dealer")
+            {
+                return Json(new { success = false, message = "Unauthorized" });
+            }
+
+            try
+            {
+                // Get the logged-in user's information
+                var userName = HttpContext.Session.GetString("UserName");
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.phoneno == userName);
+
+                if (user == null)
+                {
+                    return Json(new { success = false, message = "User not found" });
+                }
+
+                // Create test notifications
+                var notifications = new[]
+                {
+                    new Notification
+                    {
+                        UserId = user.Id,
+                        Title = "New Campaign Started",
+                        Message = "Points to Cash campaign \"Diwali Special\" has started!",
+                        Type = "campaign",
+                        CreatedDate = DateTime.Now.AddMinutes(-30)
+                    },
+                    new Notification
+                    {
+                        UserId = user.Id,
+                        Title = "Order Placed",
+                        Message = "Your order #12345 has been placed successfully!",
+                        Type = "order",
+                        CreatedDate = DateTime.Now.AddHours(-2)
+                    },
+                    new Notification
+                    {
+                        UserId = user.Id,
+                        Title = "Voucher Generated",
+                        Message = "Voucher V123456789 worth ₹500 has been generated!",
+                        Type = "voucher",
+                        CreatedDate = DateTime.Now.AddHours(-5)
+                    }
+                };
+
+                _context.Notifications.AddRange(notifications);
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true, message = "Test notifications created successfully" });
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error in CreateTestNotifications action: {ex.Message}");
+                return Json(new { success = false, message = "Error creating test notifications" });
+            }
+        }
+
+        // API endpoint to add test notifications
+        [HttpPost]
+        public async Task<IActionResult> AddTestNotifications()
+        {
+            try
+            {
+                // Get the logged-in user's information
+                var userName = HttpContext.Session.GetString("UserName");
+                var userRole = HttpContext.Session.GetString("role");
+
+                if (string.IsNullOrEmpty(userName) || userRole != "Dealer")
+                {
+                    return Json(new { success = false, message = "Unauthorized" });
+                }
+
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.phoneno == userName);
+                if (user == null)
+                {
+                    return Json(new { success = false, message = "User not found" });
+                }
+
+                // Create test notifications
+                var testNotifications = new List<Notification>
+                {
+                    new Notification
+                    {
+                        UserId = user.Id,
+                        Title = "New Campaign Started",
+                        Message = "Exciting new campaign 'Summer Sale' is now live!",
+                        Type = "campaign",
+                        CreatedDate = DateTime.Now.AddMinutes(-30)
+                    },
+                    new Notification
+                    {
+                        UserId = user.Id,
+                        Title = "Order Confirmation",
+                        Message = "Your order #ORD-7890 has been confirmed and is being processed.",
+                        Type = "order",
+                        CreatedDate = DateTime.Now.AddHours(-2)
+                    },
+                    new Notification
+                    {
+                        UserId = user.Id,
+                        Title = "Voucher Available",
+                        Message = "You have a new voucher worth ₹500 available for use.",
+                        Type = "voucher",
+                        CreatedDate = DateTime.Now.AddHours(-5)
+                    }
+                };
+
+                _context.Notifications.AddRange(testNotifications);
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true, message = "Test notifications added successfully" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        // Helper method to get badge text based on notification type
+        private string GetBadgeText(string type)
+        {
+            return type.ToLower() switch
+            {
+                "campaign" => "Campaign",
+                "order" => "Order",
+                "voucher" => "Voucher",
+                _ => "Notification"
+            };
+        }
     }
 }

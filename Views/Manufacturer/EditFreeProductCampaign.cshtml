@@ -99,63 +99,65 @@
                                         freeQuantity = Model.FreeQuantities[material.Id];
                                     }
                                     
-                                    <div class="p-3 bg-gray-50">
+                                    <div class="material-item flex flex-col mb-3 p-3 border border-gray-200 rounded" data-category="@material.Category">
                                         <div class="flex items-center mb-2">
                                             <input type="checkbox" 
                                                    name="SelectedMaterialIds" 
                                                    value="@material.Id" 
                                                    id="material_@material.Id"
                                                    @(isSelected ? "checked" : "") 
-                                                   class="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500" />
+                                                   class="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500 material-checkbox" />
                                             <input type="hidden" name="AllMaterials[@i].Id" value="@material.Id" />
                                             <input type="hidden" name="AllMaterials[@i].Name" value="@material.Name" />
                                             <label for="material_@material.Id" class="ml-3 block text-sm font-medium text-gray-700">
                                                 @material.Name (@material.Category)
                                             </label>
+                                            <input type="number" 
+                                                   name="MaterialQuantities[@material.Id]" 
+                                                   id="quantity_@material.Id"
+                                                   value="@quantity" 
+                                                   min="1" 
+                                                   class="ml-2 w-20 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm material-quantities"
+                                                   placeholder="Qty"
+                                                   style="@(isSelected ? "display: block;" : "display: none;")">
                                         </div>
                                         
-                                        <div class="grid grid-cols-1 gap-3 sm:grid-cols-3 ml-7">
-                                            <div>
-                                                <label for="quantity_@material.Id" class="block text-sm text-gray-600 mb-1">Quantity Required:</label>
-                                                <input type="number" 
-                                                       name="MaterialQuantities[@material.Id]" 
-                                                       id="quantity_@material.Id"
-                                                       value="@quantity" 
-                                                       min="1" 
-                                                       class="w-full border border-gray-300 shadow-sm py-1 px-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
-                                            </div>
-                                            
-                                            <div>
-                                                <label for="freeProduct_@material.Id" class="block text-sm text-gray-600 mb-1">Free Product:</label>
-                                                <select name="FreeProducts[@material.Id]" 
-                                                        id="freeProduct_@material.Id"
-                                                        class="w-full border border-gray-300 shadow-sm py-1 px-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                                                    <option value="">Select free product (optional)</option>
-                                                    @if (Model.AllProducts != null)
-                                                    {
-                                                        @foreach (var product in Model.AllProducts)
+                                        <!-- Free Product Selection - Only visible when material is selected -->
+                                        <div class="free-product-section ml-6 mt-2" id="freeProductSection_@material.Id" 
+                                             style="@(isSelected ? "display: block;" : "display: none;")">
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                                <div>
+                                                    <label class="block text-xs font-medium text-gray-700 mb-1">Free Product</label>
+                                                    <select name="FreeProducts[@material.Id]" 
+                                                            id="freeProduct_@material.Id"
+                                                            class="w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm free-product-select">
+                                                        <option value="">Select a material</option>
+                                                        @if (Model.AllMaterials != null)
                                                         {
-                                                            if (freeProductId == product.Id)
+                                                            @foreach (var freeMaterial in Model.AllMaterials)
                                                             {
-                                                                <option value="@product.Id" selected>@product.ProductName</option>
-                                                            }
-                                                            else
-                                                            {
-                                                                <option value="@product.Id">@product.ProductName</option>
+                                                                if (freeProductId == freeMaterial.Id)
+                                                                {
+                                                                    <option value="@freeMaterial.Id" selected>@freeMaterial.Name</option>
+                                                                }
+                                                                else
+                                                                {
+                                                                    <option value="@freeMaterial.Id">@freeMaterial.Name</option>
+                                                                }
                                                             }
                                                         }
-                                                    }
-                                                </select>
-                                            </div>
-                                            
-                                            <div>
-                                                <label for="freeQuantity_@material.Id" class="block text-sm text-gray-600 mb-1">Free Quantity:</label>
-                                                <input type="number" 
-                                                       name="FreeQuantities[@material.Id]" 
-                                                       id="freeQuantity_@material.Id"
-                                                       value="@freeQuantity" 
-                                                       min="0" 
-                                                       class="w-full border border-gray-300 shadow-sm py-1 px-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label class="block text-xs font-medium text-gray-700 mb-1">Free Quantity</label>
+                                                    <input type="number" 
+                                                           name="FreeQuantities[@material.Id]" 
+                                                           id="freeQuantity_@material.Id"
+                                                           value="@freeQuantity" 
+                                                           min="0" 
+                                                           class="w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm free-quantity-input"
+                                                           placeholder="Qty">
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -173,7 +175,7 @@
                     <a asp-action="ViewCampaigns" class="py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                         Cancel
                     </a>
-                    <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" id="submitBtn">
                         Save
                     </button>
                 </div>
@@ -198,5 +200,104 @@
         if (document.getElementById('StartDate').value) {
             document.getElementById('EndDate').setAttribute('min', document.getElementById('StartDate').value);
         }
+        
+        // Add event listeners for material checkboxes to show/hide free product sections
+        document.addEventListener('DOMContentLoaded', function() {
+            const materialCheckboxes = document.querySelectorAll('.material-checkbox');
+            
+            materialCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    const materialId = this.value;
+                    const quantityInput = document.getElementById('quantity_' + materialId);
+                    const freeProductSection = document.getElementById('freeProductSection_' + materialId);
+                    
+                    if (this.checked) {
+                        // Set default value if empty
+                        if (!quantityInput.value || quantityInput.value <= 0) {
+                            quantityInput.value = '1';
+                        }
+                        // Show free product section
+                        freeProductSection.style.display = 'block';
+                    } else {
+                        // Clear value when unchecked
+                        quantityInput.value = '';
+                        // Hide free product section
+                        freeProductSection.style.display = 'none';
+                    }
+                });
+                
+                // Initialize display state for pre-selected materials
+                if (checkbox.checked) {
+                    const materialId = checkbox.value;
+                    const quantityInput = document.getElementById('quantity_' + materialId);
+                    const freeProductSection = document.getElementById('freeProductSection_' + materialId);
+                    
+                    // Set default value if empty
+                    if (!quantityInput.value || quantityInput.value <= 0) {
+                        quantityInput.value = '1';
+                    }
+                    // Show free product section
+                    freeProductSection.style.display = 'block';
+                }
+            });
+            
+            // Form submission validation
+            const form = document.querySelector('form');
+            const submitBtn = document.getElementById('submitBtn');
+            
+            form.addEventListener('submit', function(e) {
+                // Check if at least one material is selected
+                const selectedMaterials = document.querySelectorAll('input[name="SelectedMaterialIds"]:checked');
+                if (selectedMaterials.length === 0) {
+                    e.preventDefault();
+                    alert('Please select at least one material.');
+                    return false;
+                }
+                
+                // Validate that only checked materials have valid values
+                let isValid = true;
+                let errorMessages = [];
+                
+                selectedMaterials.forEach(checkbox => {
+                    const materialId = checkbox.value;
+                    const quantityInput = document.getElementById('quantity_' + materialId);
+                    const freeProductSelect = document.getElementById('freeProduct_' + materialId);
+                    const freeQuantityInput = document.getElementById('freeQuantity_' + materialId);
+                    
+                    // Check material quantity
+                    if (!quantityInput.value || quantityInput.value <= 0) {
+                        isValid = false;
+                        quantityInput.classList.add('border-red-500');
+                        errorMessages.push(`Please enter a valid quantity for material ${materialId}.`);
+                    } else {
+                        quantityInput.classList.remove('border-red-500');
+                    }
+                    
+                    // Check free product selection (optional)
+                    // If a free product is selected, check that quantity is valid
+                    if (freeProductSelect.value) {
+                        if (!freeQuantityInput.value || freeQuantityInput.value < 0) {
+                            isValid = false;
+                            freeQuantityInput.classList.add('border-red-500');
+                            errorMessages.push(`Please enter a valid free quantity for material ${materialId}.`);
+                        } else {
+                            freeQuantityInput.classList.remove('border-red-500');
+                        }
+                    }
+                });
+                
+                if (!isValid) {
+                    e.preventDefault();
+                    alert('Please correct the following errors:\n' + errorMessages.join('\n'));
+                    return false;
+                }
+                
+                // Show loading state
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Saving...';
+                
+                return true;
+            });
+        });
     </script>
 }

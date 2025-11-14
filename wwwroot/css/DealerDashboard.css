@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿/* ========================================
+﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿/* ========================================
    Dealer Dashboard - Standalone CSS
    ======================================== */
 
@@ -432,7 +432,7 @@ body {
 .add-to-cart-btn {
     width: 100%;
     padding: 0.5rem;
-    background: var(--primary);
+    background: #059669;
     color: white;
     border: none;
     border-radius: 0.25rem;
@@ -442,17 +442,6 @@ body {
     transition: all 0.2s;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
-
-    .add-to-cart-btn:hover {
-        background: var(--primary-dark);
-        transform: translateY(-1px);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-    }
-
-    .add-to-cart-btn:active {
-        transform: translateY(0);
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-    }
 
 /* Category Cards */
 .categories-section {
@@ -657,7 +646,7 @@ body {
 .checkout-btn {
     width: 100%;
     padding: 0.75rem;
-    background: var(--success);
+    background: #059669;
     color: white;
     border: none;
     border-radius: 0.5rem;
@@ -1058,6 +1047,7 @@ body {
     border-top: 1px solid var(--gray-200);
     backdrop-filter: blur(10px);
     background: rgba(255, 255, 255, 0.95);
+    border-radius: 0 !important; /* Sharp edges as per user preference */
 }
 
 .nav-item {
@@ -1069,7 +1059,7 @@ body {
     font-size: 0.75rem;
     transition: all 0.2s;
     padding: 0.5rem;
-    border-radius: 0.5rem;
+    border-radius: 0 !important; /* Sharp edges as per user preference */
 }
 
 .nav-item.active {
@@ -1109,6 +1099,17 @@ body {
     margin: 0 auto;
     padding: 2rem 1.5rem 5rem 1.5rem; /* Added bottom padding to prevent content overlap */
 }
+
+/* Adjust container for other pages to account for fixed bottom nav */
+.container {
+    padding-bottom: 5rem !important;
+}
+
+.container-fluid {
+    padding-bottom: 5rem !important;
+}
+
+
 
 /* Info Rows and Labels */
 .info-row {
@@ -1173,4 +1174,275 @@ body {
 /* Utility */
 .hidden {
     display: none;
+}
+
+/* Voucher Styles */
+.vouchers-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.voucher-card {
+    background: white;
+    border-radius: 0.75rem;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    border: 1px solid var(--gray-100);
+    padding: 1.5rem;
+}
+
+.voucher-card:hover {
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    transform: translateY(-5px);
+}
+
+.voucher-card.redeemed {
+    opacity: 0.7;
+    background: var(--gray-50);
+}
+
+.voucher-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--gray-200);
+}
+
+.voucher-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--gray-900);
+    flex: 1;
+}
+
+.badge-redeemed {
+    background: var(--gray-200);
+    color: var(--gray-700);
+}
+
+.badge-expired {
+    background: var(--danger-light);
+    color: var(--danger);
+}
+
+.voucher-details {
+    margin-bottom: 1.5rem;
+}
+
+.voucher-qrcode {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.qrcode-placeholder {
+    background: var(--gray-100);
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.qrcode-image {
+    width: 120px;
+    height: 120px;
+    object-fit: contain;
+}
+
+.qrcode-instruction {
+    font-size: 0.875rem;
+    color: var(--gray-700);
+    margin: 0;
+}
+
+.redeem-btn {
+    width: 100%;
+    padding: 0.75rem;
+    background: var(--success);
+    color: white;
+    border: none;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.redeem-btn:hover {
+    background: #059669;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.redeem-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.redeemed-info, .expired-info {
+    text-align: center;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    background: var(--gray-50);
+}
+
+.points-summary {
+    margin-top: 2rem;
+}
+
+.points-card {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    border-radius: 1rem;
+    padding: 2rem;
+    text-align: center;
+    color: white;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.points-value {
+    font-size: 3rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.points-label {
+    font-size: 1rem;
+    opacity: 0.9;
+}
+
+/* Notification Styles */
+#notificationContainer {
+    position: relative;
+}
+
+#notificationBell {
+    font-size: 1.25rem;
+    padding: 0.25rem;
+}
+
+#notificationDropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    z-index: 1000;
+    background: white;
+    border-radius: 0; /* Sharp edges as per user preference */
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--gray-200);
+    max-height: 400px;
+    overflow-y: auto;
+    width: 320px;
+    font-size: 0.875rem;
+}
+
+.notification-item {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--gray-100);
+    transition: background-color 0.2s;
+    font-size: 0.875rem;
+}
+
+.notification-item:hover {
+    background-color: var(--gray-50);
+}
+
+.notification-item.unread {
+    background-color: var(--primary-light);
+}
+
+.notification-title {
+    font-weight: 600;
+    color: var(--gray-900);
+    margin-bottom: 0.25rem;
+    font-size: 0.875rem;
+}
+
+.notification-message {
+    font-size: 0.75rem;
+    color: var(--gray-700);
+    margin-bottom: 0.5rem;
+    line-height: 1.25;
+}
+
+.notification-time {
+    font-size: 0.625rem;
+    color: var(--gray-500);
+}
+
+.notification-badge {
+    display: inline-block;
+    padding: 0.125rem 0.375rem;
+    border-radius: 9999px;
+    font-size: 0.625rem;
+    font-weight: 500;
+    margin-right: 0.5rem;
+}
+
+.badge-campaign {
+    background-color: #dbeafe;
+    color: #1d4ed8;
+}
+
+.badge-order {
+    background-color: #dcfce7;
+    color: #166534;
+}
+
+.badge-voucher {
+    background-color: #fef3c7;
+    color: #92400e;
+}
+
+.notification-close {
+    position: absolute;
+    top: 0.25rem;
+    right: 0.25rem;
+    background: none;
+    border: none;
+    color: var(--gray-400);
+    cursor: pointer;
+    font-size: 0.875rem;
+    width: 1.25rem;
+    height: 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.notification-close:hover {
+    color: var(--gray-600);
+    background-color: var(--gray-200);
+    border-radius: 0; /* Sharp edges as per user preference */
+}
+
+@media (max-width: 768px) {
+    #notificationDropdown {
+        width: 280px;
+        right: -50px;
+    }
+    
+    .notification-item {
+        padding: 0.5rem 0.75rem;
+    }
+    
+    .notification-title {
+        font-size: 0.8125rem;
+    }
+    
+    .notification-message {
+        font-size: 0.6875rem;
+    }
+    
+    .notification-time {
+        font-size: 0.5625rem;
+    }
+    
+    .notification-badge {
+        font-size: 0.5625rem;
+        padding: 0.1rem 0.25rem;
+    }
 }

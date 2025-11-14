@@ -327,47 +327,47 @@ else
 
         <!-- Recent Order -->
         <div class="campaigns-section">
-            <h2 class="section-header">Recent Order</h2>
-            @if (Model.RecentOrder != null)
+            <h2 class="section-header">Repeat Order</h2>
+            @if (Model.RecentDealerBasicOrders != null && Model.RecentDealerBasicOrders.Any())
             {
                 <div class="recent-order-container">
                     <div class="order-header">
                         <div class="order-info">
-                            <h3 class="order-title">Order #@Model.RecentOrder.Id</h3>
-                            <span class="badge badge-active">@Model.RecentOrder.OrderStatus</span>
+                            <h3 class="order-title">Repeat Orders</h3>
+                            <span class="badge badge-active">Active</span>
                         </div>
                         <div class="order-details">
-                            <div class="info-row"><span class="info-label">Date:</span> @Model.RecentOrder.OrderDate.ToString("dd/MM/yyyy")</div>
-                            <div class="info-row"><span class="info-label">Total:</span> ₹@Model.RecentOrder.TotalAmount</div>
+                            <div class="info-row"><span class="info-label">Total Items:</span> @Model.RecentDealerBasicOrders.Count()</div>
                         </div>
                     </div>
 
                     <div class="order-items-grid">
-                        @foreach (var item in Model.RecentOrder.OrderItems)
+                        @foreach (var item in Model.RecentDealerBasicOrders)
                         {
-                            var materialImage = Model.MaterialImages?.FirstOrDefault(mi => mi.MaterialMasterId == item.MaterialId);
-                            <div class="product-card" data-material-id="@item.MaterialId">
+                            // Try to find a matching material image based on SapCode
+                            var materialImage = Model.MaterialImages?.FirstOrDefault(mi => mi.MaterialMaster?.material3partycode == item.SapCode);
+                            <div class="product-card" data-material-id="@item.Id">
                                 <div class="product-image-wrapper">
                                     <img src="@(materialImage?.ImagePath ?? "https://placehold.co/600x600/cccccc/000000?text=No+Image")"
-                                         alt="@item.Material?.Materialname" class="product-image"
+                                         alt="@item.MaterialName" class="product-image"
                                          onerror="this.onerror=null;this.src='https://placehold.co/600x600/cccccc/000000?text=No+Image';">
                                 </div>
                                 <div class="product-content">
-                                    <h3 class="product-title">@(item.Material?.Materialname ?? "Unknown")</h3>
-                                    <p class="product-sku">SKU: @(item.Material?.material3partycode ?? "N/A")</p>
+                                    <h3 class="product-title">@item.MaterialName</h3>
+                                    <p class="product-sku">SAP: @item.SapCode</p>
+                                    <p class="product-sku">Short Code: @item.ShortCode</p>
                                     <div class="product-price-row">
-                                        <span class="product-price">₹@item.UnitPrice</span>
-                                        <span class="product-points">Pts: @item.Points</span>
+                                        <span class="product-price">₹@item.Rate</span>
                                     </div>
                                     <div class="quantity-section">
                                         <label class="quantity-label">Qty:</label>
                                         <div class="quantity-controls">
-                                            <button class="quantity-btn" onclick="changeQuantity(this, -1, @item.MaterialId)">-</button>
-                                            <input type="number" class="quantity-input" value="@item.Quantity" min="1" data-material-id="@item.MaterialId">
-                                            <button class="quantity-btn" onclick="changeQuantity(this, 1, @item.MaterialId)">+</button>
+                                            <button class="quantity-btn" onclick="changeQuantity(this, -1, @item.Id)">-</button>
+                                            <input type="number" class="quantity-input" value="@item.Quantity" min="1" data-material-id="@item.Id">
+                                            <button class="quantity-btn" onclick="changeQuantity(this, 1, @item.Id)">+</button>
                                         </div>
                                     </div>
-                                    <button class="add-to-cart-btn" onclick="updateCartItem(@item.MaterialId, this)" style="margin-top:0.5rem;">
+                                    <button class="add-to-cart-btn" onclick="updateCartItem(@item.Id, this)" style="margin-top:0.5rem;">
                                         Update in Cart
                                     </button>
                                 </div>
@@ -432,7 +432,7 @@ else
             @if (Model.Materials?.Any() == true)
             {
                 <div class="products-grid">
-                    @foreach (var m in Model.Materials)
+                    @foreach (var m in Model.Materials.Where(x => x.isactive))
                     {
                         var img = Model.MaterialImages?.FirstOrDefault(mi => mi.MaterialMaster?.material3partycode == m.material3partycode);
                         <div class="product-card" data-category="@m.Category">
@@ -508,7 +508,7 @@ else
                 <i class="fas fa-coins"></i>
                 <span>Points</span>
             </a>
-            <a href="#" class="nav-item" onclick="alert('Vouchers feature coming soon')">
+            <a href="@Url.Action("Vouchers", "Home")" class="nav-item">
                 <i class="fas fa-ticket-alt"></i>
                 <span>Vouchers</span>
             </a>
@@ -523,6 +523,7 @@ else
     <script>
         const materialsData = @Html.Raw(Json.Serialize(Model.Materials));
         const materialImagesData = @Html.Raw(Json.Serialize(Model.MaterialImages));
+        const dealerBasicOrdersData = @Html.Raw(Json.Serialize(Model.RecentDealerBasicOrders)) || [];
         let cart = [];
 
         // Create a JavaScript object to store material points data
@@ -541,7 +542,8 @@ else
             }
             
             // Fallback to simple calculation based on dealer price
-            const material = materialsData.find(m => m.Id == materialId);
+            // Note: JSON serialization converts property names to camelCase
+            const material = materialsData.find(m => m.id == materialId);
             if (!material) return 0;
             
             return Math.floor(material.dealerprice / 10);
@@ -563,21 +565,65 @@ else
         function updateCartItem(materialId, btn) {
             const input = btn.parentElement.querySelector('.quantity-input');
             const qty = parseInt(input.value) || 1;
-            const material = materialsData.find(m => m.Id == materialId);
-            if (!material) return;
-
-            const idx = cart.findIndex(i => i.materialId == materialId);
-            if (idx > -1) {
-                cart[idx].quantity = qty;
+            
+            // Check if this is a DealerBasicOrder item (new implementation)
+            // Note: JSON serialization converts property names to camelCase
+            const dealerBasicOrderItem = dealerBasicOrdersData.find(item => item.id == materialId);
+            
+            if (dealerBasicOrderItem) {
+                // Handle DealerBasicOrder item
+                // We need to find the corresponding MaterialMaster item for this DealerBasicOrder
+                // We'll match based on sapCode/material3partycode
+                const material = materialsData.find(m => m.material3partycode === dealerBasicOrderItem.sapCode);
+                
+                if (material) {
+                    const idx = cart.findIndex(i => i.materialId == material.id);
+                    if (idx > -1) {
+                        cart[idx].quantity = qty;
+                    } else {
+                        cart.push({
+                            sku: dealerBasicOrderItem.sapCode,
+                            name: dealerBasicOrderItem.materialName,
+                            price: dealerBasicOrderItem.rate,
+                            quantity: qty,
+                            materialId: material.id  // Use the MaterialMaster ID, not the DealerBasicOrder ID
+                        });
+                    }
+                } else {
+                    // If we can't find a matching material, we'll still add it but with a warning
+                    const idx = cart.findIndex(i => i.materialId == materialId);
+                    if (idx > -1) {
+                        cart[idx].quantity = qty;
+                    } else {
+                        cart.push({
+                            sku: dealerBasicOrderItem.sapCode,
+                            name: dealerBasicOrderItem.materialName,
+                            price: dealerBasicOrderItem.rate,
+                            quantity: qty,
+                            materialId: materialId
+                        });
+                    }
+                }
             } else {
-                cart.push({
-                    sku: material.material3partycode,
-                    name: material.Materialname,
-                    price: material.dealerprice,
-                    quantity: qty,
-                    materialId: materialId
-                });
+                // Handle regular material (existing implementation)
+                // Note: JSON serialization converts property names to camelCase
+                const material = materialsData.find(m => m.id == materialId);
+                if (!material) return;
+
+                const idx = cart.findIndex(i => i.materialId == materialId);
+                if (idx > -1) {
+                    cart[idx].quantity = qty;
+                } else {
+                    cart.push({
+                        sku: material.material3partycode,
+                        name: material.materialname,
+                        price: material.dealerprice,
+                        quantity: qty,
+                        materialId: materialId
+                    });
+                }
             }
+            
             updateCartDisplay();
             btn.textContent = 'Updated!';
             btn.style.background = 'var(--success)';
@@ -623,9 +669,20 @@ else
                 const itemPoints = pointsPerUnit * item.quantity;
                 totalPoints += itemPoints;
                 
+                // Try to find the material image
+                let imageUrl = 'https://placehold.co/60x60/cccccc/000000?text=Product';
+                // Note: JSON serialization converts property names to camelCase
+                const material = materialsData.find(m => m.id == item.materialId);
+                if (material) {
+                    const materialImage = materialImagesData.find(mi => mi.materialMaster?.material3partycode === material.material3partycode);
+                    if (materialImage) {
+                        imageUrl = materialImage.imagePath;
+                    }
+                }
+                
                 html += `
                     <div class="cart-item">
-                        <div class="cart-item-image"><img src="https://placehold.co/60x60/cccccc/000000?text=Product" alt="${item.name}"></div>
+                        <div class="cart-item-image"><img src="${imageUrl}" alt="${item.name}" onerror="this.onerror=null;this.src='https://placehold.co/60x60/cccccc/000000?text=Product';"></div>
                         <div class="cart-item-details">
                             <h4 class="cart-item-name">${item.name}</h4>
                             <p class="cart-item-price">₹${item.price} × ${item.quantity}</p>
@@ -655,6 +712,29 @@ else
             if (cart.length === 0) return alert('Cart is empty!');
             if (!confirm('Place order with saved details?')) return;
 
+            // Debug information
+            console.log('Cart contents:', cart);
+            
+            // Validate cart items
+            for (let i = 0; i < cart.length; i++) {
+                const item = cart[i];
+                if (!item.materialId || item.materialId <= 0) {
+                    alert(`Invalid material ID for item ${item.name}. Please check the browser console for more details.`);
+                    console.error('Invalid cart item:', item);
+                    return;
+                }
+                if (!item.quantity || item.quantity <= 0) {
+                    alert(`Invalid quantity for item ${item.name}. Please check the browser console for more details.`);
+                    console.error('Invalid cart item:', item);
+                    return;
+                }
+                if (item.price === undefined || item.price < 0) {
+                    alert(`Invalid price for item ${item.name}. Please check the browser console for more details.`);
+                    console.error('Invalid cart item:', item);
+                    return;
+                }
+            }
+
             // Calculate points for each item in the cart
             const data = { 
                 items: cart.map(i => { 
@@ -669,6 +749,9 @@ else
                 }) 
             };
             
+            // Debug information
+            console.log('Order data being sent:', data);
+            
             try {
                 const res = await fetch('/Orders/Create', {
                     method: 'POST',
@@ -678,12 +761,17 @@ else
                     },
                     body: JSON.stringify(data)
                 });
-                if (!res.ok) throw new Error('Failed');
+                if (!res.ok) {
+                    const errorText = await res.text();
+                    console.error('Server error response:', errorText);
+                    throw new Error(`Failed with status ${res.status}: ${errorText}`);
+                }
                 const json = await res.json();
                 alert(`Order placed! ID: ${json.OrderId}`);
                 cart = []; updateCartDisplay();
             } catch (e) {
-                alert('Error placing order.');
+                console.error('Error placing order:', e);
+                alert(`Error placing order: ${e.message}`);
             }
         }
 
@@ -697,22 +785,65 @@ else
             if (cards.length === 0) return alert('No items to reorder!');
 
             cart = [];
+            
             cards.forEach(card => {
-                const mid = card.getAttribute('data-material-id');
+                const mid = parseInt(card.getAttribute('data-material-id'));
                 const qty = parseInt(card.querySelector('.quantity-input').value) || 1;
-                const m = materialsData.find(x => x.Id == mid);
-                if (m) {
-                    cart.push({
-                        sku: m.material3partycode,
-                        name: m.Materialname,
-                        price: m.dealerprice,
-                        quantity: qty,
-                        materialId: mid
-                    });
+                
+                // For DealerBasicOrder items, we need to find them in the model data
+                // First, let's try to find if this is a DealerBasicOrder item
+                // Note: JSON serialization converts property names to camelCase
+                const dealerBasicOrderItem = dealerBasicOrdersData.find(item => item.id === mid);
+                
+                if (dealerBasicOrderItem) {
+                    // Handle DealerBasicOrder item
+                    // We need to find the corresponding MaterialMaster item for this DealerBasicOrder
+                    // We'll match based on sapCode/material3partycode
+                    const material = materialsData.find(m => m.material3partycode === dealerBasicOrderItem.sapCode);
+                    
+                    if (material) {
+                        cart.push({
+                            sku: dealerBasicOrderItem.sapCode,
+                            name: dealerBasicOrderItem.materialName,
+                            price: dealerBasicOrderItem.rate,
+                            quantity: qty,
+                            materialId: material.id  // Use the MaterialMaster ID, not the DealerBasicOrder ID
+                        });
+                    } else {
+                        // If we can't find a matching material, we'll still add it but with a warning
+                        cart.push({
+                            sku: dealerBasicOrderItem.sapCode,
+                            name: dealerBasicOrderItem.materialName,
+                            price: dealerBasicOrderItem.rate,
+                            quantity: qty,
+                            materialId: mid
+                        });
+                    }
+                } else {
+                    // Handle regular material (existing implementation)
+                    // Note: JSON serialization converts property names to camelCase
+                    const m = materialsData.find(x => x.id === mid);
+                    if (m) {
+                        cart.push({
+                            sku: m.material3partycode,
+                            name: m.materialname,
+                            price: m.dealerprice,
+                            quantity: qty,
+                            materialId: mid
+                        });
+                    }
                 }
             });
 
-            if (cart.length === 0) return alert('No valid items!');
+            if (cart.length === 0) {
+                // Additional debugging information
+                console.log('No valid items found. Debug info:');
+                console.log('Total cards:', cards.length);
+                console.log('DealerBasicOrders data:', dealerBasicOrdersData);
+                console.log('Materials data:', materialsData);
+                console.log('Processed items:', cart);
+                return alert('No valid items! Please check the browser console for more details.');
+            }
             if (confirm('Place reorder with updated quantities?')) placeOrder();
         }
 
@@ -721,19 +852,20 @@ else
         }
 
         function showCategoryProducts(cat) {
-            const filtered = materialsData.filter(m => m.Category === cat);
+            // Note: JSON serialization converts property names to camelCase
+            const filtered = materialsData.filter(m => m.category === cat);
             document.getElementById('categorySectionTitle').textContent = cat + ' Products';
             let html = '';
             filtered.forEach(m => {
-                const img = materialImagesData?.find(i => i.MaterialMaster?.material3partycode === m.material3partycode)?.ImagePath || 'https://placehold.co/600x600/cccccc/000000?text=No+Image';
+                const img = materialImagesData?.find(i => i.materialMaster?.material3partycode === m.material3partycode)?.imagePath || 'https://placehold.co/600x600/cccccc/000000?text=No+Image';
                 html += `
-                    <div class="product-card" data-category="${m.Category}">
+                    <div class="product-card" data-category="${m.category}">
                         <div class="product-image-wrapper">
-                            <img src="${img}" alt="${m.Materialname}" class="product-image" onerror="this.onerror=null;this.src='https://placehold.co/600x600/cccccc/000000?text=No+Image';">
+                            <img src="${img}" alt="${m.materialname}" class="product-image" onerror="this.onerror=null;this.src='https://placehold.co/600x600/cccccc/000000?text=No+Image';">
                         </div>
                         <div class="product-content">
-                            <h3 class="product-title">${m.Materialname}</h3>
-                            <p class="product-shortname">${m.ShortName}</p>
+                            <h3 class="product-title">${m.materialname}</h3>
+                            <p class="product-shortname">${m.shortName}</p>
                             <p class="product-sku">SKU: ${m.material3partycode}</p>
                             <div class="product-price-row">
                                 <span class="product-price">₹${m.dealerprice}</span>
@@ -747,7 +879,7 @@ else
                                     <button class="quantity-btn" onclick="changeQuantity(this, 1)">+</button>
                                 </div>
                             </div>
-                            <button class="add-to-cart-btn" onclick="addToCart(this, '${m.material3partycode}', '${m.Materialname}', ${m.dealerprice}, ${m.Id})">
+                            <button class="add-to-cart-btn" onclick="addToCart(this, '${m.material3partycode}', '${m.materialname}', ${m.dealerprice}, ${m.id})">
                                 Add to Cart
                             </button>
                         </div>

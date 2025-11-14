@@ -1,8 +1,13 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 using HaldiramPromotionalApp.Data;
 using HaldiramPromotionalApp.Models;
 using HaldiramPromotionalApp.ViewModels;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace HaldiramPromotionalApp.Controllers
 {
@@ -65,6 +70,19 @@ namespace HaldiramPromotionalApp.Controllers
 
                 _context.Add(shopkeeperMaster);
                 await _context.SaveChangesAsync();
+                
+                // Automatically create a User record for login purposes
+                var user = new User
+                {
+                    Role = "Shopkeeper",
+                    phoneno = viewModel.PhoneNumber, // Using phone number as login identifier
+                    Password = viewModel.Password, // In a real application, you should hash the password
+                    name = viewModel.Name
+                };
+                
+                _context.Users.Add(user);
+                await _context.SaveChangesAsync();
+                
                 TempData["SuccessMessage"] = "Shopkeeper created successfully!";
                 return RedirectToAction(nameof(Index));
             }
@@ -128,6 +146,17 @@ namespace HaldiramPromotionalApp.Controllers
 
                     _context.Update(shopkeeperMaster);
                     await _context.SaveChangesAsync();
+                    
+                    // Update the corresponding User record
+                    var user = await _context.Users.FirstOrDefaultAsync(u => u.phoneno == shopkeeperMaster.PhoneNumber);
+                    if (user != null)
+                    {
+                        user.name = viewModel.Name;
+                        user.Password = viewModel.Password; // In a real application, you should hash the password
+                        _context.Users.Update(user);
+                        await _context.SaveChangesAsync();
+                    }
+                    
                     TempData["SuccessMessage"] = "Shopkeeper updated successfully!";
                 }
                 catch (DbUpdateConcurrencyException)
@@ -173,6 +202,13 @@ namespace HaldiramPromotionalApp.Controllers
             if (shopkeeperMaster != null)
             {
                 _context.ShopkeeperMasters.Remove(shopkeeperMaster);
+                
+                // Also remove the corresponding User record
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.phoneno == shopkeeperMaster.PhoneNumber);
+                if (user != null)
+                {
+                    _context.Users.Remove(user);
+                }
             }
 
             await _context.SaveChangesAsync();

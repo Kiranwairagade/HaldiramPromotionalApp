@@ -12,5 +12,8 @@ namespace HaldiramPromotionalApp.ViewModels
         // public List<MaterialPoints> MaterialPoints { get; set; } = new List<MaterialPoints>();
         public Order? RecentOrder { get; set; } // Make this property nullable
         public int TotalPoints { get; set; } = 0; // New property to store total points for the dealer
+        
+        // New property for DealerBasicOrders
+        public List<DealerBasicOrder> RecentDealerBasicOrders { get; set; } = new List<DealerBasicOrder>();
     }
 }

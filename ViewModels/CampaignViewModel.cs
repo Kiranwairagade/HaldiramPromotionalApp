@@ -1,5 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Http;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace HaldiramPromotionalApp.ViewModels
 {
@@ -188,40 +190,6 @@ namespace HaldiramPromotionalApp.ViewModels
         public string? ImagePath { get; set; }
         
         public bool IsActive { get; set; } = true;
-        
-        // Custom validation logic
-        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
-        {
-            if (SelectedMaterialIds != null && SelectedMaterialIds.Any())
-            {
-                foreach (var materialId in SelectedMaterialIds)
-                {
-                    // Validate MaterialQuantities
-                    if (!MaterialQuantities.ContainsKey(materialId) || MaterialQuantities[materialId] <= 0)
-                    {
-                        yield return new ValidationResult($"Please enter a valid quantity for material {materialId}.", new[] { "MaterialQuantities" });
-                    }
-                    
-                    // Allow FreeProducts to be null/empty, but if provided, validate it
-                    // Only validate if the key exists and has a value <= 0
-                    if (FreeProducts.ContainsKey(materialId) && FreeProducts[materialId] <= 0)
-                    {
-                        yield return new ValidationResult($"Please select a valid free product for material {materialId}.", new[] { "FreeProducts" });
-                    }
-                    
-                    // Remove validation for FreeQuantities - allow 0 or null values
-                    // Only validate if the value is explicitly provided and is negative
-                    if (FreeQuantities.ContainsKey(materialId) && FreeQuantities[materialId] < 0)
-                    {
-                        yield return new ValidationResult($"Free quantity for material {materialId} cannot be negative.", new[] { "FreeQuantities" });
-                    }
-                }
-            }
-            else
-            {
-                yield return new ValidationResult("Please select at least one material.", new[] { "SelectedMaterialIds" });
-            }
-        }
     }
     
     public class AmountReachGoalCampaignViewModel

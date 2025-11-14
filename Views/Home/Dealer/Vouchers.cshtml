@@ -1,0 +1,119 @@
+@using HaldiramPromotionalApp.ViewModels
+@model VoucherViewModel
+
+@{
+    ViewData["Title"] = "My Vouchers";
+}
+
+<link rel="stylesheet" href="~/css/DealerDashboard.css" />
+
+<div class="dashboard-container">
+    <h2 class="section-header">My Vouchers</h2>
+    
+    @if (Model.Vouchers != null && Model.Vouchers.Any())
+    {
+        <div class="vouchers-grid">
+            @foreach (var voucher in Model.Vouchers)
+            {
+                <div class="voucher-card @(voucher.IsRedeemed ? "redeemed" : "")">
+                    <div class="voucher-header">
+                        <h3 class="voucher-title">₹@voucher.VoucherValue Voucher</h3>
+                        @if (voucher.IsRedeemed)
+                        {
+                            <span class="badge badge-redeemed">Redeemed</span>
+                        }
+                        else if (DateTime.Now > voucher.ExpiryDate)
+                        {
+                            <span class="badge badge-expired">Expired</span>
+                        }
+                        else
+                        {
+                            <span class="badge badge-active">Active</span>
+                        }
+                    </div>
+                    
+                    <div class="voucher-details">
+                        <div class="info-row">
+                            <span class="info-label">Voucher Code:</span>
+                            <span class="info-value">@voucher.VoucherCode</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Issue Date:</span>
+                            <span class="info-value">@voucher.IssueDate.ToString("dd/MM/yyyy")</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Expiry Date:</span>
+                            <span class="info-value">@voucher.ExpiryDate.ToString("dd/MM/yyyy")</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Points Used:</span>
+                            <span class="info-value">@voucher.PointsUsed</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Campaign:</span>
+                            <span class="info-value">@voucher.CampaignType</span>
+                        </div>
+                    </div>
+                    
+                    @if (!voucher.IsRedeemed && DateTime.Now <= voucher.ExpiryDate)
+                    {
+                        <div class="voucher-qrcode">
+                            @{
+                                var qrCodeBase64 = Model.VoucherQRCodeData.ContainsKey(voucher.Id) ? Model.VoucherQRCodeData[voucher.Id] : "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==";
+                            }
+                            <div class="qrcode-placeholder">
+                                <img src="data:image/png;base64,@qrCodeBase64" alt="QR Code" class="qrcode-image">
+                            </div>
+                            <p class="qrcode-instruction">Show this QR code at the counter to redeem</p>
+                        </div>
+                        
+                        <button class="redeem-btn" onclick="redeemVoucher(@voucher.Id)">
+                            Redeem Voucher
+                        </button>
+                    }
+                    else if (voucher.IsRedeemed)
+                    {
+                        <div class="redeemed-info">
+                            <p>Redeemed on @voucher.RedeemedDate?.ToString("dd/MM/yyyy")</p>
+                        </div>
+                    }
+                    else if (DateTime.Now > voucher.ExpiryDate)
+                    {
+                        <div class="expired-info">
+                            <p>This voucher has expired</p>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="empty-state">
+            <div class="empty-state-icon">No vouchers available.</div>
+            <p>You haven't generated any vouchers yet. Earn more points to generate vouchers!</p>
+        </div>
+    }
+    
+    <!-- Points Summary -->
+    <div class="points-summary">
+        <h3 class="section-header">Your Points</h3>
+        <div class="points-card">
+            <div class="points-value">@Model.TotalPoints</div>
+            <div class="points-label">Available Points</div>
+        </div>
+    </div>
+</div>
+
+
+
+<script>
+    function redeemVoucher(voucherId) {
+        if (confirm('Are you sure you want to redeem this voucher?')) {
+            // In a real implementation, this would make an AJAX call to the server
+            alert('Voucher redeemed successfully!');
+            // Refresh the page to show updated status
+            location.reload();
+        }
+    }
+</script>

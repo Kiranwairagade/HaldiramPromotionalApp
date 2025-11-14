@@ -1,5 +1,6 @@
 using HaldiramPromotionalApp.Data;
 using HaldiramPromotionalApp.Models;
+using HaldiramPromotionalApp.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,10 +9,12 @@ namespace HaldiramPromotionalApp.Controllers
     public class OrdersController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly INotificationService _notificationService;
 
-        public OrdersController(ApplicationDbContext context)
+        public OrdersController(ApplicationDbContext context, INotificationService notificationService)
         {
             _context = context;
+            _notificationService = notificationService;
         }
 
         // GET: Orders
@@ -195,6 +198,9 @@ namespace HaldiramPromotionalApp.Controllers
 
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
+
+                // Create notification for the new order
+                await _notificationService.CreateOrderNotificationAsync(user.Id, order.Id);
 
                 return Ok(new { OrderId = order.Id, Message = "Order created successfully" });
             }

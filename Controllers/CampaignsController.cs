@@ -318,7 +318,6 @@ namespace HaldiramPromotionalApp.Controllers
         public async Task<IActionResult> CreateFreeProductCampaign()
         {
             var materials = await _context.MaterialMaster.Where(m => m.isactive).ToListAsync();
-            var products = await _context.Products.Where(p => p.IsActive).ToListAsync();
             var viewModel = new FreeProductCampaignViewModel
             {
                 AllMaterials = materials.Select(m => new MaterialViewModel
@@ -328,13 +327,6 @@ namespace HaldiramPromotionalApp.Controllers
                     ShortName = m.ShortName ?? "",
                     Category = m.Category ?? "",
                     Price = m.price
-                }).ToList(),
-                AllProducts = products.Select(p => new ProductViewModel
-                {
-                    Id = p.Id,
-                    ProductName = p.ProductName ?? "",
-                    Price = p.Price,
-                    Category = p.Category ?? ""
                 }).ToList()
             };
             
@@ -1403,13 +1395,6 @@ namespace HaldiramPromotionalApp.Controllers
                     ShortName = m.ShortName ?? "",
                     Category = m.Category ?? "",
                     Price = m.price
-                }).ToList(),
-                AllProducts = products.Select(p => new ProductViewModel
-                {
-                    Id = p.Id,
-                    ProductName = p.ProductName ?? "",
-                    Price = p.Price,
-                    Category = p.Category ?? ""
                 }).ToList()
             };
 
