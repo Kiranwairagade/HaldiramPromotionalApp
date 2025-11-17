@@ -1,0 +1,172 @@
+@model HaldiramPromotionalApp.ViewModels.VoucherViewModel
+
+@{
+    ViewData["Title"] = "Voucher Redemption History";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    :root {
+        --primary-color: #2c5aa0;
+        --secondary-color: #f8f9fa;
+        --accent-color: #ff6b35;
+        --success-color: #28a745;
+        --danger-color: #dc3545;
+        --warning-color: #ffc107;
+        --info-color: #17a2b8;
+        --dark-color: #343a40;
+        --light-color: #f8f9fa;
+        --border-radius: 0px; /* Sharp edges as per user preference */
+        --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        --transition: all 0.3s ease;
+    }
+
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #f5f7fb;
+        color: #333;
+        line-height: 1.6;
+        padding-bottom: 80px; /* Space for fixed bottom nav */
+    }
+
+    .dashboard-header {
+        background: linear-gradient(135deg, var(--primary-color), #1e3a8a);
+        color: white;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: var(--box-shadow);
+    }
+
+    .dashboard-header h2 {
+        font-weight: 600;
+        margin: 0;
+    }
+
+    .card {
+        border: none;
+        border-radius: var(--border-radius);
+        box-shadow: var(--box-shadow);
+        transition: var(--transition);
+        margin-bottom: 1.5rem;
+        overflow: hidden;
+    }
+
+    .card-header {
+        background-color: white;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        padding: 1.25rem 1.5rem;
+        font-weight: 600;
+        color: var(--primary-color);
+        display: flex;
+        align-items: center;
+    }
+
+    .card-header i {
+        margin-right: 10px;
+        font-size: 1.2rem;
+    }
+
+    .card-body {
+        padding: 1.5rem;
+    }
+
+    .table th {
+        background-color: #f8f9fa;
+        font-weight: 600;
+    }
+    
+    .table td, .table th {
+        vertical-align: middle;
+    }
+    
+    .badge {
+        font-size: 0.75em;
+    }
+    
+    .badge-redeemed {
+        background-color: var(--success-color);
+    }
+    
+    .empty-history {
+        text-align: center;
+        padding: 3rem 1rem;
+        color: #6c757d;
+    }
+    
+    .empty-history i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        color: #adb5bd;
+    }
+
+    @@media (max-width: 768px) {
+        .dashboard-header {
+            padding: 1rem;
+        }
+        
+        .card-body {
+            padding: 1rem;
+        }
+        
+        .table-responsive {
+            font-size: 0.9rem;
+        }
+    }
+</style>
+
+<div class="container-fluid">
+    
+    <div class="card">
+        <div class="card-header">
+            <h5><i class="fas fa-ticket-alt"></i> Redemption History</h5>
+        </div>
+        <div class="card-body">
+            @if (Model.RedemptionHistory != null && Model.RedemptionHistory.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Voucher Code</th>
+                                <th>Campaign Type</th>
+                                <th>Value</th>
+                                <th>Redemption Date</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var voucher in Model.RedemptionHistory)
+                            {
+                                <tr>
+                                    <td>@voucher.VoucherCode</td>
+                                    <td>@voucher.CampaignType</td>
+                                    <td>
+                                        @if (voucher.VoucherValue > 0)
+                                        {
+                                            <span>₹@voucher.VoucherValue</span>
+                                        }
+                                        else
+                                        {
+                                            <span>N/A</span>
+                                        }
+                                    </td>
+                                    <td>@(voucher.RedeemedDate?.ToString("dd/MM/yyyy HH:mm") ?? "N/A")</td>
+                                    <td><span class="badge badge-redeemed">Redeemed</span></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="empty-history">
+                    <i class="fas fa-ticket-alt"></i>
+                    <h4>No Redemption History</h4>
+                    <p>You haven't redeemed any vouchers yet.</p>
+                    <a href="@Url.Action("Vouchers", "Home")" class="btn btn-primary">View Available Vouchers</a>
+                </div>
+            }
+        </div>
+    </div>
+</div>

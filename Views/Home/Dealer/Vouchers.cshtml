@@ -17,7 +17,36 @@
             {
                 <div class="voucher-card @(voucher.IsRedeemed ? "redeemed" : "")">
                     <div class="voucher-header">
-                        <h3 class="voucher-title">₹@voucher.VoucherValue Voucher</h3>
+                        @{
+                            var campaignDetails = Model.VoucherCampaignDetails.ContainsKey(voucher.Id) ? 
+                                Model.VoucherCampaignDetails[voucher.Id] : new VoucherCampaignDetails();
+                        }
+                        
+                        @if (campaignDetails.CampaignType == "PointsToCash")
+                        {
+                            <h3 class="voucher-title">₹<span class="voucher-value-large">@voucher.VoucherValue</span> Cash Voucher</h3>
+                        }
+                        else if (campaignDetails.CampaignType == "FreeProduct")
+                        {
+                            <h3 class="voucher-title">Free Product Voucher</h3>
+                        }
+                        else if (campaignDetails.CampaignType == "PointsReward")
+                        {
+                            <h3 class="voucher-title">Reward Voucher</h3>
+                        }
+                        else if (campaignDetails.CampaignType == "AmountReachGoal")
+                        {
+                            <h3 class="voucher-title">₹<span class="voucher-value-large">@voucher.VoucherValue</span> Achievement Voucher</h3>
+                        }
+                        else if (campaignDetails.CampaignType == "SessionDurationReward")
+                        {
+                            <h3 class="voucher-title">₹<span class="voucher-value-large">@voucher.VoucherValue</span> Session Reward</h3>
+                        }
+                        else
+                        {
+                            <h3 class="voucher-title">₹@voucher.VoucherValue Voucher</h3>
+                        }
+                        
                         @if (voucher.IsRedeemed)
                         {
                             <span class="badge badge-redeemed">Redeemed</span>
@@ -38,6 +67,67 @@
                             <span class="info-value">@voucher.VoucherCode</span>
                         </div>
                         <div class="info-row">
+                            <span class="info-label">Campaign:</span>
+                            <span class="info-value">@campaignDetails.CampaignName</span>
+                        </div>
+                        
+                        @if (campaignDetails.CampaignType == "PointsToCash")
+                        {
+                            <div class="info-row">
+                                <span class="info-label">Cash Value:</span>
+                                <span class="info-value voucher-value-large">₹@voucher.VoucherValue</span>
+                            </div>
+                        }
+                        else if (campaignDetails.CampaignType == "FreeProduct")
+                        {
+                            <div class="info-row">
+                                <span class="info-label">Free Products:</span>
+                                <span class="info-value">
+                                    @if (campaignDetails.FreeProducts.Any())
+                                    {
+                                        foreach (var product in campaignDetails.FreeProducts)
+                                        {
+                                            <div><span class="voucher-value-large">@product.Value</span> x @product.Key</div>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <span>Free products based on your purchases</span>
+                                    }
+                                </span>
+                            </div>
+                        }
+                        else if (campaignDetails.CampaignType == "PointsReward")
+                        {
+                            <div class="info-row">
+                                <span class="info-label">Reward:</span>
+                                <span class="info-value voucher-value-large">@campaignDetails.RewardProductName</span>
+                            </div>
+                        }
+                        else if (campaignDetails.CampaignType == "AmountReachGoal")
+                        {
+                            <div class="info-row">
+                                <span class="info-label">Voucher Value:</span>
+                                <span class="info-value voucher-value-large">₹@voucher.VoucherValue</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Target Amount:</span>
+                                <span class="info-value">₹@campaignDetails.TargetAmount</span>
+                            </div>
+                        }
+                        else if (campaignDetails.CampaignType == "SessionDurationReward")
+                        {
+                            <div class="info-row">
+                                <span class="info-label">Reward Value:</span>
+                                <span class="info-value voucher-value-large">₹@voucher.VoucherValue</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Session Duration:</span>
+                                <span class="info-value">@campaignDetails.SessionDuration minutes</span>
+                            </div>
+                        }
+                        
+                        <div class="info-row">
                             <span class="info-label">Issue Date:</span>
                             <span class="info-value">@voucher.IssueDate.ToString("dd/MM/yyyy")</span>
                         </div>
@@ -45,14 +135,13 @@
                             <span class="info-label">Expiry Date:</span>
                             <span class="info-value">@voucher.ExpiryDate.ToString("dd/MM/yyyy")</span>
                         </div>
-                        <div class="info-row">
-                            <span class="info-label">Points Used:</span>
-                            <span class="info-value">@voucher.PointsUsed</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">Campaign:</span>
-                            <span class="info-value">@voucher.CampaignType</span>
-                        </div>
+                        @if (voucher.PointsUsed > 0)
+                        {
+                            <div class="info-row">
+                                <span class="info-label">Points Used:</span>
+                                <span class="info-value">@voucher.PointsUsed</span>
+                            </div>
+                        }
                     </div>
                     
                     @if (!voucher.IsRedeemed && DateTime.Now <= voucher.ExpiryDate)
@@ -104,8 +193,6 @@
         </div>
     </div>
 </div>
-
-
 
 <script>
     function redeemVoucher(voucherId) {

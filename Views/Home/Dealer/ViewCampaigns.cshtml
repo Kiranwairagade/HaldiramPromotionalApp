@@ -486,6 +486,15 @@
                                                                     <span class="text-gray-900 font-medium">@freeProductDetail.FreeProductName</span>
                                                                     <span class="text-gray-900">@freeProductDetail.FreeQuantity</span>
                                                                 </div>
+                                                                @{
+                                                                    var associatedMaterial = campaign.MaterialDetails.FirstOrDefault(m => m.MaterialId == materialId);
+                                                                    if (associatedMaterial != null)
+                                                                    {
+                                                                        <div class="text-gray-500 text-xs">
+                                                                            For material: @associatedMaterial.MaterialName
+                                                                        </div>
+                                                                    }
+                                                                }
                                                             </div>
                                                         }
                                                     </div>

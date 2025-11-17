@@ -10,6 +10,17 @@ namespace HaldiramPromotionalApp.ViewModels
         public string QRCodeBase64 { get; set; } = string.Empty;
     }
 
+    public class VoucherCampaignDetails
+    {
+        public string CampaignType { get; set; } = string.Empty;
+        public string CampaignName { get; set; } = string.Empty;
+        public decimal VoucherValue { get; set; }
+        public string RewardProductName { get; set; } = string.Empty;
+        public Dictionary<string, int> FreeProducts { get; set; } = new Dictionary<string, int>();
+        public decimal TargetAmount { get; set; }
+        public int SessionDuration { get; set; } // In minutes
+    }
+
     public class VoucherViewModel
     {
         public List<Voucher> Vouchers { get; set; } = new List<Voucher>();
@@ -18,6 +29,9 @@ namespace HaldiramPromotionalApp.ViewModels
         public DealerMaster Dealer { get; set; }
         public ShopkeeperMaster Shopkeeper { get; set; }
         public Dictionary<int, string> VoucherQRCodeData { get; set; } = new Dictionary<int, string>();
+        
+        // Campaign details for each voucher
+        public Dictionary<int, VoucherCampaignDetails> VoucherCampaignDetails { get; set; } = new Dictionary<int, VoucherCampaignDetails>();
         
         // Properties for product details after voucher redemption
         public int VoucherId { get; set; }

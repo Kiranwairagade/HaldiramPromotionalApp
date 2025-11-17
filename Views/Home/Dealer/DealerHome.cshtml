@@ -5,6 +5,9 @@
     ViewData["Title"] = "Dealer Dashboard";
     // Set the total points in ViewData so it can be accessed in the layout
     ViewData["TotalPoints"] = Model.TotalPoints;
+    
+    // Prevent the layout from rendering its bottom navigation
+    ViewData["HideLayoutBottomNav"] = true;
 
     // Function to get category image URLs
     string GetCategoryImageUrl(string category)
@@ -367,16 +370,16 @@ else
                                             <button class="quantity-btn" onclick="changeQuantity(this, 1, @item.Id)">+</button>
                                         </div>
                                     </div>
-                                    <button class="add-to-cart-btn" onclick="updateCartItem(@item.Id, this)" style="margin-top:0.5rem;">
+                                    @*<button class="add-to-cart-btn" onclick="updateCartItem(@item.Id, this)" style="margin-top:0.5rem;">
                                         Update in Cart
-                                    </button>
+                                    </button>*@
                                 </div>
                             </div>
                         }
                     </div>
 
                     <button type="button" class="checkout-btn" style="margin-top:1rem;width:100%" onclick="reorderWithUpdatedQuantities()">
-                        Reorder All Items
+                        Add All Items to Cart
                     </button>
                 </div>
             }
@@ -395,6 +398,15 @@ else
             {
                 var categories = Model.Materials.Select(m => m.Category).Distinct().ToList();
                 <div class="category-grid">
+                    <!-- All Products Button -->
+                    <div class="category-card all-products-card" onclick="showAllProducts()">
+                        <div class="category-overlay">
+                            <div class="category-content">
+                                <h3 class="category-name">All Products</h3>
+                                <p class="category-count">@Model.Materials.Count() items</p>
+                            </div>
+                        </div>
+                    </div>
                     @foreach (var category in categories)
                     {
                         var count = Model.Materials.Count(m => m.Category == category);
@@ -485,7 +497,10 @@ else
                     <span>Total:</span>
                     <span id="cartTotal">₹0.00</span>
                 </div>
-                <button class="checkout-btn" onclick="checkout()">Proceed to Checkout</button>
+                <div class="cart-actions">
+                    <button class="clear-cart-btn" onclick="clearCart()">Clear Cart</button>
+                    <button class="checkout-btn" onclick="checkout()">Proceed to Checkout</button>
+                </div>
             </div>
         </div>
         <div class="cart-overlay" id="cartOverlay" onclick="toggleCart()"></div>
@@ -496,6 +511,10 @@ else
         
         <!-- Bottom Navigation -->
         <nav class="bottom-nav">
+            <a href="@Url.Action("DealerHome", "Home")" class="nav-item @(ViewContext.RouteData.Values["action"]?.ToString() == "DealerHome" && ViewContext.RouteData.Values["controller"]?.ToString() == "Home" ? "active" : "")">
+                <i class="fas fa-home"></i>
+                <span>Home</span>
+            </a>
             <a href="@Url.Action("ViewCampaigns", "Home")" class="nav-item @(ViewContext.RouteData.Values["action"]?.ToString() == "ViewCampaigns" && ViewContext.RouteData.Values["controller"]?.ToString() == "Home" ? "active" : "")">
                 <i class="fas fa-bullhorn"></i>
                 <span>Campaigns</span>
@@ -512,7 +531,7 @@ else
                 <i class="fas fa-ticket-alt"></i>
                 <span>Vouchers</span>
             </a>
-            <a href="#" class="nav-item" onclick="alert('History feature coming soon')">
+            <a href="@Url.Action("History", "Home")" class="nav-item">
                 <i class="fas fa-history"></i>
                 <span>History</span>
             </a>
@@ -562,74 +581,6 @@ else
             input.value = val;
         }
 
-        function updateCartItem(materialId, btn) {
-            const input = btn.parentElement.querySelector('.quantity-input');
-            const qty = parseInt(input.value) || 1;
-            
-            // Check if this is a DealerBasicOrder item (new implementation)
-            // Note: JSON serialization converts property names to camelCase
-            const dealerBasicOrderItem = dealerBasicOrdersData.find(item => item.id == materialId);
-            
-            if (dealerBasicOrderItem) {
-                // Handle DealerBasicOrder item
-                // We need to find the corresponding MaterialMaster item for this DealerBasicOrder
-                // We'll match based on sapCode/material3partycode
-                const material = materialsData.find(m => m.material3partycode === dealerBasicOrderItem.sapCode);
-                
-                if (material) {
-                    const idx = cart.findIndex(i => i.materialId == material.id);
-                    if (idx > -1) {
-                        cart[idx].quantity = qty;
-                    } else {
-                        cart.push({
-                            sku: dealerBasicOrderItem.sapCode,
-                            name: dealerBasicOrderItem.materialName,
-                            price: dealerBasicOrderItem.rate,
-                            quantity: qty,
-                            materialId: material.id  // Use the MaterialMaster ID, not the DealerBasicOrder ID
-                        });
-                    }
-                } else {
-                    // If we can't find a matching material, we'll still add it but with a warning
-                    const idx = cart.findIndex(i => i.materialId == materialId);
-                    if (idx > -1) {
-                        cart[idx].quantity = qty;
-                    } else {
-                        cart.push({
-                            sku: dealerBasicOrderItem.sapCode,
-                            name: dealerBasicOrderItem.materialName,
-                            price: dealerBasicOrderItem.rate,
-                            quantity: qty,
-                            materialId: materialId
-                        });
-                    }
-                }
-            } else {
-                // Handle regular material (existing implementation)
-                // Note: JSON serialization converts property names to camelCase
-                const material = materialsData.find(m => m.id == materialId);
-                if (!material) return;
-
-                const idx = cart.findIndex(i => i.materialId == materialId);
-                if (idx > -1) {
-                    cart[idx].quantity = qty;
-                } else {
-                    cart.push({
-                        sku: material.material3partycode,
-                        name: material.materialname,
-                        price: material.dealerprice,
-                        quantity: qty,
-                        materialId: materialId
-                    });
-                }
-            }
-            
-            updateCartDisplay();
-            btn.textContent = 'Updated!';
-            btn.style.background = 'var(--success)';
-            setTimeout(() => { btn.textContent = 'Update in Cart'; btn.style.background = ''; }, 1000);
-        }
-
         function addToCart(btn, sku, name, price, materialId) {
             const input = btn.parentElement.querySelector('.quantity-input');
             const qty = parseInt(input.value) || 1;
@@ -650,6 +601,13 @@ else
 
             const totalItems = cart.reduce((s, i) => s + i.quantity, 0);
             countSpan.textContent = totalItems;
+            
+            // Add visual indicator even when cart is empty
+            if (totalItems === 0) {
+                countSpan.classList.add('cart-count-empty');
+            } else {
+                countSpan.classList.remove('cart-count-empty');
+            }
 
             if (cart.length === 0) {
                 itemsDiv.innerHTML = '<p style="text-align:center;color:var(--gray-500);padding:2rem;">Your cart is empty</p>';
@@ -660,7 +618,7 @@ else
             let html = '';
             let total = 0;
             let totalPoints = 0;
-            cart.forEach(item => {
+            cart.forEach((item, index) => {
                 const itemTotal = item.price * item.quantity;
                 total += itemTotal;
                 
@@ -681,14 +639,20 @@ else
                 }
                 
                 html += `
-                    <div class="cart-item">
-                        <div class="cart-item-image"><img src="${imageUrl}" alt="${item.name}" onerror="this.onerror=null;this.src='https://placehold.co/60x60/cccccc/000000?text=Product';"></div>
+                    <div class="cart-item" data-cart-index="${index}">
+                        <div class="cart-item-image">
+                            <img src="${imageUrl}" alt="${item.name}" onerror="this.onerror=null;this.src='https://placehold.co/60x60/cccccc/000000?text=Product';">
+                        </div>
                         <div class="cart-item-details">
                             <h4 class="cart-item-name">${item.name}</h4>
-                            <p class="cart-item-price">₹${item.price} × ${item.quantity}</p>
+                            <p class="cart-item-price">₹${item.price.toFixed(2)}</p>
                             <p class="cart-item-points">Points: ${itemPoints}</p>
+                            <div class="cart-item-quantity-controls">
+                                <button class="quantity-btn" onclick="changeCartItemQuantity(${index}, -1)">-</button>
+                                <input type="number" class="quantity-input" value="${item.quantity}" min="1" onchange="updateCartItemQuantity(${index}, this.value)">
+                                <button class="quantity-btn" onclick="changeCartItemQuantity(${index}, 1)">+</button>
+                            </div>
                             <div class="cart-item-actions">
-                                <span class="cart-item-quantity">Qty: ${item.quantity}</span>
                                 <button class="remove-item" onclick="removeFromCart('${item.sku}')">Remove</button>
                             </div>
                         </div>
@@ -696,6 +660,23 @@ else
             });
             itemsDiv.innerHTML = html;
             totalSpan.textContent = `₹${total.toFixed(2)} (Pts: ${totalPoints})`;
+        }
+
+        function changeCartItemQuantity(index, delta) {
+            if (index >= 0 && index < cart.length) {
+                let newQuantity = cart[index].quantity + delta;
+                if (newQuantity < 1) newQuantity = 1;
+                cart[index].quantity = newQuantity;
+                updateCartDisplay();
+            }
+        }
+
+        function updateCartItemQuantity(index, newQuantity) {
+            const qty = parseInt(newQuantity);
+            if (index >= 0 && index < cart.length && !isNaN(qty) && qty > 0) {
+                cart[index].quantity = qty;
+                updateCartDisplay();
+            }
         }
 
         function removeFromCart(sku) {
@@ -780,10 +761,19 @@ else
             if (confirm('Proceed to checkout?')) placeOrder();
         }
 
+        function clearCart() {
+            if (cart.length === 0) return;
+            if (confirm('Are you sure you want to clear your cart?')) {
+                cart = [];
+                updateCartDisplay();
+            }
+        }
+
         function reorderWithUpdatedQuantities() {
             const cards = document.querySelectorAll('.recent-order-container .product-card');
             if (cards.length === 0) return alert('No items to reorder!');
 
+            // Clear cart and add all items with updated quantities
             cart = [];
             
             cards.forEach(card => {
@@ -844,7 +834,15 @@ else
                 console.log('Processed items:', cart);
                 return alert('No valid items! Please check the browser console for more details.');
             }
-            if (confirm('Place reorder with updated quantities?')) placeOrder();
+            
+            // Update cart display instead of placing order directly
+            updateCartDisplay();
+            
+            // Show success message
+            alert(`Added ${cart.length} items to cart. You can now add more items from the product catalog before checkout.`);
+            
+            // Scroll to cart icon to indicate where items were added
+            document.querySelector('.cart-icon-container').scrollIntoView({ behavior: 'smooth' });
         }
 
         function showDetails(id) {
@@ -888,6 +886,13 @@ else
             document.getElementById('categoryProductsGrid').innerHTML = html;
             document.getElementById('allProductsSection').style.display = 'none';
             document.getElementById('categoryProductsSection').style.display = 'block';
+        }
+
+        function showAllProducts() {
+            document.getElementById('categoryProductsSection').style.display = 'none';
+            document.getElementById('allProductsSection').style.display = 'block';
+            // Scroll to the All Products section
+            document.getElementById('allProductsSection').scrollIntoView({ behavior: 'smooth' });
         }
 
         function hideCategoryProducts() {

@@ -15,7 +15,6 @@
             z-index: 1000;
             background-color: #1e293b;
             color: white;
-            overflow-y: auto;
         }
         
         .sidebar.collapsed {
@@ -30,24 +29,9 @@
             display: none;
         }
         
-        .sidebar.collapsed .toggle-btn i:before {
-            content: "\f054"; /* right arrow */
-        }
-        
-        .sidebar.expanded .toggle-btn i:before {
-            content: "\f053"; /* left arrow */
-        }
-        
         .main-content {
             transition: all 0.3s ease;
-        }
-        
-        .main-content.sidebar-expanded {
             margin-left: 250px;
-        }
-        
-        .main-content.sidebar-collapsed {
-            margin-left: 70px;
         }
         
         .sidebar-link {
@@ -74,22 +58,6 @@
             margin-left: 12px;
             white-space: nowrap;
             overflow: hidden;
-        }
-        
-        .toggle-btn {
-            position: absolute;
-            top: 16px;
-            right: -12px;
-            background-color: #4f46e5;
-            border: none;
-            border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            z-index: 1001;
         }
         
         /* Fixed bottom navigation for mobile */
@@ -134,11 +102,8 @@
     <div class="flex">
         <!-- Sidebar for desktop -->
         <aside class="sidebar expanded hidden md:block" id="sidebar">
-            <div class="p-4 border-b border-gray-700 relative">
+            <div class="p-4 border-b border-gray-700">
                 <h1 class="text-xl font-bold truncate">Admin Panel</h1>
-                <button class="toggle-btn" id="sidebar-toggle">
-                    <i class="fas fa-chevron-left"></i>
-                </button>
             </div>
             <nav class="mt-4">
                 <a asp-area="" asp-controller="Home" asp-action="AdminDashboard" class="sidebar-link @(ViewContext.RouteData.Values["Action"].ToString() == "AdminDashboard" ? "active" : "")">
@@ -253,28 +218,10 @@
             const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
             const sidebar = document.getElementById('sidebar');
             const mainContent = document.querySelector('.main-content');
-            const sidebarToggle = document.getElementById('sidebar-toggle');
             
             if (mobileMenuToggle && sidebar) {
                 mobileMenuToggle.addEventListener('click', function() {
                     sidebar.classList.toggle('hidden');
-                });
-            }
-            
-            // Sidebar toggle functionality
-            if (sidebarToggle && sidebar && mainContent) {
-                sidebarToggle.addEventListener('click', function() {
-                    sidebar.classList.toggle('collapsed');
-                    sidebar.classList.toggle('expanded');
-                    
-                    // Update main content classes
-                    if (sidebar.classList.contains('collapsed')) {
-                        mainContent.classList.remove('sidebar-expanded');
-                        mainContent.classList.add('sidebar-collapsed');
-                    } else {
-                        mainContent.classList.remove('sidebar-collapsed');
-                        mainContent.classList.add('sidebar-expanded');
-                    }
                 });
             }
             

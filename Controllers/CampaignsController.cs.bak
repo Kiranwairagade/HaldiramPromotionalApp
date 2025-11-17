@@ -127,6 +127,16 @@ namespace HaldiramPromotionalApp.Controllers
                     
                     _context.PointsToCashCampaigns.Add(campaign);
                     await _context.SaveChangesAsync();
+                    
+                    // Create notification for manufacturer
+                    await CreateManufacturerNotificationAsync(
+                        "Campaign Created", 
+                        $"Points to Cash campaign \"{viewModel.CampaignName}\" has been created successfully!",
+                        "campaign",
+                        campaign.Id,
+                        "PointsToCashCampaign"
+                    );
+                    
                     TempData["SuccessMessage"] = "Points to Cash Campaign created successfully!";
                     return RedirectToAction("CreateCampaign");
                 }
@@ -180,6 +190,453 @@ namespace HaldiramPromotionalApp.Controllers
                 AllMaterials = materials.Select(m => new MaterialViewModel
                 {
                     Id = m.Id,
+                    Name = m.Materialname ?? "",
+                    ShortName = m.ShortName ?? "",
+                    Category = m.Category ?? "",
+                    Price = m.price
+                }).ToList(),
+                AllProducts = products.Select(p => new ProductViewModel
+                {
+                    Id = p.Id,
+                    Name = p.ProductName,
+                    Price = p.Price,
+                    Description = p.Description,
+                    ImagePath = p.ImagePath
+                }).ToList()
+            };
+            
+            ViewBag.CampaignType = "Points Reward";
+            return View("CreatePointsRewardCampaign", viewModel);
+        }
+        
+        [HttpPost]
+        public async Task<IActionResult> CreatePointsRewardCampaign(PointsRewardCampaignViewModel viewModel, IFormFile ImagePath)
+        {
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    string imagePath = null;
+                    if (ImagePath != null && ImagePath.Length > 0)
+                    {
+                        // Save the uploaded file
+                        var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "campaigns");
+                        if (!Directory.Exists(uploadsFolder))
+                        {
+                            Directory.CreateDirectory(uploadsFolder);
+                        }
+                        
+                        var fileName = Path.GetFileNameWithoutExtension(ImagePath.FileName);
+                        var extension = Path.GetExtension(ImagePath.FileName);
+                        var uniqueFileName = $"{fileName}_{DateTime.Now:yyyyMMddHHmmss}{extension}";
+                        var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+                        
+                        using (var fileStream = new FileStream(filePath, FileMode.Create))
+                        {
+                            await ImagePath.CopyToAsync(fileStream);
+                        }
+                        
+                        // Store the relative path to be saved in the database
+                        imagePath = $"/images/campaigns/{uniqueFileName}";
+                    }
+                    
+                    var campaign = new PointsRewardCampaign
+                    {
+                        CampaignName = viewModel.CampaignName,
+                        StartDate = viewModel.StartDate,
+                        EndDate = viewModel.EndDate,
+                        Description = viewModel.Description,
+                        VoucherGenerationThreshold = viewModel.VoucherGenerationThreshold,
+                        VoucherValue = viewModel.VoucherValue,
+                        VoucherValidity = viewModel.VoucherValidity,
+                        Materials = viewModel.SelectedMaterialIds != null ? string.Join(",", viewModel.SelectedMaterialIds) : "",
+                        MaterialPoints = viewModel.MaterialPoints != null ? JsonSerializer.Serialize(viewModel.MaterialPoints) : "{}",
+                        Products = viewModel.SelectedProductIds != null ? string.Join(",", viewModel.SelectedProductIds) : "",
+                        ProductPoints = viewModel.ProductPoints != null ? JsonSerializer.Serialize(viewModel.ProductPoints) : "{}",
+                        ImagePath = imagePath,
+                        IsActive = viewModel.IsActive
+                    };
+                    
+                    _context.PointsRewardCampaigns.Add(campaign);
+                    await _context.SaveChangesAsync();
+                    
+                    // Create notification for manufacturer
+                    await CreateManufacturerNotificationAsync(
+                        "Campaign Created", 
+                        $"Points Reward campaign \"{viewModel.CampaignName}\" has been created successfully!",
+                        "campaign",
+                        campaign.Id,
+                        "PointsRewardCampaign"
+                    );
+                    
+                    TempData["SuccessMessage"] = "Points Reward Campaign created successfully!";
+                    return RedirectToAction("CreateCampaign");
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Exception occurred: {ex.Message}");
+                    System.Diagnostics.Debug.WriteLine($"Exception stack trace: {ex.StackTrace}");
+                    ModelState.AddModelError("", "An error occurred while saving the campaign: " + ex.Message);
+                }
+            }
+            else
+            {
+                // Add model state errors to TempData for display
+                var errors = ModelState.Where(x => x.Value.Errors.Count > 0)
+                    .Select(x => new { x.Key, x.Value.Errors })
+                    .ToArray();
+                
+                string errorMessages = "";
+                foreach (var error in errors)
+                {
+                    foreach (var subError in error.Errors)
+                    {
+                        errorMessages += $"{error.Key}: {subError.ErrorMessage}\n";
+                    }
+                }
+                
+                TempData["ErrorMessage"] = "Please correct the following errors:\n" + errorMessages;
+            }
+            
+            // Repopulate materials and products if model state is invalid
+            var materials = await _context.MaterialMaster.Where(m => m.isactive).ToListAsync();
+            var products = await _context.Products.Where(p => p.IsActive).ToListAsync();
+            viewModel.AllMaterials = materials.Select(m => new MaterialViewModel
+            {
+                Id = m.Id,
+                Name = m.Materialname ?? "",
+                ShortName = m.ShortName ?? "",
+                Category = m.Category ?? "",
+                Price = m.price
+            }).ToList();
+            viewModel.AllProducts = products.Select(p => new ProductViewModel
+            {
+                Id = p.Id,
+                Name = p.ProductName,
+                Price = p.Price,
+                Description = p.Description,
+                ImagePath = p.ImagePath
+            }).ToList();
+            
+            ViewBag.CampaignType = "Points Reward";
+            return View("CreatePointsRewardCampaign", viewModel);
+        }
+        
+        public async Task<IActionResult> CreateFreeProductCampaign()
+        {
+            var products = await _context.Products.Where(p => p.IsActive).ToListAsync();
+            var viewModel = new FreeProductCampaignViewModel
+            {
+                AllProducts = products.Select(p => new ProductViewModel
+                {
+                    Id = p.Id,
+                    Name = p.ProductName,
+                    Price = p.Price,
+                    Description = p.Description,
+                    ImagePath = p.ImagePath
+                }).ToList()
+            };
+            
+            ViewBag.CampaignType = "Free Product";
+            return View("CreateFreeProductCampaign", viewModel);
+        }
+        
+        [HttpPost]
+        public async Task<IActionResult> CreateFreeProductCampaign(FreeProductCampaignViewModel viewModel, IFormFile ImagePath)
+        {
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    string imagePath = null;
+                    if (ImagePath != null && ImagePath.Length > 0)
+                    {
+                        // Save the uploaded file
+                        var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "campaigns");
+                        if (!Directory.Exists(uploadsFolder))
+                        {
+                            Directory.CreateDirectory(uploadsFolder);
+                        }
+                        
+                        var fileName = Path.GetFileNameWithoutExtension(ImagePath.FileName);
+                        var extension = Path.GetExtension(ImagePath.FileName);
+                        var uniqueFileName = $"{fileName}_{DateTime.Now:yyyyMMddHHmmss}{extension}";
+                        var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+                        
+                        using (var fileStream = new FileStream(filePath, FileMode.Create))
+                        {
+                            await ImagePath.CopyToAsync(fileStream);
+                        }
+                        
+                        // Store the relative path to be saved in the database
+                        imagePath = $"/images/campaigns/{uniqueFileName}";
+                    }
+                    
+                    var campaign = new FreeProductCampaign
+                    {
+                        CampaignName = viewModel.CampaignName,
+                        StartDate = viewModel.StartDate,
+                        EndDate = viewModel.EndDate,
+                        Description = viewModel.Description,
+                        VoucherGenerationThreshold = viewModel.VoucherGenerationThreshold,
+                        VoucherValue = viewModel.VoucherValue,
+                        VoucherValidity = viewModel.VoucherValidity,
+                        Products = viewModel.SelectedProductIds != null ? string.Join(",", viewModel.SelectedProductIds) : "",
+                        ProductPoints = viewModel.ProductPoints != null ? JsonSerializer.Serialize(viewModel.ProductPoints) : "{}",
+                        ImagePath = imagePath,
+                        IsActive = viewModel.IsActive
+                    };
+                    
+                    _context.FreeProductCampaigns.Add(campaign);
+                    await _context.SaveChangesAsync();
+                    
+                    // Create notification for manufacturer
+                    await CreateManufacturerNotificationAsync(
+                        "Campaign Created", 
+                        $"Free Product campaign \"{viewModel.CampaignName}\" has been created successfully!",
+                        "campaign",
+                        campaign.Id,
+                        "FreeProductCampaign"
+                    );
+                    
+                    TempData["SuccessMessage"] = "Free Product Campaign created successfully!";
+                    return RedirectToAction("CreateCampaign");
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Exception occurred: {ex.Message}");
+                    System.Diagnostics.Debug.WriteLine($"Exception stack trace: {ex.StackTrace}");
+                    ModelState.AddModelError("", "An error occurred while saving the campaign: " + ex.Message);
+                }
+            }
+            else
+            {
+                // Add model state errors to TempData for display
+                var errors = ModelState.Where(x => x.Value.Errors.Count > 0)
+                    .Select(x => new { x.Key, x.Value.Errors })
+                    .ToArray();
+                
+                string errorMessages = "";
+                foreach (var error in errors)
+                {
+                    foreach (var subError in error.Errors)
+                    {
+                        errorMessages += $"{error.Key}: {subError.ErrorMessage}\n";
+                    }
+                }
+                
+                TempData["ErrorMessage"] = "Please correct the following errors:\n" + errorMessages;
+            }
+            
+            // Repopulate products if model state is invalid
+            var products = await _context.Products.Where(p => p.IsActive).ToListAsync();
+            viewModel.AllProducts = products.Select(p => new ProductViewModel
+            {
+                Id = p.Id,
+                Name = p.ProductName,
+                Price = p.Price,
+                Description = p.Description,
+                ImagePath = p.ImagePath
+            }).ToList();
+            
+            ViewBag.CampaignType = "Free Product";
+            return View("CreateFreeProductCampaign", viewModel);
+        }
+        
+        public async Task<IActionResult> CreateAmountReachGoalCampaign()
+        {
+            var viewModel = new AmountReachGoalCampaignViewModel();
+            
+            ViewBag.CampaignType = "Amount Reach Goal";
+            return View("CreateAmountReachGoalCampaign", viewModel);
+        }
+        
+        [HttpPost]
+        public async Task<IActionResult> CreateAmountReachGoalCampaign(AmountReachGoalCampaignViewModel viewModel, IFormFile ImagePath)
+        {
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    string imagePath = null;
+                    if (ImagePath != null && ImagePath.Length > 0)
+                    {
+                        // Save the uploaded file
+                        var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "campaigns");
+                        if (!Directory.Exists(uploadsFolder))
+                        {
+                            Directory.CreateDirectory(uploadsFolder);
+                        }
+                        
+                        var fileName = Path.GetFileNameWithoutExtension(ImagePath.FileName);
+                        var extension = Path.GetExtension(ImagePath.FileName);
+                        var uniqueFileName = $"{fileName}_{DateTime.Now:yyyyMMddHHmmss}{extension}";
+                        var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+                        
+                        using (var fileStream = new FileStream(filePath, FileMode.Create))
+                        {
+                            await ImagePath.CopyToAsync(fileStream);
+                        }
+                        
+                        // Store the relative path to be saved in the database
+                        imagePath = $"/images/campaigns/{uniqueFileName}";
+                    }
+                    
+                    var campaign = new AmountReachGoalCampaign
+                    {
+                        CampaignName = viewModel.CampaignName,
+                        StartDate = viewModel.StartDate,
+                        EndDate = viewModel.EndDate,
+                        Description = viewModel.Description,
+                        VoucherGenerationThreshold = viewModel.VoucherGenerationThreshold,
+                        VoucherValue = viewModel.VoucherValue,
+                        VoucherValidity = viewModel.VoucherValidity,
+                        ImagePath = imagePath,
+                        IsActive = viewModel.IsActive
+                    };
+                    
+                    _context.AmountReachGoalCampaigns.Add(campaign);
+                    await _context.SaveChangesAsync();
+                    
+                    // Create notification for manufacturer
+                    await CreateManufacturerNotificationAsync(
+                        "Campaign Created", 
+                        $"Amount Reach Goal campaign \"{viewModel.CampaignName}\" has been created successfully!",
+                        "campaign",
+                        campaign.Id,
+                        "AmountReachGoalCampaign"
+                    );
+                    
+                    TempData["SuccessMessage"] = "Amount Reach Goal Campaign created successfully!";
+                    return RedirectToAction("CreateCampaign");
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Exception occurred: {ex.Message}");
+                    System.Diagnostics.Debug.WriteLine($"Exception stack trace: {ex.StackTrace}");
+                    ModelState.AddModelError("", "An error occurred while saving the campaign: " + ex.Message);
+                }
+            }
+            else
+            {
+                // Add model state errors to TempData for display
+                var errors = ModelState.Where(x => x.Value.Errors.Count > 0)
+                    .Select(x => new { x.Key, x.Value.Errors })
+                    .ToArray();
+                
+                string errorMessages = "";
+                foreach (var error in errors)
+                {
+                    foreach (var subError in error.Errors)
+                    {
+                        errorMessages += $"{error.Key}: {subError.ErrorMessage}\n";
+                    }
+                }
+                
+                TempData["ErrorMessage"] = "Please correct the following errors:\n" + errorMessages;
+            }
+            
+            ViewBag.CampaignType = "Amount Reach Goal";
+            return View("CreateAmountReachGoalCampaign", viewModel);
+        }
+        
+        public async Task<IActionResult> CreateSessionDurationRewardCampaign()
+        {
+            var viewModel = new SessionDurationRewardCampaignViewModel();
+            
+            ViewBag.CampaignType = "Session Duration Reward";
+            return View("CreateSessionDurationRewardCampaign", viewModel);
+        }
+        
+        [HttpPost]
+        public async Task<IActionResult> CreateSessionDurationRewardCampaign(SessionDurationRewardCampaignViewModel viewModel, IFormFile ImagePath)
+        {
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    string imagePath = null;
+                    if (ImagePath != null && ImagePath.Length > 0)
+                    {
+                        // Save the uploaded file
+                        var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "campaigns");
+                        if (!Directory.Exists(uploadsFolder))
+                        {
+                            Directory.CreateDirectory(uploadsFolder);
+                        }
+                        
+                        var fileName = Path.GetFileNameWithoutExtension(ImagePath.FileName);
+                        var extension = Path.GetExtension(ImagePath.FileName);
+                        var uniqueFileName = $"{fileName}_{DateTime.Now:yyyyMMddHHmmss}{extension}";
+                        var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+                        
+                        using (var fileStream = new FileStream(filePath, FileMode.Create))
+                        {
+                            await ImagePath.CopyToAsync(fileStream);
+                        }
+                        
+                        // Store the relative path to be saved in the database
+                        imagePath = $"/images/campaigns/{uniqueFileName}";
+                    }
+                    
+                    var campaign = new SessionDurationRewardCampaign
+                    {
+                        CampaignName = viewModel.CampaignName,
+                        StartDate = viewModel.StartDate,
+                        EndDate = viewModel.EndDate,
+                        Description = viewModel.Description,
+                        VoucherGenerationThreshold = viewModel.VoucherGenerationThreshold,
+                        VoucherValue = viewModel.VoucherValue,
+                        VoucherValidity = viewModel.VoucherValidity,
+                        ImagePath = imagePath,
+                        IsActive = viewModel.IsActive
+                    };
+                    
+                    _context.SessionDurationRewardCampaigns.Add(campaign);
+                    await _context.SaveChangesAsync();
+                    
+                    // Create notification for manufacturer
+                    await CreateManufacturerNotificationAsync(
+                        "Campaign Created", 
+                        $"Session Duration Reward campaign \"{viewModel.CampaignName}\" has been created successfully!",
+                        "campaign",
+                        campaign.Id,
+                        "SessionDurationRewardCampaign"
+                    );
+                    
+                    TempData["SuccessMessage"] = "Session Duration Reward Campaign created successfully!";
+                    return RedirectToAction("CreateCampaign");
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Exception occurred: {ex.Message}");
+                    System.Diagnostics.Debug.WriteLine($"Exception stack trace: {ex.StackTrace}");
+                    ModelState.AddModelError("", "An error occurred while saving the campaign: " + ex.Message);
+                }
+            }
+            else
+            {
+                // Add model state errors to TempData for display
+                var errors = ModelState.Where(x => x.Value.Errors.Count > 0)
+                    .Select(x => new { x.Key, x.Value.Errors })
+                    .ToArray();
+                
+                string errorMessages = "";
+                foreach (var error in errors)
+                {
+                    foreach (var subError in error.Errors)
+                    {
+                        errorMessages += $"{error.Key}: {subError.ErrorMessage}\n";
+                    }
+                }
+                
+                TempData["ErrorMessage"] = "Please correct the following errors:\n" + errorMessages;
+            }
+            
+            ViewBag.CampaignType = "Session Duration Reward";
+            return View("CreateSessionDurationRewardCampaign", viewModel);
+        }
+        
                     Name = m.Materialname ?? "",
                     ShortName = m.ShortName ?? "",
                     Category = m.Category ?? "",
@@ -318,7 +775,6 @@ namespace HaldiramPromotionalApp.Controllers
         public async Task<IActionResult> CreateFreeProductCampaign()
         {
             var materials = await _context.MaterialMaster.Where(m => m.isactive).ToListAsync();
-            var products = await _context.Products.Where(p => p.IsActive).ToListAsync();
             var viewModel = new FreeProductCampaignViewModel
             {
                 AllMaterials = materials.Select(m => new MaterialViewModel
@@ -328,13 +784,6 @@ namespace HaldiramPromotionalApp.Controllers
                     ShortName = m.ShortName ?? "",
                     Category = m.Category ?? "",
                     Price = m.price
-                }).ToList(),
-                AllProducts = products.Select(p => new ProductViewModel
-                {
-                    Id = p.Id,
-                    ProductName = p.ProductName ?? "",
-                    Price = p.Price,
-                    Category = p.Category ?? ""
                 }).ToList()
             };
             
@@ -1121,16 +1570,40 @@ namespace HaldiramPromotionalApp.Controllers
                 {
                     if (!PointsToCashCampaignExists(viewModel.Id))
                     {
-                        return NotFound();
+                        TempData["ErrorMessage"] = "Campaign not found.";
+                        return RedirectToAction("ViewCampaigns");
                     }
                     else
                     {
+                        TempData["ErrorMessage"] = "The campaign was modified by another user. Please try again.";
                         throw;
                     }
                 }
                 catch (Exception ex)
                 {
-                    ModelState.AddModelError("", "An error occurred while updating the campaign: " + ex.Message);
+                    TempData["ErrorMessage"] = "An error occurred while updating the campaign: " + ex.Message;
+                    // Log the exception for debugging
+                    System.Diagnostics.Debug.WriteLine($"Exception in EditPointsToCashCampaign: {ex}");
+                    if (ex.InnerException != null)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Inner exception: {ex.InnerException.Message}");
+                    }
+                }
+            }
+            else
+            {
+                // Log validation errors for debugging
+                foreach (var key in ModelState.Keys)
+                {
+                    var state = ModelState[key];
+                    if (state.Errors.Count > 0)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Validation error for {key}:");
+                        foreach (var error in state.Errors)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"  - {error.ErrorMessage}");
+                        }
+                    }
                 }
             }
 
@@ -1379,13 +1852,6 @@ namespace HaldiramPromotionalApp.Controllers
                     ShortName = m.ShortName ?? "",
                     Category = m.Category ?? "",
                     Price = m.price
-                }).ToList(),
-                AllProducts = products.Select(p => new ProductViewModel
-                {
-                    Id = p.Id,
-                    ProductName = p.ProductName ?? "",
-                    Price = p.Price,
-                    Category = p.Category ?? ""
                 }).ToList()
             };
 
@@ -1399,7 +1865,8 @@ namespace HaldiramPromotionalApp.Controllers
         {
             if (id != viewModel.Id)
             {
-                return NotFound();
+                TempData["ErrorMessage"] = "Invalid campaign ID.";
+                return RedirectToAction("ViewCampaigns");
             }
 
             // Process only checked materials
@@ -1478,7 +1945,8 @@ namespace HaldiramPromotionalApp.Controllers
                     var campaign = await _context.FreeProductCampaigns.FindAsync(id);
                     if (campaign == null)
                     {
-                        return NotFound();
+                        TempData["ErrorMessage"] = "Campaign not found.";
+                        return RedirectToAction("ViewCampaigns");
                     }
 
                     // Handle image upload if a new image is provided
@@ -1561,16 +2029,40 @@ namespace HaldiramPromotionalApp.Controllers
                 {
                     if (!FreeProductCampaignExists(viewModel.Id))
                     {
-                        return NotFound();
+                        TempData["ErrorMessage"] = "Campaign not found.";
+                        return RedirectToAction("ViewCampaigns");
                     }
                     else
                     {
+                        TempData["ErrorMessage"] = "The campaign was modified by another user. Please try again.";
                         throw;
                     }
                 }
                 catch (Exception ex)
                 {
-                    ModelState.AddModelError("", "An error occurred while updating the campaign: " + ex.Message);
+                    TempData["ErrorMessage"] = "An error occurred while updating the campaign: " + ex.Message;
+                    // Log the exception for debugging
+                    System.Diagnostics.Debug.WriteLine($"Exception in EditFreeProductCampaign: {ex}");
+                    if (ex.InnerException != null)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Inner exception: {ex.InnerException.Message}");
+                    }
+                }
+            }
+            else
+            {
+                // Log validation errors for debugging
+                foreach (var key in ModelState.Keys)
+                {
+                    var state = ModelState[key];
+                    if (state.Errors.Count > 0)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Validation error for {key}:");
+                        foreach (var error in state.Errors)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"  - {error.ErrorMessage}");
+                        }
+                    }
                 }
             }
 
@@ -2069,6 +2561,44 @@ namespace HaldiramPromotionalApp.Controllers
                 TempData["SuccessMessage"] = "Session Duration Reward Campaign deleted successfully!";
             }
             return RedirectToAction("ViewCampaigns");
+        }
+        
+        // Helper method to create manufacturer notification
+        private async Task CreateManufacturerNotificationAsync(string title, string message, string type, int? relatedEntityId = null, string relatedEntityType = null)
+        {
+            try
+            {
+                // Get the logged-in manufacturer user
+                var userName = HttpContext.Session.GetString("UserName");
+                var userRole = HttpContext.Session.GetString("role");
+
+                // Only create notifications for manufacturers
+                if (!string.IsNullOrEmpty(userName) && userRole == "Manufacturer")
+                {
+                    var user = await _context.Users.FirstOrDefaultAsync(u => u.phoneno == userName);
+                    if (user != null)
+                    {
+                        var notification = new Notification
+                        {
+                            UserId = user.Id,
+                            Title = title,
+                            Message = message,
+                            Type = type,
+                            RelatedEntityId = relatedEntityId,
+                            RelatedEntityType = relatedEntityType,
+                            CreatedDate = DateTime.Now
+                        };
+
+                        _context.Notifications.Add(notification);
+                        await _context.SaveChangesAsync();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log error but don't fail the main operation
+                System.Diagnostics.Debug.WriteLine($"Error creating manufacturer notification: {ex.Message}");
+            }
         }
     }
 }

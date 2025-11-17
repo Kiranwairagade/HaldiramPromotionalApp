@@ -27,7 +27,7 @@
         background-color: #f5f7fb;
         color: #333;
         line-height: 1.6;
-        padding-top: 60px; /* Space for fixed navbar */
+        overflow: hidden; /* Remove scrolling */
     }
 
     /* Navbar Styles */
@@ -43,10 +43,11 @@
     .nav-tabs .nav-link {
         border: none;
         border-radius: 0;
-        padding: 12px 20px;
+        padding: 6px 10px; /* Reduced padding */
         color: #666;
         font-weight: 500;
         transition: var(--transition);
+        font-size: 0.9rem; /* Reduced font size */
     }
 
     .nav-tabs .nav-link:hover {
@@ -63,14 +64,15 @@
     .dashboard-header {
         background: linear-gradient(135deg, var(--primary-color), #1e3a8a);
         color: white;
-        padding: 1.5rem;
-        margin-bottom: 2rem;
+        padding: 1rem; /* Reduced padding */
+        margin-bottom: 1rem; /* Reduced margin */
         box-shadow: var(--box-shadow);
     }
 
     .dashboard-header h2 {
         font-weight: 600;
         margin: 0;
+        font-size: 1.5rem; /* Reduced font size */
     }
 
     .card {
@@ -78,19 +80,20 @@
         border-radius: var(--border-radius);
         box-shadow: var(--box-shadow);
         transition: var(--transition);
-        margin-bottom: 1.5rem;
-        overflow: hidden;
+        margin-bottom: 1rem; /* Reduced margin */
+        
+        max-height: 300px; /* Limit card height */
     }
 
     .card:hover {
-        transform: translateY(-5px);
+        transform: translateY(-2px);
         box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
     }
 
     .card-header {
         background-color: white;
         border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-        padding: 1.25rem 1.5rem;
+        padding: 0.75rem 1rem; /* Reduced padding */
         font-weight: 600;
         color: var(--primary-color);
         display: flex;
@@ -98,30 +101,32 @@
     }
 
     .card-header i {
-        margin-right: 10px;
-        font-size: 1.2rem;
+        margin-right: 8px; /* Reduced margin */
+        font-size: 1rem; /* Reduced font size */
     }
 
     .card-body {
-        padding: 1.5rem;
+        padding: 1rem; /* Reduced padding */
+        overflow-y: auto; /* Allow scrolling within card if needed */
+        max-height: 250px; /* Limit card body height */
     }
 
     .info-item {
         display: flex;
-        margin-bottom: 1rem;
+        margin-bottom: 0.75rem; /* Reduced margin */
         align-items: flex-start;
     }
 
     .info-icon {
         background-color: rgba(44, 90, 160, 0.1);
         color: var(--primary-color);
-        width: 40px;
-        height: 40px;
+        width: 30px; /* Reduced size */
+        height: 30px; /* Reduced size */
         border-radius: var(--border-radius);
         display: flex;
         align-items: center;
         justify-content: center;
-        margin-right: 15px;
+        margin-right: 10px; /* Reduced margin */
         flex-shrink: 0;
     }
 
@@ -132,26 +137,26 @@
     .info-label {
         font-weight: 500;
         color: #666;
-        font-size: 0.9rem;
-        margin-bottom: 0.25rem;
+        font-size: 0.8rem; /* Reduced font size */
+        margin-bottom: 0.2rem; /* Reduced margin */
     }
 
     .info-value {
         font-weight: 600;
         color: #333;
-        font-size: 1rem;
+        font-size: 0.9rem; /* Reduced font size */
     }
 
     .scanner-container {
         width: 100%;
-        height: 300px;
+        height: 200px; /* Reduced height */
         border: 2px dashed #ddd;
         display: flex;
         align-items: center;
         justify-content: center;
         overflow: hidden;
         background-color: #f8f9fa;
-        margin-bottom: 1rem;
+        margin-bottom: 0.75rem; /* Reduced margin */
         position: relative;
     }
     
@@ -161,8 +166,8 @@
     }
     
     .scanner-placeholder i {
-        font-size: 3rem;
-        margin-bottom: 1rem;
+        font-size: 2rem; /* Reduced font size */
+        margin-bottom: 0.5rem; /* Reduced margin */
         color: #adb5bd;
     }
     
@@ -188,8 +193,8 @@
     }
 
     .scanner-placeholder i {
-        font-size: 3rem;
-        margin-bottom: 1rem;
+        font-size: 2rem; /* Reduced font size */
+        margin-bottom: 0.5rem; /* Reduced margin */
         display: block;
     }
 
@@ -197,44 +202,48 @@
         background-color: var(--primary-color);
         border-color: var(--primary-color);
         border-radius: var(--border-radius);
-        padding: 0.5rem 1.5rem;
+        padding: 0.4rem 1rem; /* Reduced padding */
         font-weight: 500;
         transition: var(--transition);
+        font-size: 0.9rem; /* Reduced font size */
     }
 
     .btn-primary:hover {
         background-color: #1e3a8a;
         border-color: #1e3a8a;
-        transform: translateY(-2px);
+        transform: translateY(-1px); /* Reduced transform */
     }
 
     .btn-success {
         background-color: var(--success-color);
         border-color: var(--success-color);
         border-radius: var(--border-radius);
-        padding: 0.5rem 1.5rem;
+        padding: 0.4rem 1rem; /* Reduced padding */
         font-weight: 500;
         transition: var(--transition);
+        font-size: 0.9rem; /* Reduced font size */
     }
 
     .btn-success:hover {
         background-color: #218838;
         border-color: #218838;
-        transform: translateY(-2px);
+        transform: translateY(-1px); /* Reduced transform */
     }
 
     .btn-outline-secondary {
         border-radius: var(--border-radius);
-        padding: 0.5rem 1.5rem;
+        padding: 0.4rem 1rem; /* Reduced padding */
         font-weight: 500;
         transition: var(--transition);
+        font-size: 0.9rem; /* Reduced font size */
     }
 
     .form-control {
         border-radius: var(--border-radius);
-        padding: 0.75rem 1rem;
+        padding: 0.5rem 0.75rem; /* Reduced padding */
         border: 1px solid #ddd;
         transition: var(--transition);
+        font-size: 0.9rem; /* Reduced font size */
     }
 
     .form-control:focus {
@@ -245,7 +254,7 @@
     .alert {
         border-radius: var(--border-radius);
         border: none;
-        padding: 1rem 1.5rem;
+        padding: 0.75rem 1rem; /* Reduced padding */
     }
 
     .alert-success {
@@ -267,17 +276,17 @@
     }
 
     .section-title {
-        font-size: 1.25rem;
+        font-size: 1.1rem; /* Reduced font size */
         font-weight: 600;
-        margin-bottom: 1.5rem;
+        margin-bottom: 1rem; /* Reduced margin */
         color: var(--primary-color);
-        padding-bottom: 0.5rem;
+        padding-bottom: 0.3rem; /* Reduced padding */
         border-bottom: 2px solid rgba(44, 90, 160, 0.1);
     }
 
     .manual-entry {
         background-color: #f8f9fa;
-        padding: 1.5rem;
+        padding: 1rem; /* Reduced padding */
         border-radius: var(--border-radius);
         height: 100%;
     }
@@ -285,52 +294,85 @@
     .table th {
         background-color: #f8f9fa;
         font-weight: 600;
+        font-size: 0.85rem; /* Reduced font size */
     }
     
     .table td, .table th {
         vertical-align: middle;
+        padding: 0.5rem; /* Reduced padding */
     }
     
     .badge {
-        font-size: 0.75em;
+        font-size: 0.7em; /* Reduced font size */
     }
 
     @@media (max-width: 768px) {
         .dashboard-header {
-            padding: 1rem;
+            padding: 0.75rem; /* Reduced padding */
         }
         
         .card-body {
-            padding: 1rem;
+            padding: 0.75rem; /* Reduced padding */
         }
         
         .scanner-container {
-            height: 250px;
+            height: 150px; /* Reduced height */
         }
         
         .nav-tabs .nav-link {
-            padding: 10px 15px;
-            font-size: 0.9rem;
+            padding: 6px 10px; /* Reduced padding */
+            font-size: 0.8rem; /* Reduced font size */
         }
+        
+        .info-icon {
+            width: 25px; /* Reduced size */
+            height: 25px; /* Reduced size */
+        }
+        
+        .btn {
+            padding: 0.3rem 0.75rem; /* Reduced padding */
+            font-size: 0.8rem; /* Reduced font size */
+        }
+    }
+    
+    /* Container adjustments for fixed height */
+    .container-fluid {
+        height: calc(100vh - 120px); /* Fixed height minus navbar and footer */
+        overflow: hidden; /* Prevent scrolling */
+    }
+    
+    .tab-content {
+        height: calc(100% - 60px); /* Account for tabs height */
+    }
+    
+    .tab-pane {
+        height: 100%;
+    }
+    
+    /* Adjustments for specific sections */
+    #voucher-redemption .card,
+    #shopkeeper-information .card,
+    #redemption-history .card {
+        height: calc(100% - 30px); /* Account for margin */
     }
 </style>
 
 <div class="container-fluid">
     <!-- Navigation Tabs -->
-    <ul class="nav nav-tabs mb-4" id="shopkeeperTabs" role="tablist">
+    <ul class="nav nav-tabs mb-3" id="shopkeeperTabs" role="tablist"> <!-- Reduced margin -->
         <li class="nav-item" role="presentation">
             <button class="nav-link active" id="voucher-redemption-tab" data-bs-toggle="tab" data-bs-target="#voucher-redemption" type="button" role="tab">
-                <i class="fas fa-ticket-alt me-2"></i>Voucher Redemption
+                <i class="fas fa-ticket-alt me-1"></i>Voucher Redemption <!-- Reduced margin -->
             </button>
         </li>
         <li class="nav-item" role="presentation">
             <button class="nav-link" id="shopkeeper-info-tab" data-bs-toggle="tab" data-bs-target="#shopkeeper-information" type="button" role="tab">
-                <i class="fas fa-store me-2"></i>Shopkeeper Information
+                <i class="fas fa-store me-1"></i>Shopkeeper Information <!-- Reduced margin -->
             </button>
         </li>
         <li class="nav-item" role="presentation">
             <button class="nav-link" id="redemption-history-tab" data-bs-toggle="tab" data-bs-target="#redemption-history" type="button" role="tab">
-                <i class="fas fa-history me-2"></i>Redemption History
+                <i class="fas fa-history me-1"></i>Redemption History <!-- Reduced margin -->
             </button>
         </li>
     </ul>
@@ -368,41 +410,41 @@
                     <!-- Product Details Form (shown after Points-to-Cash voucher redemption) -->
                     @if (Model.ShowProductForm)
                     {
-                        <div class="alert alert-info mb-4">
-                            <h5><i class="fas fa-info-circle"></i> Product Details Required</h5>
-                            <p>Please enter the details of the product being redeemed with this Points-to-Cash voucher.</p>
+                        <div class="alert alert-info mb-3"> <!-- Reduced margin -->
+                            <h6><i class="fas fa-info-circle"></i> Product Details Required</h6> <!-- Reduced heading -->
+                            <p class="mb-2">Please enter the details of the product being redeemed with this Points-to-Cash voucher.</p> <!-- Reduced margin -->
                         </div>
                         
-                        <form asp-action="SaveProductDetails" method="post" class="mb-4">
+                        <form asp-action="SaveProductDetails" method="post" class="mb-3"> <!-- Reduced margin -->
                             <input type="hidden" name="voucherId" value="@Model.VoucherId" />
                             <div class="row">
                                 <div class="col-md-6">
-                                    <div class="form-group mb-3">
+                                    <div class="form-group mb-2"> <!-- Reduced margin -->
                                         <label for="ProductName" class="form-label">Product Name</label>
                                         <input type="text" class="form-control" id="ProductName" name="ProductName" value="@Model.ProductName" required>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
-                                    <div class="form-group mb-3">
+                                    <div class="form-group mb-2"> <!-- Reduced margin -->
                                         <label for="Quantity" class="form-label">Quantity</label>
                                         <input type="number" class="form-control" id="Quantity" name="Quantity" value="@Model.Quantity" min="1" required>
                                     </div>
                                 </div>
                             </div>
-                            <div class="form-group mb-3">
+                            <div class="form-group mb-2"> <!-- Reduced margin -->
                                 <label for="ProductDescription" class="form-label">Product Description</label>
-                                <textarea class="form-control" id="ProductDescription" name="ProductDescription" rows="3">@Model.ProductDescription</textarea>
+                                <textarea class="form-control" id="ProductDescription" name="ProductDescription" rows="2">@Model.ProductDescription</textarea> <!-- Reduced rows -->
                             </div>
-                            <div class="form-group mb-3">
+                            <div class="form-group mb-2"> <!-- Reduced margin -->
                                 <label for="ProductPrice" class="form-label">Product Price (₹)</label>
                                 <input type="number" class="form-control" id="ProductPrice" name="ProductPrice" value="@Model.ProductPrice" step="0.01" min="0" required>
                             </div>
-                            <div class="d-flex gap-2">
+                            <div class="d-flex gap-1"> <!-- Reduced gap -->
                                 <button type="submit" class="btn btn-success">
-                                    <i class="fas fa-save me-2"></i>Save Product Details
+                                    <i class="fas fa-save me-1"></i>Save Product Details <!-- Reduced margin -->
                                 </button>
                                 <a href="@Url.Action("ShopkeeperHome", "Home")" class="btn btn-outline-secondary">
-                                    <i class="fas fa-times me-2"></i>Cancel
+                                    <i class="fas fa-times me-1"></i>Cancel <!-- Reduced margin -->
                                 </a>
                             </div>
                         </form>
@@ -411,13 +453,13 @@
                     {
                         <div class="row">
                             <div class="col-md-6">
-                                <h6>Scan Voucher QR Code</h6>
-                                <div class="form-group mb-3">
+                                <h6>Scan Voucher QR Code</h6> <!-- Reduced heading -->
+                                <div class="form-group mb-2"> <!-- Reduced margin -->
                                     <button id="startCamera" class="btn btn-primary">
-                                        <i class="fas fa-camera me-2"></i>Start Camera
+                                        <i class="fas fa-camera me-1"></i>Start Camera <!-- Reduced margin -->
                                     </button>
                                     <button id="stopCamera" class="btn btn-outline-secondary" style="display:none;">
-                                        <i class="fas fa-stop me-2"></i>Stop Camera
+                                        <i class="fas fa-stop me-1"></i>Stop Camera <!-- Reduced margin -->
                                     </button>
                                 </div>
                                 <div id="scannerContainer" class="scanner-container" style="display: none;">
@@ -426,34 +468,34 @@
                                 <div id="scannerPlaceholder" class="scanner-container">
                                     <div class="scanner-placeholder">
                                         <i class="fas fa-qrcode"></i>
-                                        <p>Click "Start Camera" to begin scanning</p>
+                                        <p class="mb-1">Click "Start Camera" to begin scanning</p> <!-- Reduced margin -->
                                     </div>
                                 </div>
-                                <div id="scanResult" class="mt-4" style="display: none;">
+                                <div id="scanResult" class="mt-3" style="display: none;"> <!-- Reduced margin -->
                                     <div class="alert alert-info">
-                                        <i class="fas fa-info-circle me-2"></i>
+                                        <i class="fas fa-info-circle me-1"></i> <!-- Reduced margin -->
                                         <strong>Scanned Data:</strong> <span id="scannedData"></span>
                                     </div>
-                                    <div class="d-flex gap-2">
+                                    <div class="d-flex gap-1"> <!-- Reduced gap -->
                                         <button id="redeemVoucher" class="btn btn-success">
-                                            <i class="fas fa-check-circle me-2"></i>Redeem Voucher
+                                            <i class="fas fa-check-circle me-1"></i>Redeem Voucher <!-- Reduced margin -->
                                         </button>
                                         <button id="scanAgain" class="btn btn-outline-secondary">
-                                            <i class="fas fa-redo me-2"></i>Scan Again
+                                            <i class="fas fa-redo me-1"></i>Scan Again <!-- Reduced margin -->
                                         </button>
                                     </div>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="manual-entry">
-                                    <h6>Manual Voucher Entry</h6>
+                                    <h6>Manual Voucher Entry</h6> <!-- Reduced heading -->
                                     <form asp-action="RedeemVoucher" method="post">
-                                        <div class="form-group mb-3">
+                                        <div class="form-group mb-2"> <!-- Reduced margin -->
                                             <label for="voucherCode" class="form-label">Voucher Code</label>
                                             <input type="text" class="form-control" id="voucherCode" name="voucherCode" placeholder="Enter voucher code">
                                         </div>
                                         <button type="submit" class="btn btn-success w-100">
-                                            <i class="fas fa-ticket-alt me-2"></i>Redeem Voucher
+                                            <i class="fas fa-ticket-alt me-1"></i>Redeem Voucher <!-- Reduced margin -->
                                         </button>
                                     </form>
                                 </div>
@@ -518,9 +560,9 @@
                     }
                     else
                     {
-                        <div class="text-center py-4">
-                            <i class="fas fa-exclamation-triangle fa-2x text-warning mb-3"></i>
-                            <p>No shopkeeper information found.</p>
+                        <div class="text-center py-3"> <!-- Reduced padding -->
+                            <i class="fas fa-exclamation-triangle fa-lg text-warning mb-2"></i> <!-- Reduced margin -->
+                            <p class="mb-0">No shopkeeper information found.</p> <!-- Reduced margin -->
                         </div>
                     }
                 </div>
@@ -537,7 +579,7 @@
                     @if (Model.RedemptionHistory != null && Model.RedemptionHistory.Any())
                     {
                         <div class="table-responsive">
-                            <table class="table table-striped">
+                            <table class="table table-striped table-sm"> <!-- Added table-sm for smaller tables -->
                                 <thead>
                                     <tr>
                                         <th>Voucher Code</th>
@@ -564,14 +606,14 @@
                     }
                     else
                     {
-                        <div class="text-center py-4">
-                            <i class="fas fa-info-circle fa-2x text-info mb-3"></i>
-                            <p>No redemption history found.</p>
+                        <div class="text-center py-3"> <!-- Reduced padding -->
+                            <i class="fas fa-info-circle fa-lg text-info mb-2"></i> <!-- Reduced margin -->
+                            <p class="mb-0">No redemption history found.</p> <!-- Reduced margin -->
                         </div>
                     }
                     <div class="d-flex justify-content-center">
                         <nav>
-                            <ul class="pagination">
+                            <ul class="pagination pagination-sm"> <!-- Smaller pagination -->
                                 <li class="page-item disabled"><a class="page-link" href="#">Previous</a></li>
                                 <li class="page-item active"><a class="page-link" href="#">1</a></li>
                                 <li class="page-item"><a class="page-link" href="#">2</a></li>
@@ -628,7 +670,7 @@
                 
                 const config = {
                     fps: 10,
-                    qrbox: { width: 250, height: 250 }
+                    qrbox: { width: 200, height: 200 } // Reduced size
                 };
                 
                 // Start scanning

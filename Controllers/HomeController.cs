@@ -217,6 +217,169 @@ namespace HaldiramPromotionalApp.Controllers
                         System.Diagnostics.Debug.WriteLine($"Dealer {dealer.Id} has {totalPoints} points, but needs {campaign.VoucherGenerationThreshold} for campaign {campaign.Id}");
                     }
                 }
+
+                // Check AmountReachGoal campaigns for automatic voucher generation
+                var amountReachGoalCampaigns = await _context.AmountReachGoalCampaigns
+                    .Where(c => c.IsActive && c.StartDate <= DateTime.Now && c.EndDate >= DateTime.Now)
+                    .ToListAsync();
+
+                // Log campaign count for debugging
+                System.Diagnostics.Debug.WriteLine($"Found {amountReachGoalCampaigns.Count} active AmountReachGoal campaigns");
+
+                foreach (var campaign in amountReachGoalCampaigns)
+                {
+                    // Calculate total order amount for this dealer
+                    var totalOrderAmount = await _context.Orders
+                        .Where(o => o.DealerId == dealer.Id)
+                        .SumAsync(o => (decimal?)o.TotalAmount) ?? 0;
+
+                    // Log campaign information for debugging
+                    System.Diagnostics.Debug.WriteLine($"Checking AmountReachGoal campaign {campaign.Id}: {campaign.CampaignName}, Target: {campaign.TargetAmount}, Dealer Total: {totalOrderAmount}");
+
+                    // Check if dealer has reached the target amount for this campaign
+                    if (totalOrderAmount >= campaign.TargetAmount)
+                    {
+                        // Check if dealer already has a voucher for this campaign
+                        var existingVoucher = await _context.Vouchers
+                            .AnyAsync(v => v.DealerId == dealer.Id && v.CampaignId == campaign.Id && v.CampaignType == "AmountReachGoal");
+
+                        if (!existingVoucher)
+                        {
+                            // Generate voucher
+                            var voucherCode = $"ARG{dealer.Id}{campaign.Id}{DateTime.Now:yyyyMMddHHmmss}";
+                            var voucher = new Voucher
+                            {
+                                VoucherCode = voucherCode,
+                                DealerId = dealer.Id,
+                                CampaignType = "AmountReachGoal",
+                                CampaignId = campaign.Id,
+                                VoucherValue = campaign.VoucherValue,
+                                PointsUsed = 0, // No points used for this campaign type
+                                IssueDate = DateTime.Now,
+                                ExpiryDate = DateTime.Now.AddDays(campaign.VoucherValidity),
+                                QRCodeData = $"{voucherCode}|{dealer.Id}|{campaign.VoucherValue}|{DateTime.Now.AddDays(campaign.VoucherValidity):yyyy-MM-dd}"
+                            };
+
+                            _context.Vouchers.Add(voucher);
+                            await _context.SaveChangesAsync();
+
+                            // Log successful voucher creation for debugging
+                            System.Diagnostics.Debug.WriteLine($"Created AmountReachGoal voucher {voucherCode} for dealer {dealer.Id} and campaign {campaign.Id}");
+
+                            // Create notification for voucher generation
+                            await _notificationService.CreateVoucherNotificationAsync(user.Id, voucherCode, campaign.VoucherValue, voucher.Id);
+                        }
+                        else
+                        {
+                            // Log that voucher already exists
+                            System.Diagnostics.Debug.WriteLine($"Dealer {dealer.Id} already has a voucher for AmountReachGoal campaign {campaign.Id}");
+                        }
+                    }
+                    else
+                    {
+                        // Log insufficient order amount
+                        System.Diagnostics.Debug.WriteLine($"Dealer {dealer.Id} has {totalOrderAmount} total order amount, but needs {campaign.TargetAmount} for campaign {campaign.Id}");
+                    }
+                }
+
+                // Check FreeProduct campaigns for automatic voucher generation
+                var freeProductCampaigns = await _context.FreeProductCampaigns
+                    .Where(c => c.IsActive && c.StartDate <= DateTime.Now && c.EndDate >= DateTime.Now)
+                    .ToListAsync();
+
+                // Log campaign count for debugging
+                System.Diagnostics.Debug.WriteLine($"Found {freeProductCampaigns.Count} active FreeProduct campaigns");
+
+                foreach (var campaign in freeProductCampaigns)
+                {
+                    // Check if dealer has ordered enough quantities of campaign materials
+                    if (!string.IsNullOrEmpty(campaign.Materials) && !string.IsNullOrEmpty(campaign.MaterialQuantities))
+                    {
+                        try
+                        {
+                            var campaignMaterialIds = campaign.Materials.Split(',').Select(int.Parse).ToList();
+                            var materialQuantities = JsonSerializer.Deserialize<Dictionary<int, int>>(campaign.MaterialQuantities);
+
+                            // Calculate total quantities of campaign materials ordered by this dealer
+                            var orderedMaterialQuantities = await _context.OrderItems
+                                .Where(oi => oi.Order.DealerId == dealer.Id && campaignMaterialIds.Contains(oi.MaterialId))
+                                .GroupBy(oi => oi.MaterialId)
+                                .ToDictionaryAsync(g => g.Key, g => g.Sum(oi => oi.Quantity));
+
+                            bool hasSufficientQuantities = true;
+                            foreach (var materialId in campaignMaterialIds)
+                            {
+                                if (materialQuantities.ContainsKey(materialId))
+                                {
+                                    var requiredQuantity = materialQuantities[materialId];
+                                    var orderedQuantity = orderedMaterialQuantities.ContainsKey(materialId) ? orderedMaterialQuantities[materialId] : 0;
+
+                                    if (orderedQuantity < requiredQuantity)
+                                    {
+                                        hasSufficientQuantities = false;
+                                        break;
+                                    }
+                                }
+                            }
+
+                            // Log campaign information for debugging
+                            System.Diagnostics.Debug.WriteLine($"Checking FreeProduct campaign {campaign.Id}: {campaign.CampaignName}, Sufficient Quantities: {hasSufficientQuantities}");
+
+                            // Check if dealer has ordered sufficient quantities
+                            if (hasSufficientQuantities)
+                            {
+                                // Check if dealer already has a voucher for this campaign
+                                var existingVoucher = await _context.Vouchers
+                                    .AnyAsync(v => v.DealerId == dealer.Id && v.CampaignId == campaign.Id && v.CampaignType == "FreeProduct");
+
+                                if (!existingVoucher)
+                                {
+                                    // Generate voucher
+                                    var voucherCode = $"FRP{dealer.Id}{campaign.Id}{DateTime.Now:yyyyMMddHHmmss}";
+                                    var voucher = new Voucher
+                                    {
+                                        VoucherCode = voucherCode,
+                                        DealerId = dealer.Id,
+                                        CampaignType = "FreeProduct",
+                                        CampaignId = campaign.Id,
+                                        VoucherValue = 0, // No monetary value for free product vouchers
+                                        PointsUsed = 0, // No points used for this campaign type
+                                        IssueDate = DateTime.Now,
+                                        ExpiryDate = DateTime.Now.AddDays(30), // Default 30 days validity for FreeProduct vouchers
+                                        QRCodeData = $"{voucherCode}|{dealer.Id}|0|{DateTime.Now.AddDays(30):yyyy-MM-dd}"
+                                    };
+
+                                    _context.Vouchers.Add(voucher);
+                                    await _context.SaveChangesAsync();
+
+                                    // Log successful voucher creation for debugging
+                                    System.Diagnostics.Debug.WriteLine($"Created FreeProduct voucher {voucherCode} for dealer {dealer.Id} and campaign {campaign.Id}");
+
+                                    // Create notification for voucher generation
+                                    await _notificationService.CreateVoucherNotificationAsync(user.Id, voucherCode, 0, voucher.Id);
+                                }
+                                else
+                                {
+                                    // Log that voucher already exists
+                                    System.Diagnostics.Debug.WriteLine($"Dealer {dealer.Id} already has a voucher for FreeProduct campaign {campaign.Id}");
+                                }
+                            }
+                            else
+                            {
+                                // Log insufficient quantities
+                                System.Diagnostics.Debug.WriteLine($"Dealer {dealer.Id} has insufficient quantities for FreeProduct campaign {campaign.Id}");
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            // Log any errors during processing
+                            System.Diagnostics.Debug.WriteLine($"Error processing FreeProduct campaign {campaign.Id}: {ex.Message}");
+                        }
+                    }
+                }
+
+                // Note: SessionDurationReward campaigns would require session tracking which is not implemented in the current codebase
+                // This would typically involve tracking user sessions and comparing duration to campaign requirements
             }
 
             var viewModel = new DealerDashboardViewModel
@@ -335,6 +498,9 @@ namespace HaldiramPromotionalApp.Controllers
             {
                 return RedirectToAction("Login");
             }
+
+            // Hide bottom navigation for ShopkeeperHome
+            ViewData["HideLayoutBottomNav"] = "true";
 
             try
             {
@@ -731,6 +897,59 @@ namespace HaldiramPromotionalApp.Controllers
             }
         }
 
+        public async Task<IActionResult> History()
+        {
+            // Check if user is logged in and is a Dealer
+            if (HttpContext.Session.GetString("UserName") == null || HttpContext.Session.GetString("role") != "Dealer")
+            {
+                return RedirectToAction("Login");
+            }
+
+            try
+            {
+                // Get the logged-in user's information
+                var userName = HttpContext.Session.GetString("UserName");
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.phoneno == userName);
+
+                // Get the dealer information for this user
+                DealerMaster dealer = null;
+                if (user != null)
+                {
+                    // Assuming the DealerMaster.PhoneNo corresponds to the User.phoneno for dealers
+                    dealer = await _context.DealerMasters.FirstOrDefaultAsync(d => d.PhoneNo == user.phoneno);
+                }
+
+                if (dealer == null)
+                {
+                    // If no dealer found, redirect to login
+                    return RedirectToAction("Login");
+                }
+
+                // Get redemption history (recently redeemed vouchers) for this dealer
+                // Include dealer information for better context
+                var redemptionHistory = await _context.Vouchers
+                    .Include(v => v.Dealer)
+                    .Where(v => v.IsRedeemed && v.DealerId == dealer.Id)
+                    .OrderByDescending(v => v.RedeemedDate)
+                    .ToListAsync();
+
+                var viewModel = new VoucherViewModel
+                {
+                    RedemptionHistory = redemptionHistory,
+                    Dealer = dealer
+                };
+
+                return View("~/Views/Home/Dealer/History.cshtml", viewModel);
+            }
+            catch (Exception ex)
+            {
+                // Log the exception (in a real application, you would use a proper logging framework)
+                System.Diagnostics.Debug.WriteLine($"Error in History action: {ex.Message}");
+                // Redirect to dealer home page if there's an error
+                return RedirectToAction("DealerHome");
+            }
+        }
+
         public async Task<IActionResult> ViewCampaigns()
         {
             // Check if user is logged in and is a Dealer
@@ -1031,12 +1250,109 @@ namespace HaldiramPromotionalApp.Controllers
                 // Log total points for debugging
                 System.Diagnostics.Debug.WriteLine($"Dealer {dealer.Id} has {totalPoints} total points");
 
+                // Get campaign details for each voucher
+                var voucherCampaignDetails = new Dictionary<int, VoucherCampaignDetails>();
+                
+                foreach (var voucher in vouchers)
+                {
+                    var campaignDetails = new VoucherCampaignDetails
+                    {
+                        CampaignType = voucher.CampaignType
+                    };
+                    
+                    switch (voucher.CampaignType)
+                    {
+                        case "PointsToCash":
+                            var pointsToCashCampaign = await _context.PointsToCashCampaigns
+                                .FirstOrDefaultAsync(c => c.Id == voucher.CampaignId);
+                            if (pointsToCashCampaign != null)
+                            {
+                                campaignDetails.CampaignName = pointsToCashCampaign.CampaignName;
+                                campaignDetails.VoucherValue = pointsToCashCampaign.VoucherValue;
+                            }
+                            break;
+                            
+                        case "PointsReward":
+                            var pointsRewardCampaign = await _context.PointsRewardCampaigns
+                                .Include(c => c.RewardProduct)
+                                .FirstOrDefaultAsync(c => c.Id == voucher.CampaignId);
+                            if (pointsRewardCampaign != null)
+                            {
+                                campaignDetails.CampaignName = pointsRewardCampaign.CampaignName;
+                                campaignDetails.RewardProductName = pointsRewardCampaign.RewardProduct?.ProductName ?? "Reward Product";
+                            }
+                            break;
+                            
+                        case "AmountReachGoal":
+                            var amountReachGoalCampaign = await _context.AmountReachGoalCampaigns
+                                .FirstOrDefaultAsync(c => c.Id == voucher.CampaignId);
+                            if (amountReachGoalCampaign != null)
+                            {
+                                campaignDetails.CampaignName = amountReachGoalCampaign.CampaignName;
+                                campaignDetails.VoucherValue = amountReachGoalCampaign.VoucherValue;
+                                campaignDetails.TargetAmount = amountReachGoalCampaign.TargetAmount;
+                            }
+                            break;
+                            
+                        case "SessionDurationReward":
+                            var sessionDurationCampaign = await _context.SessionDurationRewardCampaigns
+                                .FirstOrDefaultAsync(c => c.Id == voucher.CampaignId);
+                            if (sessionDurationCampaign != null)
+                            {
+                                campaignDetails.CampaignName = sessionDurationCampaign.CampaignName;
+                                campaignDetails.VoucherValue = sessionDurationCampaign.VoucherValue;
+                                campaignDetails.SessionDuration = sessionDurationCampaign.SessionDuration;
+                            }
+                            break;
+                            
+                        case "FreeProduct":
+                            var freeProductCampaign = await _context.FreeProductCampaigns
+                                .FirstOrDefaultAsync(c => c.Id == voucher.CampaignId);
+                            if (freeProductCampaign != null)
+                            {
+                                campaignDetails.CampaignName = freeProductCampaign.CampaignName;
+                                
+                                // Parse free product details if available
+                                if (!string.IsNullOrEmpty(freeProductCampaign.FreeProducts) && 
+                                    !string.IsNullOrEmpty(freeProductCampaign.FreeQuantities))
+                                {
+                                    try
+                                    {
+                                        var freeProducts = JsonSerializer.Deserialize<Dictionary<int, int>>(freeProductCampaign.FreeProducts);
+                                        var freeQuantities = JsonSerializer.Deserialize<Dictionary<int, int>>(freeProductCampaign.FreeQuantities);
+                                        
+                                        // Get product names for the free products
+                                        foreach (var kvp in freeProducts)
+                                        {
+                                            var productId = kvp.Value;
+                                            var quantity = freeQuantities.ContainsKey(kvp.Key) ? freeQuantities[kvp.Key] : 0;
+                                            
+                                            var product = await _context.Products.FirstOrDefaultAsync(p => p.Id == productId);
+                                            if (product != null)
+                                            {
+                                                campaignDetails.FreeProducts[product.ProductName] = quantity;
+                                            }
+                                        }
+                                    }
+                                    catch
+                                    {
+                                        // Handle deserialization errors
+                                    }
+                                }
+                            }
+                            break;
+                    }
+                    
+                    voucherCampaignDetails[voucher.Id] = campaignDetails;
+                }
+
                 var viewModel = new VoucherViewModel
                 {
                     Vouchers = vouchers,
                     TotalPoints = totalPoints,
                     Dealer = dealer,
-                    VoucherQRCodeData = voucherQRCodeData
+                    VoucherQRCodeData = voucherQRCodeData,
+                    VoucherCampaignDetails = voucherCampaignDetails
                 };
 
                 return View("~/Views/Home/Dealer/Vouchers.cshtml", viewModel);
