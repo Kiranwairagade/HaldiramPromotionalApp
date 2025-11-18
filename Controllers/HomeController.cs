@@ -1256,10 +1256,12 @@ namespace HaldiramPromotionalApp.Controllers
                     return RedirectToAction("Login");
                 }
 
-                // Get all vouchers for this dealer
+                // Get all vouchers for this dealer and order so redeemed vouchers appear at the end
                 var vouchers = await _context.Vouchers
                     .Where(v => v.DealerId == dealer.Id)
-                    .OrderByDescending(v => v.IssueDate)
+                    .OrderBy(v => v.IsRedeemed)
+                    .ThenByDescending(v => v.ExpiryDate)
+                    .ThenByDescending(v => v.IssueDate)
                     .ToListAsync();
                 
                 // Log voucher count for debugging
@@ -1500,6 +1502,176 @@ namespace HaldiramPromotionalApp.Controllers
                 System.Diagnostics.Debug.WriteLine($"Error in GenerateVoucher action: {ex.Message}");
                 TempData["ErrorMessage"] = "Error generating voucher. Please try again.";
                 return RedirectToAction("Vouchers");
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetVouchersPage(int page = 1, int pageSize = 10, string status = null, string campaignType = null)
+        {
+            // Returns paginated vouchers for the logged-in dealer as JSON
+            if (HttpContext.Session.GetString("UserName") == null || HttpContext.Session.GetString("role") != "Dealer")
+            {
+                return Unauthorized();
+            }
+
+            try
+            {
+                var userName = HttpContext.Session.GetString("UserName");
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.phoneno == userName);
+                DealerMaster dealer = null;
+                if (user != null)
+                {
+                    dealer = await _context.DealerMasters.FirstOrDefaultAsync(d => d.PhoneNo == user.phoneno);
+                }
+
+                if (dealer == null)
+                {
+                    return Unauthorized();
+                }
+
+                if (page < 1) page = 1;
+                if (pageSize < 1) pageSize = 10;
+
+                var query = _context.Vouchers
+                    .Where(v => v.DealerId == dealer.Id);
+
+                // Apply optional filters
+                if (!string.IsNullOrEmpty(status))
+                {
+                    switch (status)
+                    {
+                        case "Redeemed":
+                            query = query.Where(v => v.IsRedeemed);
+                            break;
+                        case "Expired":
+                            query = query.Where(v => v.ExpiryDate < DateTime.Now);
+                            break;
+                        case "Active":
+                            query = query.Where(v => !v.IsRedeemed && v.ExpiryDate >= DateTime.Now);
+                            break;
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(campaignType))
+                {
+                    if (campaignType != "All")
+                    {
+                        query = query.Where(v => v.CampaignType == campaignType);
+                    }
+                }
+
+                // Order so redeemed vouchers appear at the end
+                query = query.OrderBy(v => v.IsRedeemed)
+                    .ThenByDescending(v => v.ExpiryDate)
+                    .ThenByDescending(v => v.IssueDate);
+
+                var total = await query.CountAsync();
+                var skip = (page - 1) * pageSize;
+                var vouchers = await query.Skip(skip).Take(pageSize).ToListAsync();
+
+                // Ensure QR code data for returned vouchers
+                var updated = false;
+                foreach (var voucher in vouchers)
+                {
+                    if (string.IsNullOrEmpty(voucher.QRCodeData))
+                    {
+                        voucher.QRCodeData = $"{voucher.VoucherCode}|{dealer.Id}|{voucher.VoucherValue}|{voucher.ExpiryDate:yyyy-MM-dd}";
+                        _context.Vouchers.Update(voucher);
+                        updated = true;
+                    }
+                }
+
+                if (updated)
+                {
+                    await _context.SaveChangesAsync();
+                }
+
+                // Build response objects with campaign details and QR code
+                var resultList = new List<object>();
+                foreach (var voucher in vouchers)
+                {
+                    var campaignName = string.Empty;
+                    var freeProducts = new Dictionary<string, int>();
+                    var rewardProductName = string.Empty;
+
+                    switch (voucher.CampaignType)
+                    {
+                        case "PointsToCash":
+                            var ptc = await _context.PointsToCashCampaigns.FirstOrDefaultAsync(c => c.Id == voucher.CampaignId);
+                            if (ptc != null) campaignName = ptc.CampaignName;
+                            break;
+                        case "PointsReward":
+                            var pr = await _context.PointsRewardCampaigns.Include(c => c.RewardProduct).FirstOrDefaultAsync(c => c.Id == voucher.CampaignId);
+                            if (pr != null)
+                            {
+                                campaignName = pr.CampaignName;
+                                rewardProductName = pr.RewardProduct?.ProductName ?? string.Empty;
+                            }
+                            break;
+                        case "AmountReachGoal":
+                            var arg = await _context.AmountReachGoalCampaigns.FirstOrDefaultAsync(c => c.Id == voucher.CampaignId);
+                            if (arg != null) campaignName = arg.CampaignName;
+                            break;
+                        case "SessionDurationReward":
+                            var sdr = await _context.SessionDurationRewardCampaigns.FirstOrDefaultAsync(c => c.Id == voucher.CampaignId);
+                            if (sdr != null) campaignName = sdr.CampaignName;
+                            break;
+                        case "FreeProduct":
+                            var fp = await _context.FreeProductCampaigns.FirstOrDefaultAsync(c => c.Id == voucher.CampaignId);
+                            if (fp != null)
+                            {
+                                campaignName = fp.CampaignName;
+                                try
+                                {
+                                    if (!string.IsNullOrEmpty(fp.FreeProducts) && !string.IsNullOrEmpty(fp.FreeQuantities))
+                                    {
+                                        var freeMap = JsonSerializer.Deserialize<Dictionary<int, int>>(fp.FreeProducts);
+                                        var qtyMap = JsonSerializer.Deserialize<Dictionary<int, int>>(fp.FreeQuantities);
+                                        if (freeMap != null)
+                                        {
+                                            foreach (var kv in freeMap)
+                                            {
+                                                var prod = await _context.Products.FirstOrDefaultAsync(p => p.Id == kv.Value);
+                                                if (prod != null)
+                                                {
+                                                    var qty = qtyMap != null && qtyMap.ContainsKey(kv.Key) ? qtyMap[kv.Key] : 0;
+                                                    freeProducts[prod.ProductName] = qty;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                catch { }
+                            }
+                            break;
+                    }
+
+                    resultList.Add(new
+                    {
+                        voucher.Id,
+                        voucher.VoucherCode,
+                        voucher.VoucherValue,
+                        IssueDate = voucher.IssueDate.ToString("o"),
+                        ExpiryDate = voucher.ExpiryDate.ToString("o"),
+                        voucher.IsRedeemed,
+                        RedeemedDate = voucher.RedeemedDate.HasValue ? voucher.RedeemedDate.Value.ToString("o") : null,
+                        voucher.PointsUsed,
+                        voucher.CampaignType,
+                        CampaignName = campaignName,
+                        FreeProducts = freeProducts,
+                        RewardProductName = rewardProductName,
+                        QRCodeBase64 = GenerateQRCodeBase64(voucher.QRCodeData)
+                    });
+                }
+
+                var hasMore = skip + vouchers.Count < total;
+
+                return Ok(new { vouchers = resultList, hasMore, nextPage = page + 1 });
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error in GetVouchersPage: {ex.Message}");
+                return StatusCode(500);
             }
         }
 

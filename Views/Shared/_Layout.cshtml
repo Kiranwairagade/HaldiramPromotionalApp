@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="~/css/DealerDashboard.css" />
 </head>
 <body class="bg-gray-150">
-    <header class="bg-white shadow-md">
+    <header class="bg-white shadow-md sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
                 <div class="flex">
@@ -94,15 +94,25 @@
                                     </div>
                                 </div>
                                 
-                                <!-- Display total points for dealers -->
-                                <span class="text-gray-700 text-sm bg-yellow-100 px-2 py-1 rounded-full">
-                                    <i class="fas fa-coins"></i> Points: <span id="dealerPoints">@ViewData["TotalPoints"]</span>
+                                }
+                                <!-- Always display available points -->
+                                <span class="text-gray-700 text-sm bg-yellow-100 px-2 py-1 rounded-full" id="pointsDisplay">
+                                    <i class="fas fa-coins"></i> Available Points: <span id="dealerPoints">@(ViewData["AvailablePoints"] ?? ViewData["TotalPoints"] ?? 0)</span>
                                 </span>
-                            }
-                            <span class="text-gray-700 text-sm">Hello, @Context.Session.GetString("name")</span>
-                            <a asp-area="" asp-controller="Home" asp-action="Logout" class="text-gray-700 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">
-                                <i class="fas fa-sign-out-alt"></i> Logout
-                            </a>
+                            
+                            <!-- Profile icon and name; clicking icon shows logout -->
+                            <div class="relative" id="profileContainer" style="display:flex;align-items:center;gap:8px;">
+                                <button id="profileToggle" class="flex items-center text-gray-700 hover:text-indigo-600 p-1 rounded-full" style="background:transparent;border:none;">
+                                    <i class="fas fa-user-circle fa-lg"></i>
+                                </button>
+                                <span class="text-gray-700 text-sm">Hello, @Context.Session.GetString("name")</span>
+
+                                <div id="profileDropdown" class="hidden absolute right-0 mt-10 bg-white border border-gray-200 rounded shadow-md" style="min-width:140px;">
+                                    <a asp-area="" asp-controller="Home" asp-action="Logout" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                        <i class="fas fa-sign-out-alt mr-2"></i> Logout
+                                    </a>
+                                </div>
+                            </div>
                         </div>
                     }
                     else
@@ -164,13 +174,10 @@
                         </a>
                     }
                     
-                    @if (userRole == "Dealer")
-                    {
-                        <!-- Display total points for dealers in mobile view -->
-                        <div class="px-3 py-2 text-sm text-gray-700 bg-yellow-100 rounded-md">
-                            <i class="fas fa-coins"></i> Points: <span id="dealerPointsMobile">@ViewData["TotalPoints"]</span>
-                        </div>
-                    }
+                    <!-- Always show points in mobile menu as well -->
+                    <div class="px-3 py-2 text-sm text-gray-700 bg-yellow-100 rounded-md">
+                        <i class="fas fa-coins"></i> Available Points: <span id="dealerPointsMobile">@(ViewData["AvailablePoints"] ?? ViewData["TotalPoints"] ?? 0)</span>
+                    </div>
                     
                     <a asp-area="" asp-controller="Home" asp-action="Logout" class="text-gray-700 hover:text-indigo-600 hover:bg-gray-50 block px-3 py-2 rounded-md text-base font-medium">
                         <i class="fas fa-sign-out-alt"></i> Logout
@@ -206,15 +213,6 @@
         </main>
     </div>
 
-    <footer class="bg-white border-t border-gray-200">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="py-6">
-                <p class="text-center text-sm text-gray-500">
-                    &copy; 2025 - Haldiram Promotional Management
-                </p>
-            </div>
-        </div>
-    </footer>
     
     @* Conditionally render bottom navigation based on ViewData *@
     @if (!(ViewData["HideLayoutBottomNav"]?.ToString().ToLower() == "true") && 
@@ -266,6 +264,24 @@
                     const expanded = mobileMenuButton.getAttribute('aria-expanded') === 'true';
                     mobileMenuButton.setAttribute('aria-expanded', !expanded);
                     mobileMenu.classList.toggle('hidden');
+                });
+            }
+            
+            // Profile dropdown toggle
+            const profileToggle = document.getElementById('profileToggle');
+            const profileDropdown = document.getElementById('profileDropdown');
+            const profileContainer = document.getElementById('profileContainer');
+            if (profileToggle && profileDropdown) {
+                profileToggle.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    profileDropdown.classList.toggle('hidden');
+                });
+
+                // close when clicking outside
+                document.addEventListener('click', function (ev) {
+                    if (!profileContainer.contains(ev.target)) {
+                        profileDropdown.classList.add('hidden');
+                    }
                 });
             }
         });

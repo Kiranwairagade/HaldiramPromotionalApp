@@ -66,7 +66,7 @@
                 
                 @if (materials.Any())
                 {
-                    <form asp-action="Upload" enctype="multipart/form-data" method="post" class="space-y-4">
+                    <form asp-controller="MaterialImages" asp-action="Upload" enctype="multipart/form-data" method="post" class="space-y-4">
                         @Html.AntiForgeryToken()
                         
                         <div>
@@ -96,11 +96,15 @@
                                         <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                                     </svg>
                                     <div class="flex text-xs text-gray-600">
-                                        <label asp-for="ImageFile" class="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none focus-within:ring-1 focus-within:ring-offset-1 focus-within:ring-indigo-500">
+                                        <label class="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none focus-within:ring-1 focus-within:ring-offset-1 focus-within:ring-indigo-500" id="materialUploadLabel">
                                             <span>Upload a file</span>
-                                            <input asp-for="ImageFile" type="file" class="sr-only" accept=".jpg,.jpeg,.png,.gif" />
+                                            <input asp-for="ImageFile" id="MaterialImageFile" type="file" class="sr-only" accept=".jpg,.jpeg,.png,.gif" />
                                         </label>
                                         <p class="pl-1">or drag and drop</p>
+                                    </div>
+                                    <!-- Preview -->
+                                    <div id="materialPreviewContainer" class="mt-2 hidden">
+                                        <img id="materialPreview" src="" alt="Material preview" class="h-24 w-auto object-cover rounded-md border" />
                                     </div>
                                     <p class="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
                                 </div>
@@ -201,15 +205,15 @@
         // Add select all functionality if needed
         document.addEventListener('DOMContentLoaded', function() {
             // You can add JavaScript for select all/deselect all functionality here if needed
-            
+
             // Material search functionality
             const searchInput = document.getElementById('materialSearch');
             const materialItems = document.querySelectorAll('.material-item');
-            
+
             if (searchInput) {
                 searchInput.addEventListener('input', function() {
                     const searchTerm = this.value.toLowerCase().trim();
-                    
+
                     materialItems.forEach(item => {
                         const materialName = item.getAttribute('data-name');
                         if (materialName.includes(searchTerm)) {
@@ -218,6 +222,53 @@
                             item.style.display = 'none';
                         }
                     });
+                });
+            }
+
+            // Material image preview
+            const fileInput = document.getElementById('MaterialImageFile');
+            const previewContainer = document.getElementById('materialPreviewContainer');
+            const previewImg = document.getElementById('materialPreview');
+            let currentObjectUrl = null;
+
+            function clearPreview() {
+                if (currentObjectUrl) {
+                    URL.revokeObjectURL(currentObjectUrl);
+                    currentObjectUrl = null;
+                }
+                if (previewImg) previewImg.src = '';
+                if (previewContainer) previewContainer.classList.add('hidden');
+            }
+
+            if (fileInput && previewImg && previewContainer) {
+                fileInput.addEventListener('change', function () {
+                    const file = this.files && this.files[0];
+                    if (!file) {
+                        clearPreview();
+                        return;
+                    }
+
+                    if (!file.type.startsWith('image/')) {
+                        clearPreview();
+                        return;
+                    }
+
+                    if (currentObjectUrl) URL.revokeObjectURL(currentObjectUrl);
+                    currentObjectUrl = URL.createObjectURL(file);
+                    previewImg.src = currentObjectUrl;
+                    previewContainer.classList.remove('hidden');
+                });
+            }
+
+            // Ensure clicking the visible upload label opens file picker (robust fallback)
+            const uploadLabel = document.getElementById('materialUploadLabel');
+            if (uploadLabel && fileInput) {
+                uploadLabel.addEventListener('click', function (e) {
+                    // If click didn't originate from the actual input, trigger click programmatically
+                    if (e.target !== fileInput) {
+                        e.preventDefault();
+                        fileInput.click();
+                    }
                 });
             }
         });
