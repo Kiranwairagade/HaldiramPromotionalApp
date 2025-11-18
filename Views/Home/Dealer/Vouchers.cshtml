@@ -32,11 +32,33 @@
 
 <div class="dashboard-container">
     <h2 class="section-header">My Vouchers</h2>
+
+    <div class="voucher-filters" style="display:flex;gap:8px;margin:0.5rem 0 1rem 0;align-items:center;">
+        <label style="font-weight:600;">Filter:</label>
+        <select id="voucherStatusFilter" style="padding:6px;border-radius:4px;border:1px solid #ddd;">
+            <option value="All">All</option>
+            <option value="Active">Active</option>
+            <option value="Expired">Expired</option>
+            <option value="Redeemed">Redeemed</option>
+        </select>
+
+        <select id="voucherCampaignFilter" style="padding:6px;border-radius:4px;border:1px solid #ddd;">
+            <option value="All">All Campaigns</option>
+            <option value="PointsToCash">PointsToCash</option>
+            <option value="FreeProduct">FreeProduct</option>
+            <option value="PointsReward">PointsReward</option>
+            <option value="AmountReachGoal">AmountReachGoal</option>
+            <option value="SessionDurationReward">SessionDurationReward</option>
+        </select>
+        <button id="voucherApplyFilters" class="btn bg-white" style="margin-left:6px;padding:6px 10px;">Apply</button>
+        <button id="voucherClearFilters" class="btn bg-white" style="margin-left:4px;padding:6px 10px;">Clear</button>
+    </div>
     
     @if (Model.Vouchers != null && Model.Vouchers.Any())
     {
-        <div class="vouchers-grid">
-            @foreach (var voucher in Model.Vouchers)
+        <!-- Render initial 10 vouchers on server; further vouchers will be fetched via AJAX (lazy load) -->
+        <div id="vouchersGrid" class="vouchers-grid" data-current-page="1" data-page-size="25" data-has-more="true">
+            @foreach (var voucher in Model.Vouchers.Take(10))
             {
                 <div class="voucher-card @(voucher.IsRedeemed ? "redeemed" : "")">
                     <div class="voucher-header">
@@ -218,4 +240,223 @@
             location.reload();
         }
     }
+
+    // Lazy loading: initial page (1) is server-rendered with 10 items.
+    // Subsequent loads will request `GetVouchersPage?page=X&pageSize=25`.
+    (function () {
+        const grid = document.getElementById('vouchersGrid');
+        if (!grid) return;
+
+        let nextPage = 2; // first page already rendered
+        const subsequentPageSize = parseInt(grid.dataset.pageSize || '25', 10);
+        let loading = false;
+        let hasMore = true;
+        let currentStatus = 'All';
+        let currentCampaignType = 'All';
+
+        function isoToDisplay(dateIso) {
+            try {
+                const d = new Date(dateIso);
+                return d.toLocaleDateString();
+            } catch (e) {
+                return dateIso;
+            }
+        }
+
+        function getProp(obj, pascalName) {
+            if (!obj) return undefined;
+            // try PascalCase then camelCase
+            if (obj[pascalName] !== undefined) return obj[pascalName];
+            const camel = pascalName.charAt(0).toLowerCase() + pascalName.slice(1);
+            return obj[camel];
+        }
+
+        function buildVoucherHtml(v) {
+            const titleMap = {
+                'PointsToCash': `₹<span class="voucher-value-large">${getProp(v,'VoucherValue') || ''}</span> Cash Voucher`,
+                'FreeProduct': 'Free Product Voucher',
+                'PointsReward': 'Reward Voucher',
+                'AmountReachGoal': `₹<span class="voucher-value-large">${getProp(v,'VoucherValue') || ''}</span> Achievement Voucher`,
+                'SessionDurationReward': `₹<span class="voucher-value-large">${getProp(v,'VoucherValue') || ''}</span> Session Reward`
+            };
+
+            const campaignType = getProp(v, 'CampaignType') || '';
+            const title = titleMap[campaignType] || `₹${getProp(v,'VoucherValue') || ''} Voucher`;
+
+            let statusBadge = '<span class="badge badge-active">Active</span>';
+            const now = new Date();
+            const expiry = new Date(getProp(v,'ExpiryDate'));
+            if (getProp(v,'IsRedeemed')) statusBadge = '<span class="badge badge-redeemed">Redeemed</span>';
+            else if (!isNaN(expiry) && now > expiry) statusBadge = '<span class="badge badge-expired">Expired</span>';
+
+            let detailsHtml = '';
+            detailsHtml += `<div class="info-row"><span class="info-label">Voucher Code:</span><span class="info-value">${getProp(v,'VoucherCode') || ''}</span></div>`;
+            detailsHtml += `<div class="info-row"><span class="info-label">Campaign:</span><span class="info-value">${getProp(v,'CampaignName') || ''}</span></div>`;
+
+            if (campaignType === 'PointsToCash') {
+                detailsHtml += `<div class="info-row"><span class="info-label">Cash Value:</span><span class="info-value voucher-value-large">₹${getProp(v,'VoucherValue') || ''}</span></div>`;
+            } else if (campaignType === 'FreeProduct') {
+                const freeProducts = getProp(v,'FreeProducts') || {};
+                detailsHtml += `<div class="info-row"><span class="info-label">Free Products:</span><span class="info-value">`;
+                if (freeProducts && Object.keys(freeProducts).length) {
+                    for (const [k, qty] of Object.entries(freeProducts)) {
+                        detailsHtml += `<div><span class="voucher-value-large">${qty}</span> x ${k}</div>`;
+                    }
+                } else {
+                    detailsHtml += `<span>Free products based on your purchases</span>`;
+                }
+                detailsHtml += `</span></div>`;
+            } else if (campaignType === 'PointsReward') {
+                detailsHtml += `<div class="info-row"><span class="info-label">Reward:</span><span class="info-value voucher-value-large">${getProp(v,'RewardProductName') || ''}</span></div>`;
+            } else if (campaignType === 'AmountReachGoal') {
+                detailsHtml += `<div class="info-row"><span class="info-label">Voucher Value:</span><span class="info-value voucher-value-large">₹${getProp(v,'VoucherValue') || ''}</span></div>`;
+            } else if (campaignType === 'SessionDurationReward') {
+                detailsHtml += `<div class="info-row"><span class="info-label">Reward Value:</span><span class="info-value voucher-value-large">₹${getProp(v,'VoucherValue') || ''}</span></div>`;
+            }
+
+            const issueDate = getProp(v,'IssueDate');
+            const expiryDate = getProp(v,'ExpiryDate');
+            const issueDt = issueDate ? new Date(issueDate) : null;
+            const expiryDt = expiryDate ? new Date(expiryDate) : null;
+            const totalDays = (issueDt && expiryDt) ? ((expiryDt.setHours(0,0,0,0) - issueDt.setHours(0,0,0,0)) / (1000 * 60 * 60 * 24)) : 0;
+            const validityText = (totalDays > 0) ? `Expires after ${Math.round(totalDays)} days (Expiry: ${isoToDisplay(expiryDate)})` : `Expiry: ${isoToDisplay(expiryDate)}`;
+            detailsHtml += `<div class="info-row"><span class="info-label">Validity:</span><span class="info-value">${validityText}</span></div>`;
+            const pointsUsed = getProp(v,'PointsUsed');
+            if (pointsUsed && pointsUsed > 0) {
+                detailsHtml += `<div class="info-row"><span class="info-label">Points Used:</span><span class="info-value">${pointsUsed}</span></div>`;
+            }
+
+            const qrBase64 = getProp(v,'QRCodeBase64') || '';
+            const idVal = getProp(v,'Id');
+            const redeemedDateVal = getProp(v,'RedeemedDate');
+            const isRedeemedVal = getProp(v,'IsRedeemed');
+            const nowForQr = new Date();
+            const isExpired = expiryDt ? (nowForQr > expiryDt) : false;
+            const qrHtml = (!isRedeemedVal && !isExpired)
+                ? `<div class="voucher-qrcode"><div class="qrcode-placeholder"><img src="data:image/png;base64,${qrBase64}" alt="QR Code" class="qrcode-image"></div><p class="qrcode-instruction">Show this QR code at the counter to redeem</p></div><button class="redeem-btn" onclick="redeemVoucher(${idVal})">Redeem Voucher</button>`
+                : isRedeemedVal ? `<div class="redeemed-info"><p>Redeemed on ${redeemedDateVal ? isoToDisplay(redeemedDateVal) : ''}</p></div>` : `<div class="expired-info"><p>This voucher has expired</p></div>`;
+
+            return `<div class="voucher-card ${isRedeemedVal ? 'redeemed' : ''}"><div class="voucher-header"><h3 class="voucher-title">${title}</h3>${statusBadge}</div><div class="voucher-details">${detailsHtml}</div>${qrHtml}</div>`;
+        }
+
+        async function loadMore() {
+            if (loading || !hasMore) return;
+            loading = true;
+            try {
+                const resp = await fetch(`/Home/GetVouchersPage?page=${nextPage}&pageSize=${subsequentPageSize}&status=${encodeURIComponent(currentStatus)}&campaignType=${encodeURIComponent(currentCampaignType)}`);
+                if (!resp.ok) {
+                    loading = false;
+                    return;
+                }
+                const data = await resp.json();
+                if (data && data.vouchers && data.vouchers.length) {
+                    for (const v of data.vouchers) {
+                        const html = buildVoucherHtml(v);
+                        const wrapper = document.createElement('div');
+                        wrapper.innerHTML = html;
+                        const appended = wrapper.firstElementChild;
+                        grid.appendChild(appended);
+
+                        // Ensure QR image src is explicitly set to avoid parsing issues with long base64 strings
+                        try {
+                            const img = appended.querySelector('.qrcode-image');
+                            const qrBase64 = getProp(v,'QRCodeBase64') || getProp(v,'qrCodeBase64') || '';
+                            if (img && qrBase64) {
+                                img.src = `data:image/png;base64,${qrBase64}`;
+                            }
+                        } catch (e) {
+                            console.warn('Failed to set QR image src', e);
+                        }
+                    }
+                    hasMore = !!data.hasMore;
+                    nextPage = data.nextPage || (nextPage + 1);
+                } else {
+                    hasMore = false;
+                }
+            } catch (e) {
+                console.error('Error loading vouchers', e);
+            }
+            loading = false;
+        }
+
+        // Reload grid with filters applied (fetch first page from API)
+        async function reloadWithFilters() {
+            if (loading) return;
+            loading = true;
+            try {
+                grid.innerHTML = '';
+                // fetch first page with a smaller pageSize to render quickly
+                const pageSize = 10;
+                const resp = await fetch(`/Home/GetVouchersPage?page=1&pageSize=${pageSize}&status=${encodeURIComponent(currentStatus)}&campaignType=${encodeURIComponent(currentCampaignType)}`);
+                if (!resp.ok) {
+                    loading = false;
+                    return;
+                }
+                const data = await resp.json();
+                if (data && data.vouchers && data.vouchers.length) {
+                    for (const v of data.vouchers) {
+                        const html = buildVoucherHtml(v);
+                        const wrapper = document.createElement('div');
+                        wrapper.innerHTML = html;
+                        const appended = wrapper.firstElementChild;
+                        grid.appendChild(appended);
+                        try {
+                            const img = appended.querySelector('.qrcode-image');
+                            const qrBase64 = getProp(v,'QRCodeBase64') || getProp(v,'qrCodeBase64') || '';
+                            if (img && qrBase64) {
+                                img.src = `data:image/png;base64,${qrBase64}`;
+                            }
+                        } catch (e) { console.warn('Failed to set QR image src', e); }
+                    }
+                    hasMore = !!data.hasMore;
+                    nextPage = data.nextPage || 2;
+                } else {
+                    hasMore = false;
+                    nextPage = 2;
+                }
+            } catch (e) {
+                console.error('Error reloading vouchers', e);
+            }
+            loading = false;
+        }
+
+        // Load more when user scrolls near bottom
+        window.addEventListener('scroll', function () {
+            if ((window.innerHeight + window.scrollY) >= (document.body.offsetHeight - 300)) {
+                loadMore();
+            }
+        });
+
+        // Wire up filter controls
+        const statusSelect = document.getElementById('voucherStatusFilter');
+        const campaignSelect = document.getElementById('voucherCampaignFilter');
+        const applyBtn = document.getElementById('voucherApplyFilters');
+        const clearBtn = document.getElementById('voucherClearFilters');
+
+        if (statusSelect && campaignSelect) {
+            statusSelect.addEventListener('change', function () {
+                currentStatus = statusSelect.value;
+            });
+            campaignSelect.addEventListener('change', function () {
+                currentCampaignType = campaignSelect.value;
+            });
+        }
+
+        if (applyBtn) {
+            applyBtn.addEventListener('click', function () {
+                // when user applies filters, reload grid from API
+                reloadWithFilters();
+            });
+        }
+
+        if (clearBtn) {
+            clearBtn.addEventListener('click', function () {
+                currentStatus = 'All';
+                currentCampaignType = 'All';
+                if (statusSelect) statusSelect.value = 'All';
+                if (campaignSelect) campaignSelect.value = 'All';
+                reloadWithFilters();
+            });
+        }
+    })();
 </script>
