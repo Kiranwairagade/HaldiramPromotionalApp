@@ -17,6 +17,150 @@ namespace HaldiramPromotionalApp.Controllers
             _notificationService = notificationService;
         }
 
+        // Generate vouchers for the given order based on active campaigns
+        private async Task GenerateVouchersForOrder(Order order, DealerMaster dealer, User user)
+        {
+            if (order == null || dealer == null || user == null) return;
+
+            var now = DateTime.Now;
+
+            // Load active campaigns that are currently running
+            var pointsToCashCampaigns = await _context.PointsToCashCampaigns
+                .Where(c => c.IsActive && c.StartDate <= now && c.EndDate >= now)
+                .ToListAsync();
+
+            var pointsRewardCampaigns = await _context.PointsRewardCampaigns
+                .Where(c => c.IsActive && c.StartDate <= now && c.EndDate >= now)
+                .ToListAsync();
+
+            // Build a material -> quantity map for the order
+            var orderItems = await _context.OrderItems.Where(oi => oi.OrderId == order.Id).ToListAsync();
+
+            // Helper to parse material points JSON safely
+            Dictionary<string, int> ParseMaterialPoints(string? json)
+            {
+                if (string.IsNullOrEmpty(json)) return new Dictionary<string, int>();
+                try
+                {
+                    return System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, int>>(json) ?? new Dictionary<string, int>();
+                }
+                catch
+                {
+                    return new Dictionary<string, int>();
+                }
+            }
+
+            // Check PointsToCash campaigns (allocate vouchers per-order in multiples of threshold)
+            foreach (var camp in pointsToCashCampaigns)
+            {
+                var materialPoints = ParseMaterialPoints(camp.MaterialPoints);
+                int orderPoints = 0;
+
+                foreach (var oi in orderItems)
+                {
+                    var key = oi.MaterialId.ToString();
+                    if (materialPoints.ContainsKey(key))
+                    {
+                        orderPoints += materialPoints[key] * oi.Quantity;
+                    }
+                }
+
+                if (orderPoints >= camp.VoucherGenerationThreshold)
+                {
+                    int count = orderPoints / camp.VoucherGenerationThreshold;
+                    var vouchersToAdd = new List<Models.Voucher>();
+
+                    for (int i = 0; i < count; i++)
+                    {
+                        var code = "V" + Guid.NewGuid().ToString("N").Substring(0, 10).ToUpper();
+                        var voucher = new Models.Voucher
+                        {
+                            VoucherCode = code,
+                            DealerId = dealer.Id,
+                            CampaignType = "PointsToCash",
+                            CampaignId = camp.Id,
+                            VoucherValue = camp.VoucherValue,
+                            PointsUsed = camp.VoucherGenerationThreshold,
+                            IssueDate = DateTime.Now,
+                            ExpiryDate = DateTime.Now.AddDays(camp.VoucherValidity),
+                            IsRedeemed = false,
+                            QRCodeData = $"{code}|{dealer.Id}|{camp.VoucherValue}|{DateTime.Now.AddDays(camp.VoucherValidity):yyyy-MM-dd}|Order:{order.Id}"
+                        };
+
+                        vouchersToAdd.Add(voucher);
+                        // reduce points (not persisted) to indicate consumption for this order
+                        orderPoints -= camp.VoucherGenerationThreshold;
+                    }
+
+                    if (vouchersToAdd.Any())
+                    {
+                        _context.Vouchers.AddRange(vouchersToAdd);
+                        await _context.SaveChangesAsync();
+
+                        // Notify dealer/user for each voucher
+                        foreach (var v in vouchersToAdd)
+                        {
+                            await _notificationService.CreateVoucherNotificationAsync(user.Id, v.VoucherCode, v.VoucherValue, v.Id);
+                        }
+                    }
+                }
+            }
+
+            // Check PointsReward campaigns (allocate per-order in multiples of threshold)
+            foreach (var camp in pointsRewardCampaigns)
+            {
+                var materialPoints = ParseMaterialPoints(camp.MaterialPoints);
+                int orderPoints = 0;
+
+                foreach (var oi in orderItems)
+                {
+                    var key = oi.MaterialId.ToString();
+                    if (materialPoints.ContainsKey(key))
+                    {
+                        orderPoints += materialPoints[key] * oi.Quantity;
+                    }
+                }
+
+                if (orderPoints >= camp.VoucherGenerationThreshold)
+                {
+                    int count = orderPoints / camp.VoucherGenerationThreshold;
+                    var vouchersToAdd = new List<Models.Voucher>();
+
+                    for (int i = 0; i < count; i++)
+                    {
+                        var code = "V" + Guid.NewGuid().ToString("N").Substring(0, 10).ToUpper();
+                        var voucher = new Models.Voucher
+                        {
+                            VoucherCode = code,
+                            DealerId = dealer.Id,
+                            CampaignType = "PointsReward",
+                            CampaignId = camp.Id,
+                            VoucherValue = 0m,
+                            PointsUsed = camp.VoucherGenerationThreshold,
+                            IssueDate = DateTime.Now,
+                            ExpiryDate = DateTime.Now.AddDays(camp.VoucherValidity),
+                            IsRedeemed = false,
+                            QRCodeData = $"{code}|{dealer.Id}|0|{DateTime.Now.AddDays(camp.VoucherValidity):yyyy-MM-dd}|Order:{order.Id}"
+                        };
+
+                        vouchersToAdd.Add(voucher);
+                        orderPoints -= camp.VoucherGenerationThreshold;
+                    }
+
+                    if (vouchersToAdd.Any())
+                    {
+                        _context.Vouchers.AddRange(vouchersToAdd);
+                        await _context.SaveChangesAsync();
+
+                        foreach (var v in vouchersToAdd)
+                        {
+                            await _notificationService.CreateVoucherNotificationAsync(user.Id, v.VoucherCode, v.VoucherValue, v.Id);
+                        }
+                    }
+                }
+            }
+        }
+
         // GET: Orders
         public async Task<IActionResult> Index()
         {
@@ -201,6 +345,17 @@ namespace HaldiramPromotionalApp.Controllers
 
                 // Create notification for the new order
                 await _notificationService.CreateOrderNotificationAsync(user.Id, order.Id);
+
+                // Attempt to generate vouchers based on active campaigns
+                try
+                {
+                    await GenerateVouchersForOrder(order, dealer, user);
+                }
+                catch (Exception genEx)
+                {
+                    // Log and continue — voucher generation should not block order creation
+                    Console.WriteLine($"Error generating vouchers for order {order.Id}: {genEx}");
+                }
 
                 return Ok(new { OrderId = order.Id, Message = "Order created successfully" });
             }

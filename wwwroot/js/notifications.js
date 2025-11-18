@@ -7,6 +7,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const notificationList = document.getElementById('notificationList');
     const notificationCount = document.getElementById('notificationCount');
     
+    // Add new button elements
+    const markAllReadBtn = document.getElementById('markAllRead');
+    const deleteAllBtn = document.getElementById('deleteAll');
+    const closeNotificationsBtn = document.getElementById('closeNotifications');
+    
     // Toggle notification dropdown
     if (notificationBell) {
         notificationBell.addEventListener('click', function(e) {
@@ -16,6 +21,32 @@ document.addEventListener('DOMContentLoaded', function() {
             // If opening the dropdown, fetch notifications
             if (!notificationDropdown.classList.contains('hidden')) {
                 fetchNotifications();
+            }
+        });
+    }
+    
+    // Mark all notifications as read
+    if (markAllReadBtn) {
+        markAllReadBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            markAllNotificationsAsRead();
+        });
+    }
+    
+    // Delete all notifications
+    if (deleteAllBtn) {
+        deleteAllBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            deleteAllNotifications();
+        });
+    }
+    
+    // Close notifications dropdown
+    if (closeNotificationsBtn) {
+        closeNotificationsBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (notificationDropdown) {
+                notificationDropdown.classList.add('hidden');
             }
         });
     }
@@ -75,21 +106,34 @@ function displayNotifications(notifications) {
     notificationCount.textContent = notifications.length;
     notificationCount.style.display = notifications.length > 0 ? 'flex' : 'none';
     
-    // Generate HTML for notifications
+    // Generate responsive HTML for notifications with clear action buttons on the right
     let html = '';
     notifications.forEach(notification => {
         const timeAgo = getTimeAgo(notification.time);
-        const typeClass = `badge-${notification.type}`;
-        
+        const badgeText = notification.badge || '';
+
         html += `
-            <div class="notification-item unread" data-id="${notification.id}">
-                <div class="flex justify-between items-start">
-                    <span class="notification-badge ${typeClass}">${notification.badge}</span>
-                    <span class="notification-time">${timeAgo}</span>
+            <div class="notification-item unread px-3 py-3 flex items-start gap-3 hover:bg-gray-50 text-sm" data-id="${notification.id}">
+                <div class="flex-shrink-0 mt-1">
+                    <span class="inline-flex items-center justify-center px-2 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">${badgeText}</span>
                 </div>
-                <h4 class="notification-title">${notification.title}</h4>
-                <p class="notification-message">${notification.message}</p>
-                <button class="notification-close" onclick="dismissNotification('${notification.id}')">×</button>
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-start justify-between gap-3">
+                        <div class="min-w-0">
+                            <h4 class="text-sm font-semibold text-gray-800 truncate">${notification.title}</h4>
+                            <p class="text-sm text-gray-600 mt-1">${notification.message}</p>
+                            <div class="text-xs text-gray-400 mt-2">${timeAgo}</div>
+                        </div>
+                        <div class="ml-3 flex-shrink-0 flex flex-col items-end gap-2">
+                            <button onclick="markNotificationAsRead('${notification.id}')" class="px-3 py-1  text-black rounded-md text-xs flex items-center" title="Mark as read">
+                                <i class="fas fa-check mr-2"></i>
+                            </button>
+                            <button onclick="deleteNotification('${notification.id}')" class="px-3 py-1  text-black rounded-md text-xs flex items-center" title="Delete">
+                                <i class="fas fa-trash mr-2"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
         `;
     });
@@ -129,4 +173,136 @@ function dismissNotification(id) {
             notificationCount.style.display = currentCount - 1 > 0 ? 'flex' : 'none';
         }
     }
+}
+
+// Function to mark a single notification as read
+function markNotificationAsRead(id) {
+    const notificationElement = document.querySelector(`.notification-item[data-id="${id}"]`);
+    if (!notificationElement) return;
+
+    // Optimistically update UI
+    notificationElement.classList.remove('unread');
+
+    // Call API to mark as read
+    (async () => {
+        try {
+            const payload = [parseInt(id)];
+            const res = await fetch('/api/Notifications/MarkAsRead', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (!data.success) {
+                console.error('Mark as read failed:', data.message);
+            }
+        } catch (err) {
+            console.error('Error marking notification as read:', err);
+        } finally {
+            // Update notification count locally
+            const notificationCount = document.getElementById('notificationCount');
+            const currentCount = parseInt(notificationCount.textContent) || 0;
+            if (currentCount > 0) {
+                const next = currentCount - 1;
+                notificationCount.textContent = next.toString();
+                notificationCount.style.display = next > 0 ? 'flex' : 'none';
+            }
+        }
+    })();
+}
+
+// Function to delete a single notification
+function deleteNotification(id) {
+    const notificationElement = document.querySelector(`.notification-item[data-id="${id}"]`);
+    if (!notificationElement) return;
+
+    (async () => {
+        try {
+            const payload = [parseInt(id)];
+            const res = await fetch('/api/Notifications/Delete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (data.success) {
+                notificationElement.remove();
+                // Update notification count
+                const notificationCount = document.getElementById('notificationCount');
+                const currentCount = parseInt(notificationCount.textContent) || 0;
+                if (currentCount > 0) {
+                    const next = currentCount - 1;
+                    notificationCount.textContent = next.toString();
+                    notificationCount.style.display = next > 0 ? 'flex' : 'none';
+                }
+            } else {
+                console.error('Delete failed:', data.message);
+            }
+        } catch (err) {
+            console.error('Error deleting notification:', err);
+        }
+    })();
+}
+
+// Function to mark all notifications as read
+function markAllNotificationsAsRead() {
+    const notificationItems = Array.from(document.querySelectorAll('.notification-item.unread'));
+    if (notificationItems.length === 0) return;
+
+    const ids = notificationItems.map(i => parseInt(i.getAttribute('data-id'))).filter(Boolean);
+    // Optimistically update UI
+    notificationItems.forEach(i => i.classList.remove('unread'));
+
+    (async () => {
+        try {
+            const res = await fetch('/api/Notifications/MarkAsRead', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(ids)
+            });
+            const data = await res.json();
+            if (!data.success) console.error('Mark all read failed:', data.message);
+        } catch (err) {
+            console.error('Error marking all notifications as read:', err);
+        } finally {
+            const notificationCount = document.getElementById('notificationCount');
+            if (notificationCount) {
+                notificationCount.textContent = '0';
+                notificationCount.style.display = 'none';
+            }
+        }
+    })();
+}
+
+// Function to delete all notifications
+function deleteAllNotifications() {
+    const notificationList = document.getElementById('notificationList');
+    if (!notificationList) return;
+
+    // Collect all notification ids; if none, still call server to clear
+    const items = Array.from(document.querySelectorAll('.notification-item'));
+    const ids = items.map(i => parseInt(i.getAttribute('data-id'))).filter(Boolean);
+
+    (async () => {
+        try {
+            const res = await fetch('/api/Notifications/Delete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(ids)
+            });
+            const data = await res.json();
+            if (data.success) {
+                notificationList.innerHTML = '<div class="px-4 py-3 text-center text-gray-500 text-xs">No notifications</div>';
+                const notificationCount = document.getElementById('notificationCount');
+                if (notificationCount) {
+                    notificationCount.textContent = '0';
+                    notificationCount.style.display = 'none';
+                }
+            } else {
+                console.error('Delete all failed:', data.message);
+            }
+        } catch (err) {
+            console.error('Error deleting all notifications:', err);
+        }
+    })();
 }

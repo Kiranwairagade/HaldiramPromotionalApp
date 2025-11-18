@@ -7,6 +7,29 @@
 
 <link rel="stylesheet" href="~/css/DealerDashboard.css" />
 
+<style>
+    /* Page-specific overrides: stronger card shadow and remove all hover effects on vouchers page */
+    .vouchers-grid .voucher-card {
+        box-shadow: 0 12px 28px rgba(16,185,129,0.10) !important;
+        transition: none !important;
+    }
+
+    /* Disable hover/transform effects for any element inside voucher cards */
+    .vouchers-grid .voucher-card:hover,
+    .vouchers-grid .voucher-card *:hover,
+    .vouchers-grid .redeem-btn:hover,
+    .vouchers-grid .badge:hover {
+        transform: none !important;
+        box-shadow: 0 12px 28px rgba(16,185,129,0.10) !important;
+    }
+
+    /* Remove transitions inside voucher area to prevent hover animations */
+    .vouchers-grid .voucher-card,
+    .vouchers-grid .voucher-card * {
+        transition: none !important;
+    }
+</style>
+
 <div class="dashboard-container">
     <h2 class="section-header">My Vouchers</h2>
     
@@ -127,13 +150,13 @@
                             </div>
                         }
                         
+                        @{
+                            var totalDays = (voucher.ExpiryDate.Date - voucher.IssueDate.Date).Days;
+                            var expiryStr = voucher.ExpiryDate.ToString("dd/MM/yyyy");
+                        }
                         <div class="info-row">
-                            <span class="info-label">Issue Date:</span>
-                            <span class="info-value">@voucher.IssueDate.ToString("dd/MM/yyyy")</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">Expiry Date:</span>
-                            <span class="info-value">@voucher.ExpiryDate.ToString("dd/MM/yyyy")</span>
+                            <span class="info-label">Validity:</span>
+                            <span class="info-value">@((totalDays > 0) ? $"Expires after {totalDays} days (Expiry: {expiryStr})" : $"Expiry: {expiryStr}")</span>
                         </div>
                         @if (voucher.PointsUsed > 0)
                         {
@@ -183,15 +206,7 @@
             <p>You haven't generated any vouchers yet. Earn more points to generate vouchers!</p>
         </div>
     }
-    
-    <!-- Points Summary -->
-    <div class="points-summary">
-        <h3 class="section-header">Your Points</h3>
-        <div class="points-card">
-            <div class="points-value">@Model.TotalPoints</div>
-            <div class="points-label">Available Points</div>
-        </div>
-    </div>
+
 </div>
 
 <script>

@@ -10,6 +10,7 @@ using QRCoder;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
+using System.Text.RegularExpressions;
 
 namespace HaldiramPromotionalApp.Controllers
 {
@@ -100,61 +101,65 @@ namespace HaldiramPromotionalApp.Controllers
             // Check if dealer qualifies for any automatic voucher generation
             if (dealer != null && totalPoints > 0)
             {
-                // Check PointsToCash campaigns for automatic voucher generation
+                // Check PointsToCash campaigns for automatic voucher generation (allocate in multiples)
                 var pointsToCashCampaigns = await _context.PointsToCashCampaigns
                     .Where(c => c.IsActive && c.StartDate <= DateTime.Now && c.EndDate >= DateTime.Now)
                     .ToListAsync();
-                
-                // Log campaign count for debugging
+
                 System.Diagnostics.Debug.WriteLine($"Found {pointsToCashCampaigns.Count} active PointsToCash campaigns");
-                
+
                 foreach (var campaign in pointsToCashCampaigns)
                 {
-                    // Log campaign information for debugging
                     System.Diagnostics.Debug.WriteLine($"Checking campaign {campaign.Id}: {campaign.CampaignName}, Threshold: {campaign.VoucherGenerationThreshold}, Dealer Points: {totalPoints}");
-                    
-                    // Check if dealer has enough points for this campaign
+
                     if (totalPoints >= campaign.VoucherGenerationThreshold)
                     {
-                        // Check if dealer already has a voucher for this campaign
-                        var existingVoucher = await _context.Vouchers
-                            .AnyAsync(v => v.DealerId == dealer.Id && v.CampaignId == campaign.Id && v.CampaignType == "PointsToCash");
+                        int eligibleCount = totalPoints / campaign.VoucherGenerationThreshold;
 
-                        if (!existingVoucher)
+                        var existingCount = await _context.Vouchers
+                            .Where(v => v.DealerId == dealer.Id && v.CampaignId == campaign.Id && v.CampaignType == "PointsToCash")
+                            .CountAsync();
+
+                        int toCreate = eligibleCount - existingCount;
+                        if (toCreate > 0)
                         {
-                            // Generate voucher
-                            var voucherCode = $"PTC{dealer.Id}{campaign.Id}{DateTime.Now:yyyyMMddHHmmss}";
-                            var voucher = new Voucher
+                            var vouchers = new List<Voucher>();
+                            for (int i = 0; i < toCreate; i++)
                             {
-                                VoucherCode = voucherCode,
-                                DealerId = dealer.Id,
-                                CampaignType = "PointsToCash",
-                                CampaignId = campaign.Id,
-                                VoucherValue = campaign.VoucherValue,
-                                PointsUsed = campaign.VoucherGenerationThreshold,
-                                IssueDate = DateTime.Now,
-                                ExpiryDate = DateTime.Now.AddDays(campaign.VoucherValidity),
-                                QRCodeData = $"{voucherCode}|{dealer.Id}|{campaign.VoucherValue}|{DateTime.Now.AddDays(campaign.VoucherValidity):yyyy-MM-dd}"
-                            };
+                                var voucherCode = $"PTC{dealer.Id}{campaign.Id}{DateTime.Now:yyyyMMddHHmmss}{i}";
+                                var voucher = new Voucher
+                                {
+                                    VoucherCode = voucherCode,
+                                    DealerId = dealer.Id,
+                                    CampaignType = "PointsToCash",
+                                    CampaignId = campaign.Id,
+                                    VoucherValue = campaign.VoucherValue,
+                                    PointsUsed = campaign.VoucherGenerationThreshold,
+                                    IssueDate = DateTime.Now,
+                                    ExpiryDate = DateTime.Now.AddDays(campaign.VoucherValidity),
+                                    QRCodeData = $"{voucherCode}|{dealer.Id}|{campaign.VoucherValue}|{DateTime.Now.AddDays(campaign.VoucherValidity):yyyy-MM-dd}"
+                                };
 
-                            _context.Vouchers.Add(voucher);
+                                vouchers.Add(voucher);
+                            }
+
+                            _context.Vouchers.AddRange(vouchers);
                             await _context.SaveChangesAsync();
-                            
-                            // Log successful voucher creation for debugging
-                            System.Diagnostics.Debug.WriteLine($"Created PointsToCash voucher {voucherCode} for dealer {dealer.Id} and campaign {campaign.Id}");
-                            
-                            // Create notification for voucher generation
-                            await _notificationService.CreateVoucherNotificationAsync(user.Id, voucherCode, campaign.VoucherValue, voucher.Id);
+
+                            foreach (var v in vouchers)
+                            {
+                                await _notificationService.CreateVoucherNotificationAsync(user.Id, v.VoucherCode, v.VoucherValue, v.Id);
+                            }
+
+                            System.Diagnostics.Debug.WriteLine($"Created {toCreate} PointsToCash vouchers for dealer {dealer.Id} campaign {campaign.Id}");
                         }
                         else
                         {
-                            // Log that voucher already exists
-                            System.Diagnostics.Debug.WriteLine($"Dealer {dealer.Id} already has a voucher for PointsToCash campaign {campaign.Id}");
+                            System.Diagnostics.Debug.WriteLine($"No new PointsToCash vouchers needed for dealer {dealer.Id} campaign {campaign.Id}");
                         }
                     }
                     else
                     {
-                        // Log insufficient points
                         System.Diagnostics.Debug.WriteLine($"Dealer {dealer.Id} has {totalPoints} points, but needs {campaign.VoucherGenerationThreshold} for campaign {campaign.Id}");
                     }
                 }
@@ -169,51 +174,56 @@ namespace HaldiramPromotionalApp.Controllers
 
                 foreach (var campaign in pointsRewardCampaigns)
                 {
-                    // Log campaign information for debugging
                     System.Diagnostics.Debug.WriteLine($"Checking campaign {campaign.Id}: {campaign.CampaignName}, Threshold: {campaign.VoucherGenerationThreshold}, Dealer Points: {totalPoints}");
-                    
-                    // Check if dealer has enough points for this campaign
+
                     if (totalPoints >= campaign.VoucherGenerationThreshold)
                     {
-                        // Check if dealer already has a voucher for this campaign
-                        var existingVoucher = await _context.Vouchers
-                            .AnyAsync(v => v.DealerId == dealer.Id && v.CampaignId == campaign.Id && v.CampaignType == "PointsReward");
+                        int eligibleCount = totalPoints / campaign.VoucherGenerationThreshold;
 
-                        if (!existingVoucher)
+                        var existingCount = await _context.Vouchers
+                            .Where(v => v.DealerId == dealer.Id && v.CampaignId == campaign.Id && v.CampaignType == "PointsReward")
+                            .CountAsync();
+
+                        int toCreate = eligibleCount - existingCount;
+                        if (toCreate > 0)
                         {
-                            // Generate voucher
-                            var voucherCode = $"PTR{dealer.Id}{campaign.Id}{DateTime.Now:yyyyMMddHHmmss}";
-                            var voucher = new Voucher
+                            var vouchers = new List<Voucher>();
+                            for (int i = 0; i < toCreate; i++)
                             {
-                                VoucherCode = voucherCode,
-                                DealerId = dealer.Id,
-                                CampaignType = "PointsReward",
-                                CampaignId = campaign.Id,
-                                VoucherValue = 100, // Default value for reward vouchers
-                                PointsUsed = campaign.VoucherGenerationThreshold,
-                                IssueDate = DateTime.Now,
-                                ExpiryDate = DateTime.Now.AddDays(campaign.VoucherValidity),
-                                QRCodeData = $"{voucherCode}|{dealer.Id}|100|{DateTime.Now.AddDays(campaign.VoucherValidity):yyyy-MM-dd}"
-                            };
+                                var voucherCode = $"PTR{dealer.Id}{campaign.Id}{DateTime.Now:yyyyMMddHHmmss}{i}";
+                                var voucher = new Voucher
+                                {
+                                    VoucherCode = voucherCode,
+                                    DealerId = dealer.Id,
+                                    CampaignType = "PointsReward",
+                                    CampaignId = campaign.Id,
+                                    VoucherValue = 100,
+                                    PointsUsed = campaign.VoucherGenerationThreshold,
+                                    IssueDate = DateTime.Now,
+                                    ExpiryDate = DateTime.Now.AddDays(campaign.VoucherValidity),
+                                    QRCodeData = $"{voucherCode}|{dealer.Id}|100|{DateTime.Now.AddDays(campaign.VoucherValidity):yyyy-MM-dd}"
+                                };
 
-                            _context.Vouchers.Add(voucher);
+                                vouchers.Add(voucher);
+                            }
+
+                            _context.Vouchers.AddRange(vouchers);
                             await _context.SaveChangesAsync();
-                            
-                            // Log successful voucher creation for debugging
-                            System.Diagnostics.Debug.WriteLine($"Created PointsReward voucher {voucherCode} for dealer {dealer.Id} and campaign {campaign.Id}");
-                            
-                            // Create notification for voucher generation
-                            await _notificationService.CreateVoucherNotificationAsync(user.Id, voucherCode, 100, voucher.Id);
+
+                            foreach (var v in vouchers)
+                            {
+                                await _notificationService.CreateVoucherNotificationAsync(user.Id, v.VoucherCode, v.VoucherValue, v.Id);
+                            }
+
+                            System.Diagnostics.Debug.WriteLine($"Created {toCreate} PointsReward vouchers for dealer {dealer.Id} campaign {campaign.Id}");
                         }
                         else
                         {
-                            // Log that voucher already exists
-                            System.Diagnostics.Debug.WriteLine($"Dealer {dealer.Id} already has a voucher for PointsReward campaign {campaign.Id}");
+                            System.Diagnostics.Debug.WriteLine($"No new PointsReward vouchers needed for dealer {dealer.Id} campaign {campaign.Id}");
                         }
                     }
                     else
                     {
-                        // Log insufficient points
                         System.Diagnostics.Debug.WriteLine($"Dealer {dealer.Id} has {totalPoints} points, but needs {campaign.VoucherGenerationThreshold} for campaign {campaign.Id}");
                     }
                 }
@@ -328,45 +338,67 @@ namespace HaldiramPromotionalApp.Controllers
                             // Check if dealer has ordered sufficient quantities
                             if (hasSufficientQuantities)
                             {
-                                // Check if dealer already has a voucher for this campaign
-                                var existingVoucher = await _context.Vouchers
-                                    .AnyAsync(v => v.DealerId == dealer.Id && v.CampaignId == campaign.Id && v.CampaignType == "FreeProduct");
-
-                                if (!existingVoucher)
+                                // Determine how many full sets of required quantities dealer has ordered
+                                int minMultiplier = int.MaxValue;
+                                foreach (var materialId in campaignMaterialIds)
                                 {
-                                    // Generate voucher
-                                    var voucherCode = $"FRP{dealer.Id}{campaign.Id}{DateTime.Now:yyyyMMddHHmmss}";
-                                    var voucher = new Voucher
+                                    if (materialQuantities.ContainsKey(materialId))
                                     {
-                                        VoucherCode = voucherCode,
-                                        DealerId = dealer.Id,
-                                        CampaignType = "FreeProduct",
-                                        CampaignId = campaign.Id,
-                                        VoucherValue = 0, // No monetary value for free product vouchers
-                                        PointsUsed = 0, // No points used for this campaign type
-                                        IssueDate = DateTime.Now,
-                                        ExpiryDate = DateTime.Now.AddDays(30), // Default 30 days validity for FreeProduct vouchers
-                                        QRCodeData = $"{voucherCode}|{dealer.Id}|0|{DateTime.Now.AddDays(30):yyyy-MM-dd}"
-                                    };
+                                        var requiredQuantity = materialQuantities[materialId];
+                                        var orderedQuantity = orderedMaterialQuantities.ContainsKey(materialId) ? orderedMaterialQuantities[materialId] : 0;
+                                        int multiplier = orderedQuantity / requiredQuantity;
+                                        if (multiplier < minMultiplier) minMultiplier = multiplier;
+                                    }
+                                }
 
-                                    _context.Vouchers.Add(voucher);
+                                if (minMultiplier == int.MaxValue) minMultiplier = 0;
+
+                                // Count existing vouchers for this campaign
+                                var existingCount = await _context.Vouchers
+                                    .Where(v => v.DealerId == dealer.Id && v.CampaignId == campaign.Id && v.CampaignType == "FreeProduct")
+                                    .CountAsync();
+
+                                int toCreate = Math.Max(0, minMultiplier - existingCount);
+
+                                if (toCreate > 0)
+                                {
+                                    var vouchers = new List<Voucher>();
+                                    for (int i = 0; i < toCreate; i++)
+                                    {
+                                        var voucherCode = $"FRP{dealer.Id}{campaign.Id}{DateTime.Now:yyyyMMddHHmmss}{i}";
+                                        var voucher = new Voucher
+                                        {
+                                            VoucherCode = voucherCode,
+                                            DealerId = dealer.Id,
+                                            CampaignType = "FreeProduct",
+                                            CampaignId = campaign.Id,
+                                            VoucherValue = 0,
+                                            PointsUsed = 0,
+                                            IssueDate = DateTime.Now,
+                                            ExpiryDate = DateTime.Now.AddDays(30),
+                                            QRCodeData = $"{voucherCode}|{dealer.Id}|0|{DateTime.Now.AddDays(30):yyyy-MM-dd}"
+                                        };
+
+                                        vouchers.Add(voucher);
+                                    }
+
+                                    _context.Vouchers.AddRange(vouchers);
                                     await _context.SaveChangesAsync();
 
-                                    // Log successful voucher creation for debugging
-                                    System.Diagnostics.Debug.WriteLine($"Created FreeProduct voucher {voucherCode} for dealer {dealer.Id} and campaign {campaign.Id}");
+                                    foreach (var v in vouchers)
+                                    {
+                                        await _notificationService.CreateVoucherNotificationAsync(user.Id, v.VoucherCode, v.VoucherValue, v.Id);
+                                    }
 
-                                    // Create notification for voucher generation
-                                    await _notificationService.CreateVoucherNotificationAsync(user.Id, voucherCode, 0, voucher.Id);
+                                    System.Diagnostics.Debug.WriteLine($"Created {toCreate} FreeProduct vouchers for dealer {dealer.Id} campaign {campaign.Id}");
                                 }
                                 else
                                 {
-                                    // Log that voucher already exists
-                                    System.Diagnostics.Debug.WriteLine($"Dealer {dealer.Id} already has a voucher for FreeProduct campaign {campaign.Id}");
+                                    System.Diagnostics.Debug.WriteLine($"No new FreeProduct vouchers needed for dealer {dealer.Id} campaign {campaign.Id}");
                                 }
                             }
                             else
                             {
-                                // Log insufficient quantities
                                 System.Diagnostics.Debug.WriteLine($"Dealer {dealer.Id} has insufficient quantities for FreeProduct campaign {campaign.Id}");
                             }
                         }
@@ -884,8 +916,17 @@ namespace HaldiramPromotionalApp.Controllers
                     .OrderByDescending(oi => oi.Order.OrderDate)
                     .ToListAsync();
 
-                // Pass the order items to the view
-                // The view will calculate the summary statistics
+                // Calculate summary values server-side and pass to view via ViewData
+                var totalPointsEarned = orderItems?.Sum(oi => oi.Points) ?? 0;
+                var pointsUsed = await _context.Vouchers
+                    .Where(v => v.DealerId == dealer.Id)
+                    .SumAsync(v => (int?)v.PointsUsed) ?? 0;
+                var availablePoints = totalPointsEarned - pointsUsed;
+
+                ViewData["TotalPointsEarned"] = totalPointsEarned;
+                ViewData["AvailablePoints"] = availablePoints;
+                ViewData["PointsUsed"] = pointsUsed;
+
                 return View("~/Views/Home/PointsDetails.cshtml", orderItems);
             }
             catch (Exception ex)
@@ -1661,14 +1702,43 @@ namespace HaldiramPromotionalApp.Controllers
             try
             {
                 // Parse the QR code data
-                // Expected format: {VoucherCode}|{DealerId}|{VoucherValue}|{ExpiryDate}
-                var qrDataParts = model.QrData.Split('|');
-                if (qrDataParts.Length != 4)
+                // Expected format (common): {VoucherCode}|{DealerId}|{VoucherValue}|{ExpiryDate}
+                // But QR may sometimes contain only the voucher code or a URL/query containing the code.
+                var raw = (model?.QrData ?? string.Empty).Trim();
+                if (string.IsNullOrEmpty(raw))
                 {
-                    return Json(new { success = false, message = "Invalid QR code format." });
+                    return Json(new { success = false, message = "Invalid QR code data." });
                 }
-                
-                var voucherCode = qrDataParts[0];
+
+                string voucherCode = null;
+                var qrDataParts = raw.Split('|');
+                if (qrDataParts.Length >= 4)
+                {
+                    voucherCode = qrDataParts[0].Trim();
+                }
+                else if (qrDataParts.Length == 1)
+                {
+                    // raw may be a plain code, a URL with query, or a path
+                    var match = Regex.Match(raw, @"(?:code|voucherCode|voucher)=([^&\s]+)", RegexOptions.IgnoreCase);
+                    if (match.Success)
+                    {
+                        voucherCode = Uri.UnescapeDataString(match.Groups[1].Value);
+                    }
+                    else if (raw.Contains('/'))
+                    {
+                        var segs = raw.TrimEnd('/').Split('/');
+                        voucherCode = Uri.UnescapeDataString(segs.Last());
+                    }
+                    else
+                    {
+                        voucherCode = Uri.UnescapeDataString(raw);
+                    }
+                }
+                else
+                {
+                    // Fallback: take the first segment as voucher code
+                    voucherCode = qrDataParts[0].Trim();
+                }
                 
                 // Find the voucher by code
                 var voucher = await _context.Vouchers.FirstOrDefaultAsync(v => v.VoucherCode == voucherCode);

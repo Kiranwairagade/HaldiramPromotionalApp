@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿<!DOCTYPE html>
+﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="~/css/DealerDashboard.css" />
 </head>
 <body class="bg-gray-150">
-    <header class="bg-white ">
+    <header class="bg-white shadow-md">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
                 <div class="flex">
@@ -73,13 +73,23 @@
                                         <span id="notificationCount" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center" style="display: none;">0</span>
                                     </button>
                                     <!-- Notification Dropdown -->
-                                    <div id="notificationDropdown" class="absolute right-0 mt-2 w-80 bg-white rounded-md shadow-lg py-1 z-50 hidden" style="border: 1px solid #e5e7eb; max-height: 400px; overflow-y: auto;">
-                                        <div class="px-4 py-2 border-b border-gray-200">
-                                            <h3 class="text-sm font-medium text-gray-900">Notifications</h3>
+                                    <div id="notificationDropdown" class="absolute right-0 mt-2 bg-white rounded-md shadow-lg z-50 hidden border border-gray-200 overflow-hidden max-h-96 sm:max-h-[420px]">
+                                        <div class="px-3 py-2 flex items-center justify-between bg-gray-50">
+                                            <h3 class="text-sm font-semibold text-gray-800">Notifications</h3>
+                                            <div class="flex items-center space-x-2">
+                                                <button id="markAllRead" class="text-sm px-3 py-1 bg-red-400 text-white rounded-md flex items-center" title="Mark all as read">
+                                                    <i class="fas fa-check-circle mr-2"></i>Mark Read
+                                                </button>
+                                            </div>
                                         </div>
-                                        <div id="notificationList" class="divide-y divide-gray-100">
+                                        <div id="notificationList" class="divide-y divide-gray-100 overflow-y-auto" style="max-height:360px;">
                                             <!-- Notifications will be populated here -->
                                             <div class="px-4 py-3 text-center text-gray-500 text-xs">Loading notifications...</div>
+                                        </div>
+                                        <div class="px-3 py-2 bg-white text-right">
+                                            <button id="closeNotifications" class="text-sm px-3 py-1 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300">
+                                                Close
+                                            </button>
                                         </div>
                                     </div>
                                 </div>

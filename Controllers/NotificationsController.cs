@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using HaldiramPromotionalApp.Data;
 using HaldiramPromotionalApp.Models;
@@ -103,6 +104,50 @@ namespace HaldiramPromotionalApp.Controllers
             catch (Exception ex)
             {
                 return Ok(new { success = false, message = "Error marking notifications as read: " + ex.Message });
+            }
+        }
+
+        // POST: api/Notifications/Delete
+        [HttpPost("Delete")]
+        public async Task<ActionResult> Delete([FromBody] int[] notificationIds)
+        {
+            // Check if user is logged in
+            var userName = HttpContext.Session.GetString("UserName");
+            var userRole = HttpContext.Session.GetString("role");
+
+            if (string.IsNullOrEmpty(userName) || userRole != "Dealer")
+            {
+                return Ok(new { success = false, message = "Unauthorized" });
+            }
+
+            try
+            {
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.phoneno == userName);
+                if (user == null)
+                {
+                    return Ok(new { success = false, message = "User not found" });
+                }
+
+                IQueryable<Notification> query = _context.Notifications.Where(n => n.UserId == user.Id);
+
+                // If specific IDs provided, filter them
+                if (notificationIds != null && notificationIds.Length > 0)
+                {
+                    query = query.Where(n => notificationIds.Contains(n.Id));
+                }
+
+                var notificationsToDelete = await query.ToListAsync();
+                if (notificationsToDelete.Any())
+                {
+                    _context.Notifications.RemoveRange(notificationsToDelete);
+                    await _context.SaveChangesAsync();
+                }
+
+                return Ok(new { success = true, message = "Notifications deleted" });
+            }
+            catch (Exception ex)
+            {
+                return Ok(new { success = false, message = "Error deleting notifications: " + ex.Message });
             }
         }
 

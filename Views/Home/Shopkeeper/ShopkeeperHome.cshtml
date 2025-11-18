@@ -27,7 +27,7 @@
         background-color: #f5f7fb;
         color: #333;
         line-height: 1.6;
-        overflow: hidden; /* Remove scrolling */
+        overflow: auto; /* allow page scrolling so content is fully visible */
     }
 
     /* Navbar Styles */
@@ -81,8 +81,7 @@
         box-shadow: var(--box-shadow);
         transition: var(--transition);
         margin-bottom: 1rem; /* Reduced margin */
-        
-        max-height: 300px; /* Limit card height */
+        max-height: none; /* allow cards to size naturally */
     }
 
     .card:hover {
@@ -107,8 +106,8 @@
 
     .card-body {
         padding: 1rem; /* Reduced padding */
-        overflow-y: auto; /* Allow scrolling within card if needed */
-        max-height: 250px; /* Limit card body height */
+        overflow: visible; /* show full content */
+        max-height: none;
     }
 
     .info-item {
@@ -149,7 +148,7 @@
 
     .scanner-container {
         width: 100%;
-        height: 200px; /* Reduced height */
+        height: 420px; /* larger so scanner is fully visible */
         border: 2px dashed #ddd;
         display: flex;
         align-items: center;
@@ -310,13 +309,13 @@
         .dashboard-header {
             padding: 0.75rem; /* Reduced padding */
         }
-        
+
         .card-body {
             padding: 0.75rem; /* Reduced padding */
         }
-        
+
         .scanner-container {
-            height: 150px; /* Reduced height */
+            height: 300px; /* mobile-friendly height */
         }
         
         .nav-tabs .nav-link {
@@ -337,23 +336,23 @@
     
     /* Container adjustments for fixed height */
     .container-fluid {
-        height: calc(100vh - 120px); /* Fixed height minus navbar and footer */
-        overflow: hidden; /* Prevent scrolling */
+        min-height: calc(100vh - 120px); /* let content expand */
+        overflow: visible; /* allow page scrolling */
     }
-    
+
     .tab-content {
-        height: calc(100% - 60px); /* Account for tabs height */
+        height: auto; /* let tabs expand as needed */
     }
-    
+
     .tab-pane {
-        height: 100%;
+        height: auto;
     }
-    
+
     /* Adjustments for specific sections */
     #voucher-redemption .card,
     #shopkeeper-information .card,
     #redemption-history .card {
-        height: calc(100% - 30px); /* Account for margin */
+        height: auto; /* allow cards to size naturally */
     }
 </style>
 
@@ -397,6 +396,9 @@
             }
         </div>
     </div>
+
+    <!-- Hidden anti-forgery token for AJAX posts -->
+    <form id="antiForgeryForm" style="display:none">@Html.AntiForgeryToken()</form>
 
     <!-- Tab Content -->
     <div class="tab-content" id="shopkeeperTabContent">
@@ -452,52 +454,63 @@
                     else
                     {
                         <div class="row">
-                            <div class="col-md-6">
-                                <h6>Scan Voucher QR Code</h6> <!-- Reduced heading -->
-                                <div class="form-group mb-2"> <!-- Reduced margin -->
-                                    <button id="startCamera" class="btn btn-primary">
-                                        <i class="fas fa-camera me-1"></i>Start Camera <!-- Reduced margin -->
+                            <div class="col-12 d-flex flex-column align-items-center">
+                                <h6 class="mb-2">Scan Voucher QR Code</h6>
+
+                                <div class="form-group mb-2 text-center"> <!-- Centered controls -->
+                                    <button id="startCamera" type="button" class="btn btn-primary">
+                                        <i class="fas fa-camera me-1"></i>Start Camera
                                     </button>
-                                    <button id="stopCamera" class="btn btn-outline-secondary" style="display:none;">
-                                        <i class="fas fa-stop me-1"></i>Stop Camera <!-- Reduced margin -->
+                                    <button id="stopCamera" type="button" class="btn btn-outline-secondary" style="display:none;">
+                                        <i class="fas fa-stop me-1"></i>Stop Camera
                                     </button>
                                 </div>
-                                <div id="scannerContainer" class="scanner-container" style="display: none;">
-                                    <div id="qrVideo" style="width: 100%; height: 100%;"></div>
+
+                                <div id="scannerWrapper" class="w-100 d-flex justify-content-center">
+                                    <div id="scannerContainer" class="scanner-container" style="display: none; width: 360px; max-width: 90%;">
+                                        <div id="qrVideo" style="width: 100%; height: 100%;"></div>
+                                    </div>
                                 </div>
-                                <div id="scannerPlaceholder" class="scanner-container">
+
+                                <div id="scannerPlaceholder" class="scanner-container" style="width:360px; max-width:90%; margin-top:12px;">
                                     <div class="scanner-placeholder">
                                         <i class="fas fa-qrcode"></i>
-                                        <p class="mb-1">Click "Start Camera" to begin scanning</p> <!-- Reduced margin -->
+                                        <p class="mb-1">Click "Start Camera" to begin scanning</p>
                                     </div>
                                 </div>
-                                <div id="scanResult" class="mt-3" style="display: none;"> <!-- Reduced margin -->
+
+                                <div id="scanMessages" class="w-100 mt-3" style="max-width:360px;">
+                                    <!-- Dynamic scan/redeem messages inserted here -->
+                                </div>
+
+                                <div id="scanResult" class="mt-2" style="display: none; width:360px; max-width:90%;">
                                     <div class="alert alert-info">
-                                        <i class="fas fa-info-circle me-1"></i> <!-- Reduced margin -->
+                                        <i class="fas fa-info-circle me-1"></i>
                                         <strong>Scanned Data:</strong> <span id="scannedData"></span>
                                     </div>
-                                    <div class="d-flex gap-1"> <!-- Reduced gap -->
-                                        <button id="redeemVoucher" class="btn btn-success">
-                                            <i class="fas fa-check-circle me-1"></i>Redeem Voucher <!-- Reduced margin -->
+                                    <div class="d-flex gap-1 justify-content-center">
+                                        <button id="redeemVoucher" type="button" class="btn btn-success">
+                                            <i class="fas fa-check-circle me-1"></i>Redeem Voucher
                                         </button>
-                                        <button id="scanAgain" class="btn btn-outline-secondary">
-                                            <i class="fas fa-redo me-1"></i>Scan Again <!-- Reduced margin -->
+                                        <button id="scanAgain" type="button" class="btn btn-outline-secondary">
+                                            <i class="fas fa-redo me-1"></i>Scan Again
                                         </button>
                                     </div>
                                 </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="manual-entry">
-                                    <h6>Manual Voucher Entry</h6> <!-- Reduced heading -->
-                                    <form asp-action="RedeemVoucher" method="post">
-                                        <div class="form-group mb-2"> <!-- Reduced margin -->
-                                            <label for="voucherCode" class="form-label">Voucher Code</label>
-                                            <input type="text" class="form-control" id="voucherCode" name="voucherCode" placeholder="Enter voucher code">
-                                        </div>
-                                        <button type="submit" class="btn btn-success w-100">
-                                            <i class="fas fa-ticket-alt me-1"></i>Redeem Voucher <!-- Reduced margin -->
-                                        </button>
-                                    </form>
+
+                                <div class="w-100 mt-4" style="max-width:640px;">
+                                    <div class="manual-entry">
+                                        <h6>Manual Voucher Entry</h6>
+                                        <form asp-action="RedeemVoucher" method="post">
+                                            <div class="form-group mb-2">
+                                                <label for="voucherCode" class="form-label">Voucher Code</label>
+                                                <input type="text" class="form-control" id="voucherCode" name="voucherCode" placeholder="Enter voucher code">
+                                            </div>
+                                            <button type="submit" class="btn btn-success w-100">
+                                                <i class="fas fa-ticket-alt me-1"></i>Redeem Voucher
+                                            </button>
+                                        </form>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -631,11 +644,11 @@
 @section Scripts {
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <script>
-        // Auto-hide alerts after 5 seconds
+        // Remove page alerts after 5 seconds (plain JS)
         setTimeout(function() {
-            $('.alert').fadeOut('slow');
+            document.querySelectorAll('.alert').forEach(function(el) { el.remove(); });
         }, 5000);
-        
+
         // QR Code Scanner
         let html5QrCode = null;
         const startCameraButton = document.getElementById('startCamera');
@@ -646,142 +659,166 @@
         const scannedData = document.getElementById('scannedData');
         const redeemVoucherButton = document.getElementById('redeemVoucher');
         const scanAgainButton = document.getElementById('scanAgain');
+        const scanMessages = document.getElementById('scanMessages');
         let lastScannedData = null;
-        
-        startCameraButton.addEventListener('click', function() {
+        let autoRedeemTimeout = null;
+
+        function showMessage(type, message, timeoutMs) {
+            // type: 'success'|'danger'|'info'|'warning'
+            if (!scanMessages) return;
+            scanMessages.innerHTML = '';
+            const wrapper = document.createElement('div');
+            wrapper.className = 'alert alert-' + type + ' alert-dismissible fade show';
+            wrapper.role = 'alert';
+            wrapper.innerHTML = message + '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>';
+            scanMessages.appendChild(wrapper);
+            if (timeoutMs) {
+                setTimeout(() => { wrapper.remove(); }, timeoutMs);
+            }
+        }
+
+        function getAntiForgeryToken() {
+            const input = document.querySelector('#antiForgeryForm input[name="__RequestVerificationToken"]');
+            return input ? input.value : null;
+        }
+
+        startCameraButton && startCameraButton.addEventListener('click', function (e) {
+            e.preventDefault();
             // Show scanner container and hide placeholder
             scannerContainer.style.display = 'block';
             scannerPlaceholder.style.display = 'none';
             startCameraButton.style.display = 'none';
             stopCameraButton.style.display = 'inline-block';
-            
-            // Clear any previous scan data
+
+            // Clear previous scan data
             lastScannedData = null;
             scannedData.textContent = '';
             scanResult.style.display = 'none';
-            
-            // Initialize the QR code scanner
+            scanMessages.innerHTML = '';
+
             try {
-                // Create new instance if not exists
                 if (html5QrCode === null) {
-                    html5QrCode = new Html5Qrcode("qrVideo");
-                    console.log("QR code scanner initialized");
+                    html5QrCode = new Html5Qrcode('qrVideo');
                 }
-                
-                const config = {
-                    fps: 10,
-                    qrbox: { width: 200, height: 200 } // Reduced size
-                };
-                
-                // Start scanning
+
+                const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+
                 html5QrCode.start(
-                    { facingMode: "environment" }, // Use rear camera
+                    { facingMode: 'environment' },
                     config,
                     (decodedText, decodedResult) => {
-                        // When QR code is scanned successfully
                         if (lastScannedData !== decodedText) {
-                            console.log("QR Code detected:", decodedText);
                             lastScannedData = decodedText;
                             scannedData.textContent = decodedText;
                             scanResult.style.display = 'block';
-                            // Don't hide the camera view immediately, let user decide
+                            showMessage('info', '<strong>Scanned:</strong> ' + decodedText + ' — attempting redemption...');
+
+                            // Auto redeem after short delay (user can cancel by clicking Scan Again)
+                            if (autoRedeemTimeout) clearTimeout(autoRedeemTimeout);
+                            autoRedeemTimeout = setTimeout(() => { redeemFromScan(); }, 800);
                         }
                     },
                     (errorMessage) => {
-                        // This is normal - scanning attempts that don't find QR codes
-                        // Only log to console, don't show alerts
-                        // console.log(`QR scanning attempt: ${errorMessage}`);
+                        // silent
                     }
                 ).catch(err => {
-                    console.error(`Unable to start scanning: ${err}`);
-                    alert("Camera access denied or not available. Please check your camera permissions and ensure you're using HTTPS (if required by your browser).");
+                    console.error('Unable to start scanning:', err);
+                    showMessage('danger', 'Camera access denied or not available. Check camera permissions.');
                     stopCamera();
                 });
             } catch (error) {
-                console.error("Error initializing QR scanner:", error);
-                alert("Error initializing camera. Please check your camera permissions and try again.");
+                console.error('Error initializing QR scanner:', error);
+                showMessage('danger', 'Error initializing camera.');
                 stopCamera();
             }
         });
-        
-        stopCameraButton.addEventListener('click', function() {
+
+        stopCameraButton && stopCameraButton.addEventListener('click', function (e) {
+            e.preventDefault();
             stopCamera();
         });
-        
-        scanAgainButton.addEventListener('click', function() {
+
+        scanAgainButton && scanAgainButton.addEventListener('click', function (e) {
+            e.preventDefault();
+            // Cancel auto redeem if pending
+            if (autoRedeemTimeout) { clearTimeout(autoRedeemTimeout); autoRedeemTimeout = null; }
             scanResult.style.display = 'none';
-            // Keep scanner running but hide result
+            scannedData.textContent = '';
+            lastScannedData = null;
+            scanMessages.innerHTML = '';
         });
-        
-        redeemVoucherButton.addEventListener('click', function() {
-            if (lastScannedData) {
-                // Send scanned data to server for redemption
-                fetch('@Url.Action("RedeemVoucherByQR", "Home")', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
-                    },
-                    body: JSON.stringify({ qrData: lastScannedData })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        if (data.requiresProductDetails) {
-                            // Redirect to shopkeeper home with product form
-                            window.location.href = '@Url.Action("ShopkeeperHome", "Home")' + '?showProductForm=true&voucherId=' + data.voucherId;
-                        } else {
-                            alert("Voucher redeemed successfully!");
-                            // Stop camera and reset UI
-                            stopCamera();
-                            scanResult.style.display = 'none';
-                            scannerPlaceholder.style.display = 'block';
-                            lastScannedData = null;
-                            scannedData.textContent = '';
-                        }
-                    } else {
-                        alert("Error redeeming voucher: " + data.message);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert("An error occurred while redeeming the voucher.");
-                });
+
+        redeemVoucherButton && redeemVoucherButton.addEventListener('click', function (e) {
+            e.preventDefault();
+            if (lastScannedData) redeemFromScan();
+        });
+
+        function redeemFromScan() {
+            if (!lastScannedData) return;
+            const token = getAntiForgeryToken();
+            if (!token) {
+                showMessage('danger', 'Missing anti-forgery token. Cannot redeem.');
+                return;
             }
-        });
-        
+
+            showMessage('info', 'Redeeming voucher, please wait...');
+
+            fetch('@Url.Action("RedeemVoucherByQR", "Home")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': token
+                },
+                body: JSON.stringify({ qrData: lastScannedData })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    if (data.requiresProductDetails) {
+                        // redirect to product form
+                        window.location.href = '@Url.Action("ShopkeeperHome", "Home")' + '?showProductForm=true&voucherId=' + data.voucherId;
+                        return;
+                    }
+                    showMessage('success', 'Voucher redeemed successfully.', 4000);
+                    stopCamera();
+                    scanResult.style.display = 'none';
+                    lastScannedData = null;
+                } else {
+                    showMessage('danger', 'Error redeeming voucher: ' + (data.message || 'Unknown error.'), 6000);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showMessage('danger', 'An error occurred while redeeming the voucher.');
+            });
+        }
+
         function stopCamera() {
             if (html5QrCode) {
-                html5QrCode.stop().then(ignore => {
-                    // QR Code scanning is stopped.
-                    console.log("Camera stopped successfully");
+                html5QrCode.stop().then(() => {
+                    console.log('Camera stopped successfully');
                 }).catch(err => {
-                    // Stop failed, handle it.
-                    console.error("Error stopping camera:", err);
+                    console.error('Error stopping camera:', err);
                 }).finally(() => {
-                    // Reset UI regardless of whether stop succeeded
                     resetCameraUI();
                 });
             } else {
-                // Reset UI if no scanner instance
                 resetCameraUI();
             }
         }
-        
+
         function resetCameraUI() {
             scannerContainer.style.display = 'none';
             scannerPlaceholder.style.display = 'block';
             startCameraButton.style.display = 'inline-block';
             stopCameraButton.style.display = 'none';
-            html5QrCode = null; // Reset the scanner instance
+            html5QrCode = null;
+            if (autoRedeemTimeout) { clearTimeout(autoRedeemTimeout); autoRedeemTimeout = null; }
         }
-        
-        // Handle page unload to stop camera
-        window.addEventListener('beforeunload', function() {
+
+        window.addEventListener('beforeunload', function () {
             if (html5QrCode) {
-                html5QrCode.stop().catch(err => {
-                    console.error("Error stopping camera on page unload:", err);
-                });
+                html5QrCode.stop().catch(err => { console.error('Error stopping camera on page unload:', err); });
             }
         });
     </script>

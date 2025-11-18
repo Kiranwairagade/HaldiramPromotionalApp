@@ -391,43 +391,7 @@ else
             }
         </div>
 
-        <!-- Categories -->
-        <div class="categories-section">
-            <h2 class="section-header">Shop by Category</h2>
-            @if (Model.Materials?.Any() == true)
-            {
-                var categories = Model.Materials.Select(m => m.Category).Distinct().ToList();
-                <div class="category-grid">
-                    <!-- All Products Button -->
-                    <div class="category-card all-products-card" onclick="showAllProducts()">
-                        <div class="category-overlay">
-                            <div class="category-content">
-                                <h3 class="category-name">All Products</h3>
-                                <p class="category-count">@Model.Materials.Count() items</p>
-                            </div>
-                        </div>
-                    </div>
-                    @foreach (var category in categories)
-                    {
-                        var count = Model.Materials.Count(m => m.Category == category);
-                        <div class="category-card" style="background-image:url('@GetCategoryImageUrl(category)')" onclick="showCategoryProducts('@category')">
-                            <div class="category-overlay">
-                                <div class="category-content">
-                                    <h3 class="category-name">@category</h3>
-                                    <p class="category-count">@count items</p>
-                                </div>
-                            </div>
-                        </div>
-                    }
-                </div>
-            }
-            else
-            {
-                <div class="empty-state">
-                    <div class="empty-state-icon">No categories available.</div>
-                </div>
-            }
-        </div>
+        <!-- Categories removed per request -->
 
         <!-- Category Products (Hidden by default) -->
         <div id="categoryProductsSection" class="products-section" style="display:none;">
@@ -441,6 +405,19 @@ else
         <!-- All Products -->
         <div class="products-section" id="allProductsSection">
             <h2 class="section-header">All Products</h2>
+            @{
+                var activeCategoriesForFilter = Model.Materials?.Where(m => m.isactive).Select(m => m.Category).Distinct().ToList() ?? new List<string>();
+            }
+            <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1rem;">
+                <label for="categoryFilter" style="font-weight:600;color:var(--gray-700);">Filter:</label>
+                <select id="categoryFilter" onchange="filterAllProducts(this.value)" style="padding:0.35rem 0.5rem;border-radius:0.25rem;border:1px solid var(--gray-200);">
+                    <option value="__all__">All Products</option>
+                    @foreach (var cat in activeCategoriesForFilter)
+                    {
+                        <option value="@cat">@cat</option>
+                    }
+                </select>
+            </div>
             @if (Model.Materials?.Any() == true)
             {
                 <div class="products-grid">
@@ -540,14 +517,16 @@ else
 
     <!-- JavaScript -->
     <script>
-        const materialsData = @Html.Raw(Json.Serialize(Model.Materials));
+        // Only include active materials on the client side
+        const materialsData = @Html.Raw(Json.Serialize(Model.Materials?.Where(m => m.isactive).ToList()));
         const materialImagesData = @Html.Raw(Json.Serialize(Model.MaterialImages));
         const dealerBasicOrdersData = @Html.Raw(Json.Serialize(Model.RecentDealerBasicOrders)) || [];
         let cart = [];
 
         // Create a JavaScript object to store material points data
+        // Only include points for active materials
         const materialPointsData = {
-            @foreach (var material in Model.Materials)
+            @foreach (var material in Model.Materials?.Where(m => m.isactive) ?? Enumerable.Empty<dynamic>())
             {
                 @:@material.Id: @GetPointsForMaterial(material.Id),
             }
@@ -891,13 +870,32 @@ else
         function showAllProducts() {
             document.getElementById('categoryProductsSection').style.display = 'none';
             document.getElementById('allProductsSection').style.display = 'block';
-            // Scroll to the All Products section
+            // Reset filter (if present) and scroll to the All Products section
+            const sel = document.getElementById('categoryFilter');
+            if (sel) { sel.value = '__all__'; filterAllProducts('__all__'); }
             document.getElementById('allProductsSection').scrollIntoView({ behavior: 'smooth' });
         }
 
         function hideCategoryProducts() {
             document.getElementById('categoryProductsSection').style.display = 'none';
             document.getElementById('allProductsSection').style.display = 'block';
+        }
+
+        // Filter products in the All Products grid by category
+        function filterAllProducts(selectedCategory) {
+            const cards = document.querySelectorAll('#allProductsSection .product-card');
+            if (!cards) return;
+            cards.forEach(c => {
+                const cat = c.getAttribute('data-category') || '';
+                if (!selectedCategory || selectedCategory === '__all__' || cat === selectedCategory) {
+                    c.style.display = '';
+                } else {
+                    c.style.display = 'none';
+                }
+            });
+            // scroll to grid so user sees filtered results
+            const grid = document.querySelector('#allProductsSection .products-grid');
+            if (grid) grid.scrollIntoView({ behavior: 'smooth' });
         }
 
         // Initialize Carousel
