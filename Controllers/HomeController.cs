@@ -1262,7 +1262,7 @@ namespace HaldiramPromotionalApp.Controllers
                     .OrderBy(v => v.IsRedeemed)
                     .ThenByDescending(v => v.ExpiryDate)
                     .ThenByDescending(v => v.IssueDate)
-                    .ToListAsync();
+                    .Take(10).ToListAsync();
                 
                 // Log voucher count for debugging
                 System.Diagnostics.Debug.WriteLine($"Found {vouchers.Count} vouchers for dealer {dealer.Id}");

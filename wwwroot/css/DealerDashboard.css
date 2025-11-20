@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿/* ========================================
+﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿/* ========================================
    Dealer Dashboard - Standalone CSS
    ======================================== */
 
@@ -932,8 +932,8 @@ body {
 }
 
 .cart-item-quantity-controls .quantity-btn {
-    width: 24px;
-    height: 24px;
+    width: 35px;
+    height: 35px;
     border-radius: var(--border-radius);
     border: 1px solid var(--gray-200);
     background: white;
@@ -943,7 +943,7 @@ body {
     justify-content: center;
     cursor: pointer;
     font-size: 0.75rem;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 .cart-item-quantity-controls .quantity-btn:hover {
@@ -955,15 +955,15 @@ body {
 }
 
 .cart-item-quantity-controls .quantity-input {
-    width: 40px;
-    height: 24px;
+    width: 35px;
+    height: 35px;
     text-align: center;
-    border: 1px solid var(--gray-200);
+    border: 1px solid var(--gray-300);
     border-radius: var(--border-radius);
     font-weight: 600;
     color: var(--gray-900);
-    font-size: 0.75rem;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    font-size: 0.9rem;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 .cart-item-quantity-controls .quantity-input:focus {
@@ -1069,6 +1069,44 @@ body {
 .checkout-btn:active {
     transform: none;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Eligible Campaigns Section */
+.eligible-campaigns {
+    background-color: var(--gray-50);
+    border-top: 1px solid var(--gray-200);
+    padding: 1rem;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.eligible-campaigns h4 {
+    margin-top: 0;
+    color: var(--primary);
+    font-size: 1.1rem;
+}
+
+.campaign-eligibility-info {
+    background-color: var(--info);
+    padding: 0.75rem;
+    border-radius: var(--border-radius);
+    margin-bottom: 0.5rem;
+    font-size: 0.85rem;
+}
+
+.campaign-eligible {
+    background-color: var(--success-light);
+}
+
+.campaign-title-small {
+    font-weight: bold;
+    color: var(--primary);
+    margin-bottom: 0.25rem;
+}
+
+.campaign-details-small {
+    font-size: 0.8rem;
+    color: var(--gray-700);
 }
 
 .cart-overlay {
@@ -1305,55 +1343,39 @@ body {
 }
 
 .quantity-btn {
-    width: 24px;
-    height: 24px;
+    width: 35px;
+    height: 35px;
     border-radius: var(--border-radius);
-    border: 1px solid var(--gray-200);
+    border: 1px solid var(--gray-300);
     background: white;
     color: var(--gray-700);
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    font-size: 0.75rem;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    font-size: 0.9rem;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
-.quantity-btn:hover {
-    background: var(--gray-50);
-    border-color: var(--primary);
-    color: var(--primary);
-    transform: none;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
-}
+
 
 .quantity-btn:active {
     transform: none;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 .quantity-input {
-    width: 40px;
-    height: 24px;
+    width: 35px;
+    height: 35px;
     text-align: center;
-    border: 1px solid var(--gray-200);
+    border: 1px solid var(--gray-400);
     border-radius: var(--border-radius);
     font-weight: 600;
     color: var(--gray-900);
-    font-size: 0.75rem;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    font-size: 0.9rem;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
-.quantity-input:focus {
-    outline: none;
-    border-color: var(--primary);
-    box-shadow: 0 0 0 2px var(--primary-light), 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.quantity-input:hover {
-    border-color:var(--primary);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
-}
 
 .add-to-cart-btn {
     width: 100%;
@@ -1863,8 +1885,8 @@ body {
 
     .quantity-input {
         width: 35px;
-        height: 22px;
-        font-size: 0.7rem;
+        height: 35px;
+        font-size: 0.9rem;
     }
 
     .add-to-cart-btn {
@@ -1935,7 +1957,7 @@ body {
     }
 
     .quantity-input {
-        width: 40px;
+        width: 435px;
         height: 24px;
         font-size: 0.75rem;
         margin-top: auto;
@@ -2083,7 +2105,7 @@ body {
     }
 
     .quantity-input {
-        width: 50px;
+        width: px;
         height: 30px;
         font-size: 0.875rem;
         margin-top: auto;
