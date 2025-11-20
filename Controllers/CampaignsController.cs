@@ -19,7 +19,7 @@ namespace HaldiramPromotionalApp.Controllers
 
         public IActionResult CreateCampaign()
         {
-            return View("~/Views/Manufacturer/CreateCampaign.cshtml");
+            return View("~/Views/Home/Manufacturer/CreateCampaign.cshtml");
         }
         
         [HttpPost]
@@ -94,7 +94,7 @@ namespace HaldiramPromotionalApp.Controllers
                         
                         var fileName = Path.GetFileNameWithoutExtension(ImagePath.FileName);
                         var extension = Path.GetExtension(ImagePath.FileName);
-                        var uniqueFileName = $"{fileName}_{DateTime.Now:yyyyMMddHHmmss}{extension}";
+                        var uniqueFileName = $"{fileName}_{DateTime.UtcNow:yyyyMMddHHmmss}{extension}";
                         var filePath = Path.Combine(uploadsFolder, uniqueFileName);
                         
                         using (var fileStream = new FileStream(filePath, FileMode.Create))
@@ -230,7 +230,7 @@ namespace HaldiramPromotionalApp.Controllers
                         
                         var fileName = Path.GetFileNameWithoutExtension(ImagePath.FileName);
                         var extension = Path.GetExtension(ImagePath.FileName);
-                        var uniqueFileName = $"{fileName}_{DateTime.Now:yyyyMMddHHmmss}{extension}";
+                        var uniqueFileName = $"{fileName}_{DateTime.UtcNow:yyyyMMddHHmmss}{extension}";
                         var filePath = Path.Combine(uploadsFolder, uniqueFileName);
                         
                         using (var fileStream = new FileStream(filePath, FileMode.Create))
@@ -426,7 +426,7 @@ namespace HaldiramPromotionalApp.Controllers
                         
                         var fileName = Path.GetFileNameWithoutExtension(ImagePath.FileName);
                         var extension = Path.GetExtension(ImagePath.FileName);
-                        var uniqueFileName = $"{fileName}_{DateTime.Now:yyyyMMddHHmmss}{extension}";
+                        var uniqueFileName = $"{fileName}_{DateTime.UtcNow:yyyyMMddHHmmss}{extension}";
                         var filePath = Path.Combine(uploadsFolder, uniqueFileName);
                         
                         using (var fileStream = new FileStream(filePath, FileMode.Create))
@@ -579,7 +579,7 @@ namespace HaldiramPromotionalApp.Controllers
                         
                         var fileName = Path.GetFileNameWithoutExtension(ImagePath.FileName);
                         var extension = Path.GetExtension(ImagePath.FileName);
-                        var uniqueFileName = $"{fileName}_{DateTime.Now:yyyyMMddHHmmss}{extension}";
+                        var uniqueFileName = $"{fileName}_{DateTime.UtcNow:yyyyMMddHHmmss}{extension}";
                         var filePath = Path.Combine(uploadsFolder, uniqueFileName);
                         
                         using (var fileStream = new FileStream(filePath, FileMode.Create))
@@ -693,7 +693,7 @@ namespace HaldiramPromotionalApp.Controllers
                         
                         var fileName = Path.GetFileNameWithoutExtension(ImagePath.FileName);
                         var extension = Path.GetExtension(ImagePath.FileName);
-                        var uniqueFileName = $"{fileName}_{DateTime.Now:yyyyMMddHHmmss}{extension}";
+                        var uniqueFileName = $"{fileName}_{DateTime.UtcNow:yyyyMMddHHmmss}{extension}";
                         var filePath = Path.Combine(uploadsFolder, uniqueFileName);
                         
                         using (var fileStream = new FileStream(filePath, FileMode.Create))
@@ -985,7 +985,7 @@ namespace HaldiramPromotionalApp.Controllers
                 }).ToList()
             };
 
-            return View("~/Views/Manufacturer/ViewCampaigns.cshtml", viewModel);
+            return View("~/Views/Home/Manufacturer/ViewCampaigns.cshtml", viewModel);
         }
 
         // GET: Campaigns/EditPointsToCashCampaign/5
@@ -1034,7 +1034,7 @@ namespace HaldiramPromotionalApp.Controllers
             };
 
             ViewBag.CampaignType = "Points to Cash";
-            return View("~/Views/Manufacturer/EditPointsToCashCampaign.cshtml", viewModel);
+            return View("~/Views/Home/Manufacturer/EditPointsToCashCampaign.cshtml", viewModel);
         }
 
         // POST: Campaigns/EditPointsToCashCampaign/5
@@ -1079,7 +1079,7 @@ namespace HaldiramPromotionalApp.Controllers
 
                         var fileName = Path.GetFileNameWithoutExtension(ImagePath.FileName);
                         var extension = Path.GetExtension(ImagePath.FileName);
-                        var uniqueFileName = $"{fileName}_{DateTime.Now:yyyyMMddHHmmss}{extension}";
+                        var uniqueFileName = $"{fileName}_{DateTime.UtcNow:yyyyMMddHHmmss}{extension}";
                         var filePath = Path.Combine(uploadsFolder, uniqueFileName);
 
                         using (var fileStream = new FileStream(filePath, FileMode.Create))
@@ -1162,7 +1162,7 @@ namespace HaldiramPromotionalApp.Controllers
             }).ToList();
 
             ViewBag.CampaignType = "Points to Cash";
-            return View("~/Views/Manufacturer/EditPointsToCashCampaign.cshtml", viewModel);
+            return View("~/Views/Home/Manufacturer/EditPointsToCashCampaign.cshtml", viewModel);
         }
 
         private bool PointsToCashCampaignExists(int id)
@@ -1227,7 +1227,7 @@ namespace HaldiramPromotionalApp.Controllers
             };
 
             ViewBag.CampaignType = "Points Reward";
-            return View("~/Views/Manufacturer/EditPointsRewardCampaign.cshtml", viewModel);
+            return View("~/Views/Home/Manufacturer/EditPointsRewardCampaign.cshtml", viewModel);
         }
 
         // POST: Campaigns/EditPointsRewardCampaign/5
@@ -1272,7 +1272,7 @@ namespace HaldiramPromotionalApp.Controllers
 
                         var fileName = Path.GetFileNameWithoutExtension(ImagePath.FileName);
                         var extension = Path.GetExtension(ImagePath.FileName);
-                        var uniqueFileName = $"{fileName}_{DateTime.Now:yyyyMMddHHmmss}{extension}";
+                        var uniqueFileName = $"{fileName}_{DateTime.UtcNow:yyyyMMddHHmmss}{extension}";
                         var filePath = Path.Combine(uploadsFolder, uniqueFileName);
 
                         using (var fileStream = new FileStream(filePath, FileMode.Create))
@@ -1339,7 +1339,7 @@ namespace HaldiramPromotionalApp.Controllers
             }).ToList();
 
             ViewBag.CampaignType = "Points Reward";
-            return View("~/Views/Manufacturer/EditPointsRewardCampaign.cshtml", viewModel);
+            return View("~/Views/Home/Manufacturer/EditPointsRewardCampaign.cshtml", viewModel);
         }
 
         private bool PointsRewardCampaignExists(int id)
@@ -1399,7 +1399,7 @@ namespace HaldiramPromotionalApp.Controllers
             };
 
             ViewBag.CampaignType = "Free Product";
-            return View("~/Views/Manufacturer/EditFreeProductCampaign.cshtml", viewModel);
+            return View("~/Views/Home/Manufacturer/EditFreeProductCampaign.cshtml", viewModel);
         }
 
         // POST: Campaigns/EditFreeProductCampaign/5
@@ -1515,7 +1515,7 @@ namespace HaldiramPromotionalApp.Controllers
 
                         var fileName = Path.GetFileNameWithoutExtension(ImagePath.FileName);
                         var extension = Path.GetExtension(ImagePath.FileName);
-                        var uniqueFileName = $"{fileName}_{DateTime.Now:yyyyMMddHHmmss}{extension}";
+                        var uniqueFileName = $"{fileName}_{DateTime.UtcNow:yyyyMMddHHmmss}{extension}";
                         var filePath = Path.Combine(uploadsFolder, uniqueFileName);
 
                         using (var fileStream = new FileStream(filePath, FileMode.Create))
@@ -1629,7 +1629,7 @@ namespace HaldiramPromotionalApp.Controllers
             }).ToList();
 
             ViewBag.CampaignType = "Free Product";
-            return View("~/Views/Manufacturer/EditFreeProductCampaign.cshtml", viewModel);
+            return View("~/Views/Home/Manufacturer/EditFreeProductCampaign.cshtml", viewModel);
         }
 
         private bool FreeProductCampaignExists(int id)
@@ -1665,7 +1665,7 @@ namespace HaldiramPromotionalApp.Controllers
             };
 
             ViewBag.CampaignType = "Amount Reach Goal";
-            return View("~/Views/Manufacturer/EditAmountReachGoalCampaign.cshtml", viewModel);
+            return View("~/Views/Home/Manufacturer/EditAmountReachGoalCampaign.cshtml", viewModel);
         }
 
         // POST: Campaigns/EditAmountReachGoalCampaign/5
@@ -1710,7 +1710,7 @@ namespace HaldiramPromotionalApp.Controllers
 
                         var fileName = Path.GetFileNameWithoutExtension(ImagePath.FileName);
                         var extension = Path.GetExtension(ImagePath.FileName);
-                        var uniqueFileName = $"{fileName}_{DateTime.Now:yyyyMMddHHmmss}{extension}";
+                        var uniqueFileName = $"{fileName}_{DateTime.UtcNow:yyyyMMddHHmmss}{extension}";
                         var filePath = Path.Combine(uploadsFolder, uniqueFileName);
 
                         using (var fileStream = new FileStream(filePath, FileMode.Create))
@@ -1756,7 +1756,7 @@ namespace HaldiramPromotionalApp.Controllers
             }
 
             ViewBag.CampaignType = "Amount Reach Goal";
-            return View("~/Views/Manufacturer/EditAmountReachGoalCampaign.cshtml", viewModel);
+            return View("~/Views/Home/Manufacturer/EditAmountReachGoalCampaign.cshtml", viewModel);
         }
 
         private bool AmountReachGoalCampaignExists(int id)
@@ -1792,7 +1792,7 @@ namespace HaldiramPromotionalApp.Controllers
             };
 
             ViewBag.CampaignType = "Session Duration Reward";
-            return View("~/Views/Manufacturer/EditSessionDurationRewardCampaign.cshtml", viewModel);
+            return View("~/Views/Home/Manufacturer/EditSessionDurationRewardCampaign.cshtml", viewModel);
         }
 
         // POST: Campaigns/EditSessionDurationRewardCampaign/5
@@ -1837,7 +1837,7 @@ namespace HaldiramPromotionalApp.Controllers
 
                         var fileName = Path.GetFileNameWithoutExtension(ImagePath.FileName);
                         var extension = Path.GetExtension(ImagePath.FileName);
-                        var uniqueFileName = $"{fileName}_{DateTime.Now:yyyyMMddHHmmss}{extension}";
+                        var uniqueFileName = $"{fileName}_{DateTime.UtcNow:yyyyMMddHHmmss}{extension}";
                         var filePath = Path.Combine(uploadsFolder, uniqueFileName);
 
                         using (var fileStream = new FileStream(filePath, FileMode.Create))
@@ -1883,7 +1883,7 @@ namespace HaldiramPromotionalApp.Controllers
             }
 
             ViewBag.CampaignType = "Session Duration Reward";
-            return View("~/Views/Manufacturer/EditSessionDurationRewardCampaign.cshtml", viewModel);
+            return View("~/Views/Home/Manufacturer/EditSessionDurationRewardCampaign.cshtml", viewModel);
         }
 
         private bool SessionDurationRewardCampaignExists(int id)
@@ -1906,7 +1906,7 @@ namespace HaldiramPromotionalApp.Controllers
                 return NotFound();
             }
 
-            return View("~/Views/Manufacturer/DeletePointsToCashCampaign.cshtml", campaign);
+            return View("~/Views/Home/Manufacturer/DeletePointsToCashCampaign.cshtml", campaign);
         }
 
         // POST: Campaigns/DeletePointsToCashCampaign/5
@@ -1949,7 +1949,7 @@ namespace HaldiramPromotionalApp.Controllers
                 return NotFound();
             }
 
-            return View("~/Views/Manufacturer/DeletePointsRewardCampaign.cshtml", campaign);
+            return View("~/Views/Home/Manufacturer/DeletePointsRewardCampaign.cshtml", campaign);
         }
 
         // POST: Campaigns/DeletePointsRewardCampaign/5
@@ -1992,7 +1992,7 @@ namespace HaldiramPromotionalApp.Controllers
                 return NotFound();
             }
 
-            return View("~/Views/Manufacturer/DeleteFreeProductCampaign.cshtml", campaign);
+            return View("~/Views/Home/Manufacturer/DeleteFreeProductCampaign.cshtml", campaign);
         }
 
         // POST: Campaigns/DeleteFreeProductCampaign/5
@@ -2035,7 +2035,7 @@ namespace HaldiramPromotionalApp.Controllers
                 return NotFound();
             }
 
-            return View("~/Views/Manufacturer/DeleteAmountReachGoalCampaign.cshtml", campaign);
+            return View("~/Views/Home/Manufacturer/DeleteAmountReachGoalCampaign.cshtml", campaign);
         }
 
         // POST: Campaigns/DeleteAmountReachGoalCampaign/5
@@ -2078,7 +2078,7 @@ namespace HaldiramPromotionalApp.Controllers
                 return NotFound();
             }
 
-            return View("~/Views/Manufacturer/DeleteSessionDurationRewardCampaign.cshtml", campaign);
+            return View("~/Views/Home/Manufacturer/DeleteSessionDurationRewardCampaign.cshtml", campaign);
         }
 
         // POST: Campaigns/DeleteSessionDurationRewardCampaign/5

@@ -22,8 +22,8 @@ namespace HaldiramPromotionalApp.Controllers
         {
             var viewModel = new MaterialImageViewModel();
             
-            // Get all active materials
-            var allActiveMaterials = await _context.MaterialMaster
+            // Get all active materials (without filtering out those with images)
+            var materials = await _context.MaterialMaster
                 .Where(m => m.isactive)
                 .OrderBy(m => m.Materialname)
                 .Select(m => new
@@ -34,24 +34,7 @@ namespace HaldiramPromotionalApp.Controllers
                 .ToListAsync();
             
             // Log the count of all active materials for debugging
-            System.Diagnostics.Debug.WriteLine($"Total active materials: {allActiveMaterials.Count}");
-            
-            // Get IDs of materials that currently have images
-            var materialsWithImages = await _context.MaterialImages
-                .Select(mi => mi.MaterialMasterId)
-                .Distinct()
-                .ToListAsync();
-            
-            // Log the count of materials with images for debugging
-            System.Diagnostics.Debug.WriteLine($"Materials with images: {materialsWithImages.Count}");
-            
-            // Filter to only show materials that don't have images
-            var materials = allActiveMaterials
-                .Where(m => !materialsWithImages.Contains(m.Id))
-                .ToList();
-            
-            // Log the count of materials without images for debugging
-            System.Diagnostics.Debug.WriteLine($"Materials without images: {materials.Count}");
+            System.Diagnostics.Debug.WriteLine($"Total active materials: {materials.Count}");
             
             // Create SelectList with proper value and text fields
             var selectList = new List<SelectListItem>();
@@ -74,7 +57,7 @@ namespace HaldiramPromotionalApp.Controllers
             
             ViewBag.MaterialImages = materialImages;
             
-            return View("~/Views/Manufacturer/UploadMaterialImages.cshtml", viewModel);
+            return View("~/Views/Home/Manufacturer/UploadMaterialImages.cshtml", viewModel);
         }
 
         [HttpPost]
@@ -173,8 +156,8 @@ namespace HaldiramPromotionalApp.Controllers
             }
             
             // Repopulate dropdown if model state is invalid
-            // Get all active materials
-            var allActiveMaterials = await _context.MaterialMaster
+            // Get all active materials (without filtering out those with images)
+            var materials = await _context.MaterialMaster
                 .Where(m => m.isactive)
                 .OrderBy(m => m.Materialname)
                 .Select(m => new
@@ -185,24 +168,7 @@ namespace HaldiramPromotionalApp.Controllers
                 .ToListAsync();
             
             // Log the count of all active materials for debugging
-            System.Diagnostics.Debug.WriteLine($"Total active materials: {allActiveMaterials.Count}");
-            
-            // Get IDs of materials that currently have images
-            var materialsWithImages = await _context.MaterialImages
-                .Select(mi => mi.MaterialMasterId)
-                .Distinct()
-                .ToListAsync();
-            
-            // Log the count of materials with images for debugging
-            System.Diagnostics.Debug.WriteLine($"Materials with images: {materialsWithImages.Count}");
-            
-            // Filter to only show materials that don't have images
-            var materials = allActiveMaterials
-                .Where(m => !materialsWithImages.Contains(m.Id))
-                .ToList();
-            
-            // Log the count of materials without images for debugging
-            System.Diagnostics.Debug.WriteLine($"Materials without images: {materials.Count}");
+            System.Diagnostics.Debug.WriteLine($"Total active materials: {materials.Count}");
             
             // Create SelectList with proper value and text fields
             var selectList = new List<SelectListItem>();
@@ -225,7 +191,7 @@ namespace HaldiramPromotionalApp.Controllers
             
             ViewBag.MaterialImages = materialImages;
             
-            return View("~/Views/Manufacturer/UploadMaterialImages.cshtml", viewModel);
+            return View("~/Views/Home/Manufacturer/UploadMaterialImages.cshtml", viewModel);
         }
         
         [HttpPost]

@@ -15,9 +15,14 @@ namespace HaldiramPromotionalApp.Controllers
         }
 
         // GET: Products
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(int? pageNumber)
         {
-            return View("~/Views/Manufacturer/Products/Index.cshtml", await _context.Products.ToListAsync());
+            int pageSize = 10; // Number of items per page
+            int pageIndex = pageNumber ?? 1;
+            var products = from p in _context.Products
+                          select p;
+            var paginatedProducts = await PaginatedList<Product>.CreateAsync(products.AsNoTracking(), pageIndex, pageSize);
+            return View("~/Views/Home/Manufacturer/Products/Index.cshtml", paginatedProducts);
         }
 
         // GET: Products/Details/5
@@ -35,13 +40,13 @@ namespace HaldiramPromotionalApp.Controllers
                 return NotFound();
             }
 
-            return View("~/Views/Manufacturer/Products/Details.cshtml", product);
+            return View("~/Views/Home/Manufacturer/Products/Details.cshtml", product);
         }
 
         // GET: Products/Create
         public IActionResult Create()
         {
-            return View("~/Views/Manufacturer/Products/Create.cshtml");
+            return View("~/Views/Home/Manufacturer/Products/Create.cshtml");
         }
 
         // POST: Products/Create
@@ -55,7 +60,7 @@ namespace HaldiramPromotionalApp.Controllers
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            return View("~/Views/Manufacturer/Products/Create.cshtml", product);
+            return View("~/Views/Home/Manufacturer/Products/Create.cshtml", product);
         }
 
         // GET: Products/Edit/5
@@ -71,7 +76,7 @@ namespace HaldiramPromotionalApp.Controllers
             {
                 return NotFound();
             }
-            return View("~/Views/Manufacturer/Products/Edit.cshtml", product);
+            return View("~/Views/Home/Manufacturer/Products/Edit.cshtml", product);
         }
 
         // POST: Products/Edit/5
@@ -104,7 +109,7 @@ namespace HaldiramPromotionalApp.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            return View("~/Views/Manufacturer/Products/Edit.cshtml", product);
+            return View("~/Views/Home/Manufacturer/Products/Edit.cshtml", product);
         }
 
         // GET: Products/Delete/5
@@ -122,7 +127,7 @@ namespace HaldiramPromotionalApp.Controllers
                 return NotFound();
             }
 
-            return View("~/Views/Manufacturer/Products/Delete.cshtml", product);
+            return View("~/Views/Home/Manufacturer/Products/Delete.cshtml", product);
         }
 
         // POST: Products/Delete/5

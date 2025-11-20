@@ -3,182 +3,103 @@
     ViewData["Title"] = "Campaigns";
 }
 
-<style>
-    /* Custom styles for sharp edges (no border-radius) */
-    .card, .btn, .badge, .form-control {
-        border-radius: 0 !important;
-    }
-    
-    .campaign-image {
-        width: 100%;
-        height: 120px;
-        margin-bottom: 0.75rem;
-        border-radius: 0 !important;
-        overflow: hidden;
-    }
+<link rel="stylesheet" href="~/css/DealerDashboard.css" />
 
-    .campaign-image img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
+<div class="container-fluid">
     
-    .campaign-card {
-        background-color: #ffffff;
-        border-radius: 0 !important;
-        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-        border: 1px solid #e5e7eb;
-        padding: 1rem;
-        transition: box-shadow 0.2s ease;
-    }
-    
-    .campaign-card:hover {
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    }
-    
-    .section-header {
-        font-size: 1rem;
-        font-weight: 600;
-        color: #374151;
-        margin-bottom: 1rem;
-        display: flex;
-        align-items: center;
-    }
-    
-    .section-header svg {
-        width: 1.25rem;
-        height: 1.25rem;
-        margin-right: 0.5rem;
-    }
-    
-    /* Compact container */
-    .compact-container {
-        max-width: 1200px;
-        margin: 1rem auto;
-        padding: 0 10px;
-    }
-    
-    /* Responsive adjustments */
-    @@media (max-width: 768px) {
-        .compact-container {
-            max-width: 100%;
-            padding: 0 5px;
-        }
-        
-        .grid {
-            grid-template-columns: 1fr !important;
-        }
-        
-        .campaign-card {
-            padding: 0.75rem;
-        }
-    }
-</style>
 
-<div class="compact-container">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="mb-0 fs-4">Campaigns Overview</h2>
-        <a href="@Url.Action("DealerHome", "Home")" class="btn btn-sm btn-outline-primary">
-            <i class="fas fa-arrow-left"></i> Back to Dashboard
-        </a>
-    </div>
-
-    <div class="bg-white shadow-sm overflow-hidden">
-        <div class="p-3">
+    <div class="card">
+        <div class="card-header">
+            <h5><i class="fas fa-bullhorn"></i> Campaigns</h5>
+        </div>
+        <div class="card-body">
             <!-- Points to Cash Campaigns -->
-            <div class="mb-4">
+            <div class="mb-3"> <!-- Reduced margin -->
                 <h2 class="section-header">
-                    <svg class="text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
+                    <i class="fas fa-money-bill-wave text-green-600"></i>
                     Points to Cash Campaigns
                 </h2>
                 @if (Model.DetailedPointsToCashCampaigns.Any())
                 {
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    <div class="grid">
                         @foreach (var campaign in Model.DetailedPointsToCashCampaigns)
                         {
                             <div class="campaign-card">
-                                <div class="flex justify-between items-start">
-                                    <h3 class="text-sm font-semibold text-gray-900">@campaign.CampaignName</h3>
-                                    @if (campaign.IsActive)
-                                    {
-                                        <span class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">Active</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">Inactive</span>
-                                    }
-                                </div>
-                                <div class="mt-2">
-                                    <div class="flex items-center text-xs">
-                                        <div class="text-gray-500">
-                                            <span class="mr-3">Start: <span class="text-gray-900">@campaign.StartDate.ToString("dd/MM/yyyy")</span></span>
-                                            <span>End: <span class="text-gray-900">@campaign.EndDate.ToString("dd/MM/yyyy")</span></span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="mt-2">
-                                    @if (!string.IsNullOrEmpty(campaign.ImagePath))
-                                    {
-                                        <img src="@campaign.ImagePath" alt="@campaign.CampaignName" class="w-full h-28 object-cover rounded-md" onerror="this.onerror=null;this.src='https://placehold.co/600x400/cccccc/000000?text=No+Image+Available';" />
-                                    }
-                                    else
-                                    {
-                                        <div class="w-full h-28 rounded-md bg-gray-100 flex items-center justify-center">
-                                            <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                            </svg>
-                                        </div>
-                                    }
-                                </div>
-                                <div class="mt-2">
-                                    <button type="button" class="text-xs text-indigo-600 hover:text-indigo-900 font-medium" onclick="toggleDetails('pointsToCash-@campaign.Id', this)">
-                                        Show Details
-                                    </button>
-                                </div>
-                                <div id="pointsToCash-@campaign.Id" class="mt-2 text-xs text-gray-600 hidden">
-                                    <div class="pt-2 border-t border-gray-100">
-                                        <div class="space-y-1">
-                                            <div class="flex justify-between">
-                                                <span class="text-gray-500">Name:</span>
-                                                <span class="text-gray-900">@campaign.CampaignName</span>
-                                            </div>
-                                            <div class="flex justify-between">
-                                                <span class="text-gray-500">Threshold:</span>
-                                                <span class="text-gray-900">@campaign.VoucherGenerationThreshold points</span>
-                                            </div>
-                                                    <div class="flex justify-between">
-                                                        <span class="text-gray-500">Voucher Value:</span>
-                                                        <span class="text-gray-900">₹@campaign.VoucherValue</span>
-                                                    </div>
-                                            
-                                            @if (campaign.MaterialDetails.Any())
+                                <div class="campaign-title">@campaign.CampaignName</div>
+                                <div class="campaign-details">
+                                    <div class="campaign-detail-item">
+                                        <div class="detail-label">Status</div>
+                                        <div class="detail-value">
+                                            @if (campaign.IsActive)
                                             {
-                                                <div class="mt-2">
-                                                    <span class="text-gray-500">Materials (@campaign.MaterialDetails.Count):</span>
-                                                    <div class="ml-1 mt-1 space-y-1">
-                                                        @foreach (var material in campaign.MaterialDetails)
-                                                        {
-                                                            <div class="border-b border-gray-100 pb-1">
-                                                                <div class="flex justify-between">
-                                                                    <span class="text-gray-900 font-medium">@material.MaterialName</span>
-                                                                    <span class="text-gray-900">@material.Points points</span>
-                                                                </div>
-                                                            </div>
-                                                        }
-                                                    </div>
-                                                </div>
+                                                <span class="campaign-status active">Active</span>
                                             }
-                                            @if (!string.IsNullOrEmpty(campaign.Description))
+                                            else
                                             {
-                                                <div class="mt-2">
-                                                    <span class="text-gray-500">Description:</span>
-                                                    <p class="text-gray-900">@campaign.Description</p>
-                                                </div>
+                                                <span class="campaign-status inactive">Inactive</span>
                                             }
                                         </div>
                                     </div>
+                                    <div class="campaign-detail-item">
+                                        <div class="detail-label">Start Date</div>
+                                        <div class="detail-value">@campaign.StartDate.ToString("dd/MM/yyyy")</div>
+                                    </div>
+                                    <div class="campaign-detail-item">
+                                        <div class="detail-label">End Date</div>
+                                        <div class="detail-value">@campaign.EndDate.ToString("dd/MM/yyyy")</div>
+                                    </div>
+                                </div>
+                                
+                                @if (!string.IsNullOrEmpty(campaign.ImagePath))
+                                {
+                                    <div class="campaign-image">
+                                        <img src="@campaign.ImagePath" alt="@campaign.CampaignName" onerror="this.onerror=null;this.src='https://placehold.co/600x400/cccccc/000000?text=No+Image+Available';" />
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="campaign-image">
+                                        <div class="bg-gray-100 flex items-center justify-center h-full">
+                                            <i class="fas fa-image text-gray-400 text-2xl"></i>
+                                        </div>
+                                    </div>
+                                }
+                                
+                                <button type="button" class="toggle-details-btn" onclick="toggleDetails('pointsToCash-@campaign.Id')">
+                                    Show Details
+                                </button>
+                                
+                                <div id="pointsToCash-@campaign.Id" class="campaign-details-content" style="display: none;">
+                                    <div class="campaign-detail-item">
+                                        <div class="detail-label">Threshold</div>
+                                        <div class="detail-value">@campaign.VoucherGenerationThreshold points</div>
+                                    </div>
+                                    <div class="campaign-detail-item">
+                                        <div class="detail-label">Voucher Value</div>
+                                        <div class="detail-value">₹@campaign.VoucherValue</div>
+                                    </div>
+                                    
+                                    @if (campaign.MaterialDetails.Any())
+                                    {
+                                        <div class="mt-2"> <!-- Reduced margin -->
+                                            <div class="detail-label">Materials (@campaign.MaterialDetails.Count)</div>
+                                            @foreach (var material in campaign.MaterialDetails)
+                                            {
+                                                <div class="d-flex justify-content-between mt-1">
+                                                    <span>@material.MaterialName</span>
+                                                    <span>@material.Points points</span>
+                                                </div>
+                                            }
+                                        </div>
+                                    }
+                                    
+                                    @if (!string.IsNullOrEmpty(campaign.Description))
+                                    {
+                                        <div class="mt-2"> <!-- Reduced margin -->
+                                            <div class="detail-label">Description</div>
+                                            <div class="detail-value">@campaign.Description</div>
+                                        </div>
+                                    }
                                 </div>
                             </div>
                         }
@@ -186,124 +107,105 @@
                 }
                 else
                 {
-                    <p class="text-gray-500 text-xs">No Points to Cash campaigns found.</p>
+                    <div class="empty-campaigns">
+                        <i class="fas fa-money-bill-wave"></i>
+                        <h4>No Points to Cash Campaigns</h4>
+                        <p>There are no Points to Cash campaigns available at the moment.</p>
+                    </div>
                 }
             </div>
 
             <!-- Points Reward Campaigns -->
-            <div class="mb-4">
+            <div class="mb-3"> <!-- Reduced margin -->
                 <h2 class="section-header">
-                    <svg class="text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>
-                    </svg>
+                    <i class="fas fa-gift text-blue-600"></i>
                     Points Reward Campaigns
                 </h2>
                 @if (Model.DetailedPointsRewardCampaigns.Any())
                 {
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    <div class="grid">
                         @foreach (var campaign in Model.DetailedPointsRewardCampaigns)
                         {
                             <div class="campaign-card">
-                                <div class="flex justify-between items-start">
-                                    <h3 class="text-sm font-semibold text-gray-900">@campaign.CampaignName</h3>
-                                    @if (campaign.IsActive)
-                                    {
-                                        <span class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">Active</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">Inactive</span>
-                                    }
-                                </div>
-                                <div class="mt-2">
-                                    <div class="flex items-center text-xs">
-                                        <div class="text-gray-500">
-                                            <span class="mr-3">Start: <span class="text-gray-900">@campaign.StartDate.ToString("dd/MM/yyyy")</span></span>
-                                            <span>End: <span class="text-gray-900">@campaign.EndDate.ToString("dd/MM/yyyy")</span></span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="mt-2">
-                                    @if (!string.IsNullOrEmpty(campaign.ImagePath))
-                                    {
-                                        <img src="@campaign.ImagePath" alt="@campaign.CampaignName" class="w-full h-28 object-cover rounded-md" onerror="this.onerror=null;this.src='https://placehold.co/600x400/cccccc/000000?text=No+Image+Available';" />
-                                    }
-                                    else
-                                    {
-                                        <div class="w-full h-28 rounded-md bg-gray-100 flex items-center justify-center">
-                                            <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                            </svg>
-                                        </div>
-                                    }
-                                </div>
-                                <div class="mt-2">
-                                    <button type="button" class="text-xs text-indigo-600 hover:text-indigo-900 font-medium" onclick="toggleDetails('pointsReward-@campaign.Id', this)">
-                                        Show Details
-                                    </button>
-                                </div>
-                                <div id="pointsReward-@campaign.Id" class="mt-2 text-xs text-gray-600 hidden">
-                                    <div class="pt-2 border-t border-gray-100">
-                                        <div class="space-y-1">
-                                            <div class="flex justify-between">
-                                                <span class="text-gray-500">Name:</span>
-                                                <span class="text-gray-900">@campaign.CampaignName</span>
-                                            </div>
-                                            <div class="flex justify-between">
-                                                <span class="text-gray-500">Threshold:</span>
-                                                <span class="text-gray-900">@campaign.VoucherGenerationThreshold points</span>
-                                            </div>
-                                            
-                                            <div class="flex justify-between">
-                                                <span class="text-gray-500">Reward ID:</span>
-                                                <span class="text-gray-900">@(campaign.RewardProductId?.ToString() ?? "N/A")</span>
-                                            </div>
-                                            @if (campaign.MaterialDetails.Any())
+                                <div class="campaign-title">@campaign.CampaignName</div>
+                                <div class="campaign-details">
+                                    <div class="campaign-detail-item">
+                                        <div class="detail-label">Status</div>
+                                        <div class="detail-value">
+                                            @if (campaign.IsActive)
                                             {
-                                                <div class="mt-2">
-                                                    <span class="text-gray-500">Materials (@campaign.MaterialDetails.Count):</span>
-                                                    <div class="ml-1 mt-1 space-y-1">
-                                                        @foreach (var material in campaign.MaterialDetails)
-                                                        {
-                                                            <div class="border-b border-gray-100 pb-1">
-                                                                <div class="flex justify-between">
-                                                                    <span class="text-gray-900 font-medium">@material.MaterialName</span>
-                                                                    <span class="text-gray-900">@material.Points points</span>
-                                                                </div>
-                                                            </div>
-                                                        }
-                                                    </div>
-                                                </div>
+                                                <span class="campaign-status active">Active</span>
                                             }
-                                            @if (campaign.RewardProduct != null)
+                                            else
                                             {
-                                                <div class="mt-2">
-                                                    <span class="text-gray-500">Reward Product:</span>
-                                                    <div class="ml-1 mt-1 space-y-1">
-                                                        <div class="flex justify-between">
-                                                            <span class="text-gray-500">Name:</span>
-                                                            <span class="text-gray-900">@campaign.RewardProduct.ProductName</span>
-                                                        </div>
-                                                        <div class="flex justify-between">
-                                                            <span class="text-gray-500">Price:</span>
-                                                            <span class="text-gray-900">₹@campaign.RewardProduct.Price</span>
-                                                        </div>
-                                                        <div class="flex justify-between">
-                                                            <span class="text-gray-500">Category:</span>
-                                                            <span class="text-gray-900">@campaign.RewardProduct.Category</span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            }
-                                            @if (!string.IsNullOrEmpty(campaign.Description))
-                                            {
-                                                <div class="mt-2">
-                                                    <span class="text-gray-500">Description:</span>
-                                                    <p class="text-gray-900">@campaign.Description</p>
-                                                </div>
+                                                <span class="campaign-status inactive">Inactive</span>
                                             }
                                         </div>
                                     </div>
+                                    <div class="campaign-detail-item">
+                                        <div class="detail-label">Start Date</div>
+                                        <div class="detail-value">@campaign.StartDate.ToString("dd/MM/yyyy")</div>
+                                    </div>
+                                    <div class="campaign-detail-item">
+                                        <div class="detail-label">End Date</div>
+                                        <div class="detail-value">@campaign.EndDate.ToString("dd/MM/yyyy")</div>
+                                    </div>
+                                </div>
+                                
+                                @if (!string.IsNullOrEmpty(campaign.ImagePath))
+                                {
+                                    <div class="campaign-image">
+                                        <img src="@campaign.ImagePath" alt="@campaign.CampaignName" onerror="this.onerror=null;this.src='https://placehold.co/600x400/cccccc/000000?text=No+Image+Available';" />
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="campaign-image">
+                                        <div class="bg-gray-100 flex items-center justify-center h-full">
+                                            <i class="fas fa-image text-gray-400 text-2xl"></i>
+                                        </div>
+                                    </div>
+                                }
+                                
+                                <button type="button" class="toggle-details-btn" onclick="toggleDetails('pointsReward-@campaign.Id')">
+                                    Show Details
+                                </button>
+                                
+                                <div id="pointsReward-@campaign.Id" class="campaign-details-content" style="display: none;">
+                                    <div class="campaign-detail-item">
+                                        <div class="detail-label">Threshold</div>
+                                        <div class="detail-value">@campaign.VoucherGenerationThreshold points</div>
+                                    </div>
+                                    
+                                    @if (campaign.MaterialDetails.Any())
+                                    {
+                                        <div class="mt-2"> <!-- Reduced margin -->
+                                            <div class="detail-label">Materials (@campaign.MaterialDetails.Count)</div>
+                                            @foreach (var material in campaign.MaterialDetails)
+                                            {
+                                                <div class="d-flex justify-content-between mt-1">
+                                                    <span>@material.MaterialName</span>
+                                                    <span>@material.Points points</span>
+                                                </div>
+                                            }
+                                        </div>
+                                    }
+                                    
+                                    @if (campaign.RewardProduct != null)
+                                    {
+                                        <div class="mt-2"> <!-- Reduced margin -->
+                                            <div class="detail-label">Reward Product</div>
+                                            <div class="detail-value">@campaign.RewardProduct.ProductName</div>
+                                        </div>
+                                    }
+                                    
+                                    @if (!string.IsNullOrEmpty(campaign.Description))
+                                    {
+                                        <div class="mt-2"> <!-- Reduced margin -->
+                                            <div class="detail-label">Description</div>
+                                            <div class="detail-value">@campaign.Description</div>
+                                        </div>
+                                    }
                                 </div>
                             </div>
                         }
@@ -311,124 +213,123 @@
                 }
                 else
                 {
-                    <p class="text-gray-500 text-xs">No Points Reward campaigns found.</p>
+                    <div class="empty-campaigns">
+                        <i class="fas fa-gift"></i>
+                        <h4>No Points Reward Campaigns</h4>
+                        <p>There are no Points Reward campaigns available at the moment.</p>
+                    </div>
                 }
             </div>
 
             <!-- Free Product Campaigns -->
-            <div class="mb-4">
+            <div class="mb-3"> <!-- Reduced margin -->
                 <h2 class="section-header">
-                    <svg class="text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                    </svg>
+                    <i class="fas fa-box-open text-purple-600"></i>
                     Free Product Campaigns
                 </h2>
                 @if (Model.DetailedFreeProductCampaigns.Any())
                 {
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    <div class="grid">
                         @foreach (var campaign in Model.DetailedFreeProductCampaigns)
                         {
                             <div class="campaign-card">
-                                <div class="flex justify-between items-start">
-                                    <h3 class="text-sm font-semibold text-gray-900">@campaign.CampaignName</h3>
-                                    @if (campaign.IsActive)
-                                    {
-                                        <span class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">Active</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">Inactive</span>
-                                    }
-                                </div>
-                                <div class="mt-2">
-                                    <div class="flex items-center justify-between text-xs">
-                                        <div class="text-gray-500">
-                                            <span class="mr-3">Start: <span class="text-gray-900">@campaign.StartDate.ToString("dd/MM/yyyy")</span></span>
-                                            <span>End: <span class="text-gray-900">@campaign.EndDate.ToString("dd/MM/yyyy")</span></span>
-                                        </div>
-                                        <div class="text-gray-900 text-xs">@campaign.MaterialDetails.Count items</div>
-                                    </div>
-                                </div>
-                                <div class="mt-2">
-                                    @if (!string.IsNullOrEmpty(campaign.ImagePath))
-                                    {
-                                        <img src="@campaign.ImagePath" alt="@campaign.CampaignName" class="w-full h-28 object-cover rounded-md" onerror="this.onerror=null;this.src='https://placehold.co/600x400/cccccc/000000?text=No+Image+Available';" />
-                                    }
-                                    else
-                                    {
-                                        <div class="w-full h-28 rounded-md bg-gray-100 flex items-center justify-center">
-                                            <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                            </svg>
-                                        </div>
-                                    }
-                                </div>
-                                <div class="mt-2">
-                                    <button type="button" class="text-xs text-indigo-600 hover:text-indigo-900 font-medium" onclick="toggleDetails('freeProduct-@campaign.Id', this)">
-                                        Show Details
-                                    </button>
-                                </div>
-                                <div id="freeProduct-@campaign.Id" class="mt-2 text-xs text-gray-600 hidden">
-                                    <div class="pt-2 border-t border-gray-100">
-                                        <div class="space-y-1">
-                                            <div class="flex justify-between">
-                                                <span class="text-gray-500">Name:</span>
-                                                <span class="text-gray-900">@campaign.CampaignName</span>
-                                            </div>
-                                            @if (campaign.MaterialDetails.Any())
+                                <div class="campaign-title">@campaign.CampaignName</div>
+                                <div class="campaign-details">
+                                    <div class="campaign-detail-item">
+                                        <div class="detail-label">Status</div>
+                                        <div class="detail-value">
+                                            @if (campaign.IsActive)
                                             {
-                                                <div class="mt-2">
-                                                    <span class="text-gray-500">Materials (@campaign.MaterialDetails.Count):</span>
-                                                    <div class="ml-1 mt-1 space-y-1">
-                                                        @foreach (var material in campaign.MaterialDetails)
-                                                        {
-                                                            <div class="border-b border-gray-100 pb-1">
-                                                                <div class="flex justify-between">
-                                                                    <span class="text-gray-900 font-medium">@material.MaterialName</span>
-                                                                    <span class="text-gray-900">@($"{material.Quantity} pcs")</span>
-                                                                </div>
-                                                            </div>
-                                                        }
-                                                    </div>
-                                                </div>
+                                                <span class="campaign-status active">Active</span>
                                             }
-                                            @if (campaign.FreeProductDetails.Any())
+                                            else
                                             {
-                                                <div class="mt-2">
-                                                    <span class="text-gray-500">Free Products (@campaign.FreeProductDetails.Count):</span>
-                                                    <div class="ml-1 mt-1 space-y-1">
-                                                        @foreach (var kvp in campaign.FreeProductDetails)
-                                                        {
-                                                            var materialId = kvp.Key;
-                                                            var freeProductDetail = kvp.Value;
-                                                            <div class="border-b border-gray-100 pb-1">
-                                                                <div class="flex justify-between">
-                                                                    <span class="text-gray-900 font-medium">@freeProductDetail.FreeProductName</span>
-                                                                    <span class="text-gray-900">@($"{freeProductDetail.FreeQuantity} pcs")</span>
-                                                                </div>
-                                                                @{
-                                                                    var associatedMaterial = campaign.MaterialDetails.FirstOrDefault(m => m.MaterialId == materialId);
-                                                                    if (associatedMaterial != null)
-                                                                    {
-                                                                        <div class="text-gray-500 text-xs">
-                                                                            For material: @associatedMaterial.MaterialName (Qty: @associatedMaterial.Quantity)
-                                                                        </div>
-                                                                    }
-                                                                }
-                                                            </div>
-                                                        }
-                                                    </div>
-                                                </div>
-                                            }
-                                            @if (!string.IsNullOrEmpty(campaign.Description))
-                                            {
-                                                <div class="mt-2">
-                                                    <span class="text-gray-500">Description:</span>
-                                                    <p class="text-gray-900">@campaign.Description</p>
-                                                </div>
+                                                <span class="campaign-status inactive">Inactive</span>
                                             }
                                         </div>
                                     </div>
+                                    <div class="campaign-detail-item">
+                                        <div class="detail-label">Start Date</div>
+                                        <div class="detail-value">@campaign.StartDate.ToString("dd/MM/yyyy")</div>
+                                    </div>
+                                    <div class="campaign-detail-item">
+                                        <div class="detail-label">End Date</div>
+                                        <div class="detail-value">@campaign.EndDate.ToString("dd/MM/yyyy")</div>
+                                    </div>
+                                    <div class="campaign-detail-item">
+                                        <div class="detail-label">Items</div>
+                                        <div class="detail-value">@campaign.MaterialDetails.Count</div>
+                                    </div>
+                                </div>
+                                
+                                @if (!string.IsNullOrEmpty(campaign.ImagePath))
+                                {
+                                    <div class="campaign-image">
+                                        <img src="@campaign.ImagePath" alt="@campaign.CampaignName" onerror="this.onerror=null;this.src='https://placehold.co/600x400/cccccc/000000?text=No+Image+Available';" />
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="campaign-image">
+                                        <div class="bg-gray-100 flex items-center justify-center h-full">
+                                            <i class="fas fa-image text-gray-400 text-2xl"></i>
+                                        </div>
+                                    </div>
+                                }
+                                
+                                <button type="button" class="toggle-details-btn" onclick="toggleDetails('freeProduct-@campaign.Id')">
+                                    Show Details
+                                </button>
+                                
+                                <div id="freeProduct-@campaign.Id" class="campaign-details-content" style="display: none;">
+                                    @if (campaign.MaterialDetails.Any())
+                                    {
+                                        <div class="mt-2"> <!-- Reduced margin -->
+                                            <div class="detail-label">Materials (@campaign.MaterialDetails.Count)</div>
+                                            @foreach (var material in campaign.MaterialDetails)
+                                            {
+                                                <div class="d-flex justify-content-between mt-1">
+                                                    <span>@material.MaterialName</span>
+                                                    <span>@($"{material.Quantity} pcs")</span>
+                                                </div>
+                                            }
+                                        </div>
+                                    }
+                                    
+                                    @if (campaign.FreeProductDetails.Any())
+                                    {
+                                        <div class="mt-2"> <!-- Reduced margin -->
+                                            <div class="detail-label">Free Products (@campaign.FreeProductDetails.Count)</div>
+                                            @foreach (var kvp in campaign.FreeProductDetails)
+                                            {
+                                                var materialId = kvp.Key;
+                                                var freeProductDetail = kvp.Value;
+                                                <div class="mt-1"> <!-- Reduced margin -->
+                                                    <div class="d-flex justify-content-between">
+                                                        <span>@freeProductDetail.FreeProductName</span>
+                                                        <span>@($"{freeProductDetail.FreeQuantity} pcs")</span>
+                                                    </div>
+                                                    @{
+                                                        var associatedMaterial = campaign.MaterialDetails.FirstOrDefault(m => m.MaterialId == materialId);
+                                                        if (associatedMaterial != null)
+                                                        {
+                                                            <div class="text-muted small">
+                                                                For material: @associatedMaterial.MaterialName (Qty: @associatedMaterial.Quantity)
+                                                            </div>
+                                                        }
+                                                    }
+                                                </div>
+                                            }
+                                        </div>
+                                    }
+                                    
+                                    @if (!string.IsNullOrEmpty(campaign.Description))
+                                    {
+                                        <div class="mt-2"> <!-- Reduced margin -->
+                                            <div class="detail-label">Description</div>
+                                            <div class="detail-value">@campaign.Description</div>
+                                        </div>
+                                    }
                                 </div>
                             </div>
                         }
@@ -436,86 +337,87 @@
                 }
                 else
                 {
-                    <p class="text-gray-500 text-xs">No Free Product campaigns found.</p>
+                    <div class="empty-campaigns">
+                        <i class="fas fa-box-open"></i>
+                        <h4>No Free Product Campaigns</h4>
+                        <p>There are no Free Product campaigns available at the moment.</p>
+                    </div>
                 }
             </div>
 
             <!-- Amount Reach Goal Campaigns -->
-            <div class="mb-4">
+            <div class="mb-3"> <!-- Reduced margin -->
                 <h2 class="section-header">
-                    <svg class="text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                    </svg>
+                    <i class="fas fa-chart-line text-yellow-600"></i>
                     Amount Reach Goal Campaigns
                 </h2>
                 @if (Model.AmountReachGoalCampaigns.Any())
                 {
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    <div class="grid">
                         @foreach (var campaign in Model.AmountReachGoalCampaigns)
                         {
                             <div class="campaign-card">
-                                <div class="flex justify-between items-start">
-                                    <h3 class="text-sm font-semibold text-gray-900">@campaign.CampaignName</h3>
-                                    @if (campaign.IsActive)
-                                    {
-                                        <span class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">Active</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">Inactive</span>
-                                    }
-                                </div>
-                                <div class="mt-2">
-                                    <div class="flex items-center justify-between text-xs">
-                                        <div class="text-gray-500">
-                                            <span class="mr-3">Start: <span class="text-gray-900">@campaign.StartDate.ToString("dd/MM/yyyy")</span></span>
-                                            <span>End: <span class="text-gray-900">@campaign.EndDate.ToString("dd/MM/yyyy")</span></span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="mt-2">
-                                    @if (!string.IsNullOrEmpty(campaign.ImagePath))
-                                    {
-                                        <img src="@campaign.ImagePath" alt="@campaign.CampaignName" class="w-full h-28 object-cover rounded-md" onerror="this.onerror=null;this.src='https://placehold.co/600x400/cccccc/000000?text=No+Image+Available';" />
-                                    }
-                                    else
-                                    {
-                                        <div class="w-full h-28 rounded-md bg-gray-100 flex items-center justify-center">
-                                            <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                            </svg>
-                                        </div>
-                                    }
-                                </div>
-                                <div class="mt-2">
-                                    <button type="button" class="text-xs text-indigo-600 hover:text-indigo-900 font-medium" onclick="toggleDetails('amountReach-@campaign.Id', this)">
-                                        Show Details
-                                    </button>
-                                </div>
-                                <div id="amountReach-@campaign.Id" class="mt-2 text-xs text-gray-600 hidden">
-                                    <div class="pt-2 border-t border-gray-100">
-                                        <div class="space-y-1">
-                                            <div class="flex justify-between">
-                                                <span class="text-gray-500">Name:</span>
-                                                <span class="text-gray-900">@campaign.CampaignName</span>
-                                            </div>
-                                            <div class="flex justify-between">
-                                                <span class="text-gray-500">Target:</span>
-                                                <span class="text-gray-900">₹@campaign.TargetAmount</span>
-                                            </div>
-                                            <div class="flex justify-between">
-                                                <span class="text-gray-500">Voucher Value:</span>
-                                                <span class="text-gray-900">₹@campaign.VoucherValue</span>
-                                            </div>
-                                            @if (!string.IsNullOrEmpty(campaign.Description))
+                                <div class="campaign-title">@campaign.CampaignName</div>
+                                <div class="campaign-details">
+                                    <div class="campaign-detail-item">
+                                        <div class="detail-label">Status</div>
+                                        <div class="detail-value">
+                                            @if (campaign.IsActive)
                                             {
-                                                <div class="mt-2">
-                                                    <span class="text-gray-500">Description:</span>
-                                                    <p class="text-gray-900">@campaign.Description</p>
-                                                </div>
+                                                <span class="campaign-status active">Active</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="campaign-status inactive">Inactive</span>
                                             }
                                         </div>
                                     </div>
+                                    <div class="campaign-detail-item">
+                                        <div class="detail-label">Start Date</div>
+                                        <div class="detail-value">@campaign.StartDate.ToString("dd/MM/yyyy")</div>
+                                    </div>
+                                    <div class="campaign-detail-item">
+                                        <div class="detail-label">End Date</div>
+                                        <div class="detail-value">@campaign.EndDate.ToString("dd/MM/yyyy")</div>
+                                    </div>
+                                </div>
+                                
+                                @if (!string.IsNullOrEmpty(campaign.ImagePath))
+                                {
+                                    <div class="campaign-image">
+                                        <img src="@campaign.ImagePath" alt="@campaign.CampaignName" onerror="this.onerror=null;this.src='https://placehold.co/600x400/cccccc/000000?text=No+Image+Available';" />
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="campaign-image">
+                                        <div class="bg-gray-100 flex items-center justify-center h-full">
+                                            <i class="fas fa-image text-gray-400 text-2xl"></i>
+                                        </div>
+                                    </div>
+                                }
+                                
+                                <button type="button" class="toggle-details-btn" onclick="toggleDetails('amountReach-@campaign.Id')">
+                                    Show Details
+                                </button>
+                                
+                                <div id="amountReach-@campaign.Id" class="campaign-details-content" style="display: none;">
+                                    <div class="campaign-detail-item">
+                                        <div class="detail-label">Target</div>
+                                        <div class="detail-value">₹@campaign.TargetAmount</div>
+                                    </div>
+                                    <div class="campaign-detail-item">
+                                        <div class="detail-label">Voucher Value</div>
+                                        <div class="detail-value">₹@campaign.VoucherValue</div>
+                                    </div>
+                                    
+                                    @if (!string.IsNullOrEmpty(campaign.Description))
+                                    {
+                                        <div class="mt-2"> <!-- Reduced margin -->
+                                            <div class="detail-label">Description</div>
+                                            <div class="detail-value">@campaign.Description</div>
+                                        </div>
+                                    }
                                 </div>
                             </div>
                         }
@@ -523,86 +425,87 @@
                 }
                 else
                 {
-                    <p class="text-gray-500 text-xs">No Amount Reach Goal campaigns found.</p>
+                    <div class="empty-campaigns">
+                        <i class="fas fa-chart-line"></i>
+                        <h4>No Amount Reach Goal Campaigns</h4>
+                        <p>There are no Amount Reach Goal campaigns available at the moment.</p>
+                    </div>
                 }
             </div>
 
             <!-- Session Duration Reward Campaigns -->
             <div>
                 <h2 class="section-header">
-                    <svg class="text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
+                    <i class="fas fa-clock text-red-600"></i>
                     Session Duration Reward Campaigns
                 </h2>
                 @if (Model.SessionDurationRewardCampaigns.Any())
                 {
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    <div class="grid">
                         @foreach (var campaign in Model.SessionDurationRewardCampaigns)
                         {
                             <div class="campaign-card">
-                                <div class="flex justify-between items-start">
-                                    <h3 class="text-sm font-semibold text-gray-900">@campaign.CampaignName</h3>
-                                    @if (campaign.IsActive)
-                                    {
-                                        <span class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">Active</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">Inactive</span>
-                                    }
-                                </div>
-                                <div class="mt-2">
-                                    <div class="flex items-center justify-between text-xs">
-                                        <div class="text-gray-500">
-                                            <span class="mr-3">Start: <span class="text-gray-900">@campaign.StartDate.ToString("dd/MM/yyyy")</span></span>
-                                            <span>End: <span class="text-gray-900">@campaign.EndDate.ToString("dd/MM/yyyy")</span></span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="mt-2">
-                                    @if (!string.IsNullOrEmpty(campaign.ImagePath))
-                                    {
-                                        <img src="@campaign.ImagePath" alt="@campaign.CampaignName" class="w-full h-28 object-cover rounded-md" onerror="this.onerror=null;this.src='https://placehold.co/600x400/cccccc/000000?text=No+Image+Available';" />
-                                    }
-                                    else
-                                    {
-                                        <div class="w-full h-28 rounded-md bg-gray-100 flex items-center justify-center">
-                                            <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                            </svg>
-                                        </div>
-                                    }
-                                </div>
-                                <div class="mt-2">
-                                    <button type="button" class="text-xs text-indigo-600 hover:text-indigo-900 font-medium" onclick="toggleDetails('sessionDuration-@campaign.Id', this)">
-                                        Show Details
-                                    </button>
-                                </div>
-                                <div id="sessionDuration-@campaign.Id" class="mt-2 text-xs text-gray-600 hidden">
-                                    <div class="pt-2 border-t border-gray-100">
-                                        <div class="space-y-1">
-                                            <div class="flex justify-between">
-                                                <span class="text-gray-500">Name:</span>
-                                                <span class="text-gray-900">@campaign.CampaignName</span>
-                                            </div>
-                                            <div class="flex justify-between">
-                                                <span class="text-gray-500">Duration:</span>
-                                                <span class="text-gray-900">@campaign.SessionDuration minutes</span>
-                                            </div>
-                                            <div class="flex justify-between">
-                                                <span class="text-gray-500">Voucher Value:</span>
-                                                <span class="text-gray-900">₹@campaign.VoucherValue</span>
-                                            </div>
-                                            @if (!string.IsNullOrEmpty(campaign.Description))
+                                <div class="campaign-title">@campaign.CampaignName</div>
+                                <div class="campaign-details">
+                                    <div class="campaign-detail-item">
+                                        <div class="detail-label">Status</div>
+                                        <div class="detail-value">
+                                            @if (campaign.IsActive)
                                             {
-                                                <div class="mt-2">
-                                                    <span class="text-gray-500">Description:</span>
-                                                    <p class="text-gray-900">@campaign.Description</p>
-                                                </div>
+                                                <span class="campaign-status active">Active</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="campaign-status inactive">Inactive</span>
                                             }
                                         </div>
                                     </div>
+                                    <div class="campaign-detail-item">
+                                        <div class="detail-label">Start Date</div>
+                                        <div class="detail-value">@campaign.StartDate.ToString("dd/MM/yyyy")</div>
+                                    </div>
+                                    <div class="campaign-detail-item">
+                                        <div class="detail-label">End Date</div>
+                                        <div class="detail-value">@campaign.EndDate.ToString("dd/MM/yyyy")</div>
+                                    </div>
+                                </div>
+                                
+                                @if (!string.IsNullOrEmpty(campaign.ImagePath))
+                                {
+                                    <div class="campaign-image">
+                                        <img src="@campaign.ImagePath" alt="@campaign.CampaignName" onerror="this.onerror=null;this.src='https://placehold.co/600x400/cccccc/000000?text=No+Image+Available';" />
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="campaign-image">
+                                        <div class="bg-gray-100 flex items-center justify-center h-full">
+                                            <i class="fas fa-image text-gray-400 text-2xl"></i>
+                                        </div>
+                                    </div>
+                                }
+                                
+                                <button type="button" class="toggle-details-btn" onclick="toggleDetails('sessionDuration-@campaign.Id')">
+                                    Show Details
+                                </button>
+                                
+                                <div id="sessionDuration-@campaign.Id" class="campaign-details-content" style="display: none;">
+                                    <div class="campaign-detail-item">
+                                        <div class="detail-label">Duration</div>
+                                        <div class="detail-value">@campaign.SessionDuration minutes</div>
+                                    </div>
+                                    <div class="campaign-detail-item">
+                                        <div class="detail-label">Voucher Value</div>
+                                        <div class="detail-value">₹@campaign.VoucherValue</div>
+                                    </div>
+                                    
+                                    @if (!string.IsNullOrEmpty(campaign.Description))
+                                    {
+                                        <div class="mt-2"> <!-- Reduced margin -->
+                                            <div class="detail-label">Description</div>
+                                            <div class="detail-value">@campaign.Description</div>
+                                        </div>
+                                    }
                                 </div>
                             </div>
                         }
@@ -610,7 +513,11 @@
                 }
                 else
                 {
-                    <p class="text-gray-500 text-xs">No Session Duration Reward campaigns found.</p>
+                    <div class="empty-campaigns">
+                        <i class="fas fa-clock"></i>
+                        <h4>No Session Duration Reward Campaigns</h4>
+                        <p>There are no Session Duration Reward campaigns available at the moment.</p>
+                    </div>
                 }
             </div>
         </div>
@@ -618,16 +525,14 @@
 </div>
 
 <script>
-    function toggleDetails(id, btn) {
+    function toggleDetails(id) {
         var detailsDiv = document.getElementById(id);
         if (!detailsDiv) return;
-        var isHidden = detailsDiv.classList.contains('hidden');
+        var isHidden = detailsDiv.style.display === 'none';
         if (isHidden) {
-            detailsDiv.classList.remove('hidden');
-            if (btn) btn.innerText = 'Hide Details';
+            detailsDiv.style.display = 'block';
         } else {
-            detailsDiv.classList.add('hidden');
-            if (btn) btn.innerText = 'Show Details';
+            detailsDiv.style.display = 'none';
         }
     }
 </script>

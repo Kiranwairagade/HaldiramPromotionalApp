@@ -21,15 +21,15 @@ namespace HaldiramPromotionalApp.Controllers
         {
             var viewModel = new PosterViewModel
             {
-                ShowFrom = DateTime.Now.Date,
-                ShowUntil = DateTime.Now.Date.AddDays(7)
+                ShowFrom = DateTime.UtcNow.Date,
+                ShowUntil = DateTime.UtcNow.Date.AddDays(7)
             };
             
             // Get all posters to display in the view
             var posters = await _context.Posters.ToListAsync();
             ViewBag.Posters = posters;
             
-            return View("~/Views/Manufacturer/UploadPoster.cshtml", viewModel);
+            return View("~/Views/Home/Manufacturer/UploadPoster.cshtml", viewModel);
         }
 
         [HttpPost]
@@ -52,7 +52,7 @@ namespace HaldiramPromotionalApp.Controllers
                         var posters = await _context.Posters.ToListAsync();
                         ViewBag.Posters = posters;
                         
-                        return View("~/Views/Manufacturer/UploadPoster.cshtml", viewModel);
+                        return View("~/Views/Home/Manufacturer/UploadPoster.cshtml", viewModel);
                     }
                     
                     // Create uploads directory if it doesn't exist
@@ -97,7 +97,7 @@ namespace HaldiramPromotionalApp.Controllers
             var existingPosters = await _context.Posters.ToListAsync();
             ViewBag.Posters = existingPosters;
             
-            return View("~/Views/Manufacturer/UploadPoster.cshtml", viewModel);
+            return View("~/Views/Home/Manufacturer/UploadPoster.cshtml", viewModel);
         }
         
         [HttpPost]
