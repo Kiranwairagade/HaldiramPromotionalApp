@@ -467,6 +467,10 @@ else
                 <button class="close-cart" onclick="toggleCart()">×</button>
             </div>
             <div class="cart-items" id="cartItems"></div>
+            <div class="eligible-campaigns" id="eligibleCampaigns" style="padding: 1rem; border-top: 1px solid var(--gray-200); background-color: var(--gray-50);">
+                <h4 style="margin-top: 0; color: var(--primary);">Eligible Campaigns</h4>
+                <div id="campaignsInfo">Add items to see eligible campaigns</div>
+            </div>
             <div class="cart-footer">
                 <div class="cart-total">
                     <span>Total:</span>
@@ -589,6 +593,7 @@ else
             if (cart.length === 0) {
                 itemsDiv.innerHTML = '<p style="text-align:center;color:var(--gray-500);padding:2rem;">Your cart is empty</p>';
                 totalSpan.textContent = '₹0.00';
+                updateEligibleCampaignsDisplay(); // Update campaigns display when cart is empty
                 return;
             }
 
@@ -637,6 +642,122 @@ else
             });
             itemsDiv.innerHTML = html;
             totalSpan.textContent = `₹${total.toFixed(2)} (Pts: ${totalPoints})`;
+            
+            // Update eligible campaigns display
+            updateEligibleCampaignsDisplay();
+        }
+
+        // Function to calculate and display eligible campaigns
+        function updateEligibleCampaignsDisplay() {
+            const campaignsInfoDiv = document.getElementById('campaignsInfo');
+            
+            // Get campaigns data from the model
+            const pointsToCashCampaigns = @Html.Raw(Json.Serialize(Model.Campaigns.DetailedPointsToCashCampaigns));
+            const pointsRewardCampaigns = @Html.Raw(Json.Serialize(Model.Campaigns.DetailedPointsRewardCampaigns));
+            const amountReachGoalCampaigns = @Html.Raw(Json.Serialize(Model.Campaigns.AmountReachGoalCampaigns));
+            const freeProductCampaigns = @Html.Raw(Json.Serialize(Model.Campaigns.DetailedFreeProductCampaigns));
+            
+            if (cart.length === 0) {
+                campaignsInfoDiv.innerHTML = '<p style="color: var(--gray-500); font-style: italic;">Add items to see eligible campaigns</p>';
+                return;
+            }
+            
+            let html = '';
+            let hasEligibleCampaigns = false;
+            
+            // Calculate total points in cart
+            let cartPoints = 0;
+            cart.forEach(item => {
+                const pointsPerUnit = getPointsForMaterialJS(item.materialId);
+                cartPoints += pointsPerUnit * item.quantity;
+            });
+            
+            // Calculate total cart value
+            let cartValue = 0;
+            cart.forEach(item => {
+                cartValue += item.price * item.quantity;
+            });
+            
+            // Check Points to Cash Campaigns
+            pointsToCashCampaigns.forEach(campaign => {
+                if (campaign.isActive) {
+                    const pointsNeeded = campaign.voucherGenerationThreshold - cartPoints;
+                    if (pointsNeeded <= 0) {
+                        html += `
+                            <div style="background-color: var(--success-light); padding: 0.75rem; border-radius: var(--border-radius); margin-bottom: 0.5rem;">
+                                <div style="font-weight: bold; color: var(--success);">${campaign.campaignName}</div>
+                                <div style="font-size: 0.85rem;">✓ Eligible for ₹${campaign.voucherValue} voucher</div>
+                            </div>`;
+                        hasEligibleCampaigns = true;
+                    } else {
+                        html += `
+                            <div style="background-color: var(--info); padding: 0.75rem; border-radius: var(--border-radius); margin-bottom: 0.5rem;">
+                                <div style="font-weight: bold; color: var(--primary);">${campaign.campaignName}</div>
+                                <div style="font-size: 0.85rem;">Need ${pointsNeeded} more points for ₹${campaign.voucherValue} voucher</div>
+                            </div>`;
+                    }
+                }
+            });
+            
+            // Check Points Reward Campaigns
+            pointsRewardCampaigns.forEach(campaign => {
+                if (campaign.isActive) {
+                    const pointsNeeded = campaign.voucherGenerationThreshold - cartPoints;
+                    if (pointsNeeded <= 0) {
+                        html += `
+                            <div style="background-color: var(--success-light); padding: 0.75rem; border-radius: var(--border-radius); margin-bottom: 0.5rem;">
+                                <div style="font-weight: bold; color: var(--success);">${campaign.campaignName}</div>
+                                <div style="font-size: 0.85rem;">✓ Eligible for reward</div>
+                            </div>`;
+                        hasEligibleCampaigns = true;
+                    } else {
+                        html += `
+                            <div style="background-color: var(--info); padding: 0.75rem; border-radius: var(--border-radius); margin-bottom: 0.5rem;">
+                                <div style="font-weight: bold; color: var(--primary);">${campaign.campaignName}</div>
+                                <div style="font-size: 0.85rem;">Need ${pointsNeeded} more points for reward</div>
+                            </div>`;
+                    }
+                }
+            });
+            
+            // Check Amount Reach Goal Campaigns
+            amountReachGoalCampaigns.forEach(campaign => {
+                if (campaign.isActive) {
+                    const amountNeeded = campaign.targetAmount - cartValue;
+                    if (amountNeeded <= 0) {
+                        html += `
+                            <div style="background-color: var(--success-light); padding: 0.75rem; border-radius: var(--border-radius); margin-bottom: 0.5rem;">
+                                <div style="font-weight: bold; color: var(--success);">${campaign.campaignName}</div>
+                                <div style="font-size: 0.85rem;">✓ Eligible for ₹${campaign.voucherValue} voucher</div>
+                            </div>`;
+                        hasEligibleCampaigns = true;
+                    } else {
+                        html += `
+                            <div style="background-color: var(--info); padding: 0.75rem; border-radius: var(--border-radius); margin-bottom: 0.5rem;">
+                                <div style="font-weight: bold; color: var(--primary);">${campaign.campaignName}</div>
+                                <div style="font-size: 0.85rem;">Spend ₹${amountNeeded.toFixed(2)} more for ₹${campaign.voucherValue} voucher</div>
+                            </div>`;
+                    }
+                }
+            });
+            
+            // For Free Product Campaigns, we would need more complex logic based on specific materials
+            // This is a simplified version for demonstration
+            freeProductCampaigns.forEach(campaign => {
+                if (campaign.isActive) {
+                    html += `
+                        <div style="background-color: var(--info); padding: 0.75rem; border-radius: var(--border-radius); margin-bottom: 0.5rem;">
+                            <div style="font-weight: bold; color: var(--primary);">${campaign.campaignName}</div>
+                            <div style="font-size: 0.85rem;">Check details for free product eligibility</div>
+                        </div>`;
+                }
+            });
+            
+            if (!hasEligibleCampaigns) {
+                html = html || '<p style="color: var(--gray-500); font-style: italic;">No campaigns are currently eligible. Add more items to qualify!</p>';
+            }
+            
+            campaignsInfoDiv.innerHTML = html;
         }
 
         function changeCartItemQuantity(index, delta) {
