@@ -52,6 +52,18 @@ namespace HaldiramPromotionalApp.Controllers
                 {
                     return RedirectToAction("ShopkeeperHome");
                 }
+                
+                // If user is a Sales, redirect to sales dashboard
+                if (userRole == "Sales")
+                {
+                    return RedirectToAction("SalesHome");
+                }
+                
+                // If user is a Customer, redirect to customer dashboard
+                if (userRole == "Customer")
+                {
+                    return RedirectToAction("CustomerHome");
+                }
             }
             
             // Check if there are any materials in the database
@@ -619,6 +631,30 @@ namespace HaldiramPromotionalApp.Controllers
             return View();
         }
 
+        // New Sales Dashboard
+        public IActionResult SalesHome()
+        {
+            // Check if user is logged in and is a Sales
+            if (HttpContext.Session.GetString("UserName") == null || HttpContext.Session.GetString("role") != "Sales")
+            {
+                return RedirectToAction("Login");
+            }
+            
+            return View("~/Views/Home/Sales/SalesHome.cshtml");
+        }
+
+        // New Customer Dashboard
+        public IActionResult CustomerHome()
+        {
+            // Check if user is logged in and is a Customer
+            if (HttpContext.Session.GetString("UserName") == null || HttpContext.Session.GetString("role") != "Customer")
+            {
+                return RedirectToAction("Login");
+            }
+            
+            return View("~/Views/Home/Customer/CustomerHome.cshtml");
+        }
+
         public IActionResult Privacy()
         {
             return View();
@@ -769,6 +805,18 @@ namespace HaldiramPromotionalApp.Controllers
                 {
                     return RedirectToAction("AdminDashboard");
                 }
+                else if (userRole == "Sales")
+                {
+                    return RedirectToAction("SalesHome");
+                }
+                else if (userRole == "Customer")
+                {
+                    return RedirectToAction("CustomerHome");
+                }
+                else if (userRole == "Shopkeeper")
+                {
+                    return RedirectToAction("ShopkeeperHome");
+                }
                 // For other roles, stay on index
                 return RedirectToAction("Index");
             }
@@ -844,6 +892,16 @@ namespace HaldiramPromotionalApp.Controllers
                         // Shopkeeper gets access to shopkeeper dashboard
                         return RedirectToAction("ShopkeeperHome");
                     }
+                    else if (obj.Role == "Sales")
+                    {
+                        // Sales gets access to sales dashboard
+                        return RedirectToAction("SalesHome");
+                    }
+                    else if (obj.Role == "Customer")
+                    {
+                        // Customer gets access to customer dashboard
+                        return RedirectToAction("CustomerHome");
+                    }
                     return RedirectToAction("Index");
                 }
                 else
@@ -868,6 +926,14 @@ namespace HaldiramPromotionalApp.Controllers
                 else if (userRole == "Shopkeeper")
                 {
                     return RedirectToAction("ShopkeeperHome");
+                }
+                else if (userRole == "Sales")
+                {
+                    return RedirectToAction("SalesHome");
+                }
+                else if (userRole == "Customer")
+                {
+                    return RedirectToAction("CustomerHome");
                 }
                 return RedirectToAction("Index");
             }
@@ -919,7 +985,7 @@ namespace HaldiramPromotionalApp.Controllers
                 // Calculate summary values server-side and pass to view via ViewData
                 var totalPointsEarned = orderItems?.Sum(oi => oi.Points) ?? 0;
                 var pointsUsed = await _context.Vouchers
-                    .Where(v => v.DealerId == dealer.Id && v.IsRedeemed)
+                    .Where(v => v.DealerId == dealer.Id)
                     .SumAsync(v => (int?)v.PointsUsed) ?? 0;
                 var availablePoints = totalPointsEarned - pointsUsed;
 
@@ -1261,9 +1327,8 @@ namespace HaldiramPromotionalApp.Controllers
                     .Where(v => v.DealerId == dealer.Id)
                     .OrderBy(v => v.IsRedeemed)
                     .ThenByDescending(v => v.ExpiryDate)
-                    .ThenByDescending(v => v.IssueDate)
+                    .ThenByDescending(v => v.IssueDate)                   
                     .Take(10).ToListAsync();
-                
                 // Log voucher count for debugging
                 System.Diagnostics.Debug.WriteLine($"Found {vouchers.Count} vouchers for dealer {dealer.Id}");
 
@@ -1671,70 +1736,6 @@ namespace HaldiramPromotionalApp.Controllers
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Error in GetVouchersPage: {ex.Message}");
-                return StatusCode(500);
-            }
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> GetProductsPage(int page = 1, int pageSize = 10, string category = "__all__")
-        {
-            // Returns paginated products for the logged-in dealer as JSON
-            if (HttpContext.Session.GetString("UserName") == null || HttpContext.Session.GetString("role") != "Dealer")
-            {
-                return Unauthorized();
-            }
-
-            try
-            {
-                if (page < 1) page = 1;
-                if (pageSize < 1) pageSize = 10;
-
-                // Get all active materials
-                var query = _context.MaterialMaster.Where(m => m.isactive);
-
-                // Apply category filter if specified
-                if (!string.IsNullOrEmpty(category) && category != "__all__")
-                {
-                    query = query.Where(m => m.Category == category);
-                }
-
-                var total = await query.CountAsync();
-                var skip = (page - 1) * pageSize;
-                var materials = await query.Skip(skip).Take(pageSize).ToListAsync();
-
-                // Get material images for these materials
-                var materialIds = materials.Select(m => m.Id).ToList();
-                var materialImages = await _context.MaterialImages
-                    .Include(mi => mi.MaterialMaster)
-                    .Where(mi => materialIds.Contains(mi.MaterialMaster.Id))
-                    .ToListAsync();
-
-                // Build response objects
-                var resultList = new List<object>();
-                foreach (var material in materials)
-                {
-                    // Try to find a matching material image
-                    var materialImage = materialImages?.FirstOrDefault(mi => mi.MaterialMaster?.material3partycode == material.material3partycode);
-                    
-                    resultList.Add(new
-                    {
-                        material.Id,
-                        material.Materialname,
-                        material.ShortName,
-                        material.material3partycode,
-                        material.dealerprice,
-                        material.Category,
-                        ImagePath = materialImage?.ImagePath ?? string.Empty
-                    });
-                }
-
-                var hasMore = skip + materials.Count < total;
-
-                return Ok(new { products = resultList, hasMore, nextPage = page + 1 });
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Error in GetProductsPage: {ex.Message}");
                 return StatusCode(500);
             }
         }

@@ -158,27 +158,47 @@ else
                             @foreach (var c in Model.Campaigns.DetailedPointsToCashCampaigns)
                             {
                                 <div class="campaign-card">
-                                    <div class="campaign-image">
-                                        <img src="@(c.ImagePath ?? "https://placehold.co/600x400/cccccc/000000?text=No+Image")" alt="@c.CampaignName" onerror="this.onerror=null;this.src='https://placehold.co/600x400/cccccc/000000?text=No+Image';">
-                                    </div>
-                                    <div class="campaign-header">
-                                        <h3 class="campaign-title">@c.CampaignName</h3>
-                                        <span class="badge @(c.IsActive ? "badge-active" : "badge-inactive")">
+                                    <div class="campaign-image-container">
+                                        <img src="@(c.ImagePath ?? "https://placehold.co/600x400/cccccc/000000?text=No+Image")" alt="@c.CampaignName" class="campaign-image" onerror="this.onerror=null;this.src='https://placehold.co/600x400/cccccc/000000?text=No+Image';">
+                                        <div class="campaign-status-badge @(c.IsActive ? "active" : "inactive")">
                                             @(c.IsActive ? "Active" : "Inactive")
+                                        </div>
+                                    </div>
+                                    <div class="campaign-title">@c.CampaignName</div>
+                                    <div class="campaign-dates">
+                                        <span class="date-item">
+                                            <i class="fas fa-calendar-start"></i>
+                                            <span>@c.StartDate.ToString("dd/MM/yyyy")</span>
+                                        </span>
+                                        <span class="date-item">
+                                            <i class="fas fa-calendar-end"></i>
+                                            <span>@c.EndDate.ToString("dd/MM/yyyy")</span>
                                         </span>
                                     </div>
-                                    <div class="campaign-info">
-                                        <div class="info-row"><span class="info-label">Start:</span> <span class="date-value">@c.StartDate.ToString("dd MMM yyyy")</span></div>
-                                        <div class="info-row"><span class="info-label">End:</span> <span class="date-value">@c.EndDate.ToString("dd MMM yyyy")</span></div>
-                                    </div>
-                                    <button type="button" class="details-btn" onclick="showDetails('pointsToCash-@c.Id')">Show Details</button>
-                                    <div id="pointsToCash-@c.Id" class="campaign-details hidden">
-                                        <div class="info-row"><span class="info-label">Threshold:</span> @c.VoucherGenerationThreshold points</div>
-                                        <div class="info-row"><span class="info-label">Voucher:</span> ₹@c.VoucherValue</div>
+                                    <button type="button" class="toggle-details-btn" onclick="toggleCampaignDetails('pointsToCash-@c.Id')" 
+                                            data-target="pointsToCash-@c.Id">
+                                        <span class="btn-text">Show Details</span>
+                                        <i class="fas fa-chevron-down toggle-icon"></i>
+                                    </button>
+                                    <div id="pointsToCash-@c.Id" class="campaign-details-content">
+                                        <div class="campaign-detail-item">
+                                            <div class="detail-label">Threshold</div>
+                                            <div class="detail-value">@c.VoucherGenerationThreshold points</div>
+                                        </div>
+                                        <div class="campaign-detail-item">
+                                            <div class="detail-label">Voucher Value</div>
+                                            <div class="detail-value">₹@c.VoucherValue</div>
+                                        </div>
                                         @if (!string.IsNullOrEmpty(c.Description))
                                         {
-                                            <div class="mt-3"><span class="info-label d-block mb-1">Description:</span><p class="text-muted small">@c.Description</p></div>
-                                            <div class="info-row"><span class="info-label">Validity:</span> @c.VoucherValidity days</div>
+                                            <div class="mt-3">
+                                                <div class="detail-label">Description</div>
+                                                <div class="detail-value">@c.Description</div>
+                                            </div>
+                                            <div class="campaign-detail-item">
+                                                <div class="detail-label">Validity</div>
+                                                <div class="detail-value">@c.VoucherValidity days</div>
+                                            </div>
                                         }
                                     </div>
                                 </div>
@@ -188,30 +208,50 @@ else
                             @foreach (var c in Model.Campaigns.DetailedPointsRewardCampaigns)
                             {
                                 <div class="campaign-card">
-                                    <div class="campaign-image">
-                                        <img src="@(c.ImagePath ?? "https://placehold.co/600x400/cccccc/000000?text=No+Image")" alt="@c.CampaignName" onerror="this.onerror=null;this.src='https://placehold.co/600x400/cccccc/000000?text=No+Image';">
-                                    </div>
-                                    <div class="campaign-header">
-                                        <h3 class="campaign-title">@c.CampaignName</h3>
-                                        <span class="badge @(c.IsActive ? "badge-active" : "badge-inactive")">
+                                    <div class="campaign-image-container">
+                                        <img src="@(c.ImagePath ?? "https://placehold.co/600x400/cccccc/000000?text=No+Image")" alt="@c.CampaignName" class="campaign-image" onerror="this.onerror=null;this.src='https://placehold.co/600x400/cccccc/000000?text=No+Image';">
+                                        <div class="campaign-status-badge @(c.IsActive ? "active" : "inactive")">
                                             @(c.IsActive ? "Active" : "Inactive")
+                                        </div>
+                                    </div>
+                                    <div class="campaign-title">@c.CampaignName</div>
+                                    <div class="campaign-dates">
+                                        <span class="date-item">
+                                            <i class="fas fa-calendar-start"></i>
+                                            <span>@c.StartDate.ToString("dd/MM/yyyy")</span>
+                                        </span>
+                                        <span class="date-item">
+                                            <i class="fas fa-calendar-end"></i>
+                                            <span>@c.EndDate.ToString("dd/MM/yyyy")</span>
                                         </span>
                                     </div>
-                                    <div class="campaign-info">
-                                        <div class="info-row"><span class="info-label">Start:</span> <span class="date-value">@c.StartDate.ToString("dd MMM yyyy")</span></div>
-                                        <div class="info-row"><span class="info-label">End:</span> <span class="date-value">@c.EndDate.ToString("dd MMM yyyy")</span></div>
-                                    </div>
-                                    <button type="button" class="details-btn" onclick="showDetails('pointsReward-@c.Id')">Show Details</button>
-                                    <div id="pointsReward-@c.Id" class="campaign-details hidden">
-                                        <div class="info-row"><span class="info-label">Threshold:</span> @c.VoucherGenerationThreshold points</div>
+                                    <button type="button" class="toggle-details-btn" onclick="toggleCampaignDetails('pointsReward-@c.Id')" 
+                                            data-target="pointsReward-@c.Id">
+                                        <span class="btn-text">Show Details</span>
+                                        <i class="fas fa-chevron-down toggle-icon"></i>
+                                    </button>
+                                    <div id="pointsReward-@c.Id" class="campaign-details-content">
+                                        <div class="campaign-detail-item">
+                                            <div class="detail-label">Threshold</div>
+                                            <div class="detail-value">@c.VoucherGenerationThreshold points</div>
+                                        </div>
                                         @if (c.RewardProduct != null)
                                         {
-                                            <div class="mt-3"><span class="info-label d-block mb-1">Reward:</span><strong>@c.RewardProduct.ProductName</strong></div>
+                                            <div class="mt-3">
+                                                <div class="detail-label">Reward Product</div>
+                                                <div class="detail-value">@c.RewardProduct.ProductName</div>
+                                            </div>
                                         }
                                         @if (!string.IsNullOrEmpty(c.Description))
                                         {
-                                            <div class="mt-3"><span class="info-label d-block mb-1">Description:</span><p class="text-muted small">@c.Description</p></div>
-                                            <div class="info-row"><span class="info-label">Validity:</span> @c.VoucherValidity days</div>
+                                            <div class="mt-3">
+                                                <div class="detail-label">Description</div>
+                                                <div class="detail-value">@c.Description</div>
+                                            </div>
+                                            <div class="campaign-detail-item">
+                                                <div class="detail-label">Validity</div>
+                                                <div class="detail-value">@c.VoucherValidity days</div>
+                                            </div>
                                         }
                                     </div>
                                 </div>
@@ -221,34 +261,47 @@ else
                             @foreach (var c in Model.Campaigns.DetailedFreeProductCampaigns)
                             {
                                 <div class="campaign-card">
-                                    <div class="campaign-image">
-                                        <img src="@(c.ImagePath ?? "https://placehold.co/600x400/cccccc/000000?text=No+Image")" alt="@c.CampaignName" onerror="this.onerror=null;this.src='https://placehold.co/600x400/cccccc/000000?text=No+Image';">
-                                    </div>
-                                    <div class="campaign-header">
-                                        <h3 class="campaign-title">@c.CampaignName</h3>
-                                        <span class="badge @(c.IsActive ? "badge-active" : "badge-inactive")">
+                                    <div class="campaign-image-container">
+                                        <img src="@(c.ImagePath ?? "https://placehold.co/600x400/cccccc/000000?text=No+Image")" alt="@c.CampaignName" class="campaign-image" onerror="this.onerror=null;this.src='https://placehold.co/600x400/cccccc/000000?text=No+Image';">
+                                        <div class="campaign-status-badge @(c.IsActive ? "active" : "inactive")">
                                             @(c.IsActive ? "Active" : "Inactive")
+                                        </div>
+                                    </div>
+                                    <div class="campaign-title">@c.CampaignName</div>
+                                    <div class="campaign-dates">
+                                        <span class="date-item">
+                                            <i class="fas fa-calendar-start"></i>
+                                            <span>@c.StartDate.ToString("dd/MM/yyyy")</span>
+                                        </span>
+                                        <span class="date-item">
+                                            <i class="fas fa-calendar-end"></i>
+                                            <span>@c.EndDate.ToString("dd/MM/yyyy")</span>
                                         </span>
                                     </div>
-                                    <div class="campaign-info">
-                                        <div class="info-row"><span class="info-label">Start:</span> @c.StartDate.ToString("dd/MM/yyyy")</div>
-                                        <div class="info-row"><span class="info-label">End:</span> @c.EndDate.ToString("dd/MM/yyyy")</div>
-                                    </div>
-                                    <button type="button" class="details-btn" onclick="showDetails('freeProduct-@c.Id')">Show Details</button>
-                                    <div id="freeProduct-@c.Id" class="campaign-details hidden">
+                                    <button type="button" class="toggle-details-btn" onclick="toggleCampaignDetails('freeProduct-@c.Id')" 
+                                            data-target="freeProduct-@c.Id">
+                                        <span class="btn-text">Show Details</span>
+                                        <i class="fas fa-chevron-down toggle-icon"></i>
+                                    </button>
+                                    <div id="freeProduct-@c.Id" class="campaign-details-content">
                                         @if (c.FreeProductDetails?.Any() == true)
                                         {
                                             <div class="mt-3">
-                                                <span class="info-label d-block mb-1">Free Products:</span>
+                                                <div class="detail-label">Free Products</div>
                                                 @foreach (var kvp in c.FreeProductDetails)
                                                 {
-                                                    <p class="mb-1"><strong>@kvp.Value.FreeProductName</strong> (Qty: @kvp.Value.FreeQuantity)</p>
+                                                    <div class="detail-value mt-1">
+                                                        <strong>@kvp.Value.FreeProductName</strong> (Qty: @kvp.Value.FreeQuantity)
+                                                    </div>
                                                 }
                                             </div>
                                         }
                                         @if (!string.IsNullOrEmpty(c.Description))
                                         {
-                                            <div class="mt-3"><span class="info-label d-block mb-1">Description:</span><p class="text-muted small">@c.Description</p></div>
+                                            <div class="mt-3">
+                                                <div class="detail-label">Description</div>
+                                                <div class="detail-value">@c.Description</div>
+                                            </div>
                                         }
                                     </div>
                                 </div>
@@ -258,27 +311,47 @@ else
                             @foreach (var c in Model.Campaigns.AmountReachGoalCampaigns)
                             {
                                 <div class="campaign-card">
-                                    <div class="campaign-image">
-                                        <img src="@(c.ImagePath ?? "https://placehold.co/600x400/cccccc/000000?text=No+Image")" alt="@c.CampaignName" onerror="this.onerror=null;this.src='https://placehold.co/600x400/cccccc/000000?text=No+Image';">
-                                    </div>
-                                    <div class="campaign-header">
-                                        <h3 class="campaign-title">@c.CampaignName</h3>
-                                        <span class="badge @(c.IsActive ? "badge-active" : "badge-inactive")">
+                                    <div class="campaign-image-container">
+                                        <img src="@(c.ImagePath ?? "https://placehold.co/600x400/cccccc/000000?text=No+Image")" alt="@c.CampaignName" class="campaign-image" onerror="this.onerror=null;this.src='https://placehold.co/600x400/cccccc/000000?text=No+Image';">
+                                        <div class="campaign-status-badge @(c.IsActive ? "active" : "inactive")">
                                             @(c.IsActive ? "Active" : "Inactive")
+                                        </div>
+                                    </div>
+                                    <div class="campaign-title">@c.CampaignName</div>
+                                    <div class="campaign-dates">
+                                        <span class="date-item">
+                                            <i class="fas fa-calendar-start"></i>
+                                            <span>@c.StartDate.ToString("dd/MM/yyyy")</span>
+                                        </span>
+                                        <span class="date-item">
+                                            <i class="fas fa-calendar-end"></i>
+                                            <span>@c.EndDate.ToString("dd/MM/yyyy")</span>
                                         </span>
                                     </div>
-                                    <div class="campaign-info">
-                                        <div class="info-row"><span class="info-label">Start:</span> @c.StartDate.ToString("dd/MM/yyyy")</div>
-                                        <div class="info-row"><span class="info-label">End:</span> @c.EndDate.ToString("dd/MM/yyyy")</div>
-                                    </div>
-                                    <button type="button" class="details-btn" onclick="showDetails('amountReach-@c.Id')">Show Details</button>
-                                    <div id="amountReach-@c.Id" class="campaign-details hidden">
+                                    <button type="button" class="toggle-details-btn" onclick="toggleCampaignDetails('amountReach-@c.Id')" 
+                                            data-target="amountReach-@c.Id">
+                                        <span class="btn-text">Show Details</span>
+                                        <i class="fas fa-chevron-down toggle-icon"></i>
+                                    </button>
+                                    <div id="amountReach-@c.Id" class="campaign-details-content">
                                         @if (!string.IsNullOrEmpty(c.Description))
                                         {
-                                            <div class="mt-3"><span class="info-label d-block mb-1">Description:</span><p class="text-muted small">@c.Description</p></div>
-                                            <div class="info-row"><span class="info-label">Target:</span> ₹@c.TargetAmount</div>
-                                            <div class="info-row"><span class="info-label">Voucher:</span> ₹@c.VoucherValue</div>
-                                            <div class="info-row"><span class="info-label">Validity:</span> @c.VoucherValidity days</div>
+                                            <div class="mt-3">
+                                                <div class="detail-label">Description</div>
+                                                <div class="detail-value">@c.Description</div>
+                                            </div>
+                                            <div class="campaign-detail-item">
+                                                <div class="detail-label">Target Amount</div>
+                                                <div class="detail-value">₹@c.TargetAmount</div>
+                                            </div>
+                                            <div class="campaign-detail-item">
+                                                <div class="detail-label">Voucher Value</div>
+                                                <div class="detail-value">₹@c.VoucherValue</div>
+                                            </div>
+                                            <div class="campaign-detail-item">
+                                                <div class="detail-label">Validity</div>
+                                                <div class="detail-value">@c.VoucherValidity days</div>
+                                            </div>
                                         }
                                     </div>
                                 </div>
@@ -288,27 +361,47 @@ else
                             @foreach (var c in Model.Campaigns.SessionDurationRewardCampaigns)
                             {
                                 <div class="campaign-card">
-                                    <div class="campaign-image">
-                                        <img src="@(c.ImagePath ?? "https://placehold.co/600x400/cccccc/000000?text=No+Image")" alt="@c.CampaignName" onerror="this.onerror=null;this.src='https://placehold.co/600x400/cccccc/000000?text=No+Image';">
-                                    </div>
-                                    <div class="campaign-header">
-                                        <h3 class="campaign-title">@c.CampaignName</h3>
-                                        <span class="badge @(c.IsActive ? "badge-active" : "badge-inactive")">
+                                    <div class="campaign-image-container">
+                                        <img src="@(c.ImagePath ?? "https://placehold.co/600x400/cccccc/000000?text=No+Image")" alt="@c.CampaignName" class="campaign-image" onerror="this.onerror=null;this.src='https://placehold.co/600x400/cccccc/000000?text=No+Image';">
+                                        <div class="campaign-status-badge @(c.IsActive ? "active" : "inactive")">
                                             @(c.IsActive ? "Active" : "Inactive")
+                                        </div>
+                                    </div>
+                                    <div class="campaign-title">@c.CampaignName</div>
+                                    <div class="campaign-dates">
+                                        <span class="date-item">
+                                            <i class="fas fa-calendar-start"></i>
+                                            <span>@c.StartDate.ToString("dd/MM/yyyy")</span>
+                                        </span>
+                                        <span class="date-item">
+                                            <i class="fas fa-calendar-end"></i>
+                                            <span>@c.EndDate.ToString("dd/MM/yyyy")</span>
                                         </span>
                                     </div>
-                                    <div class="campaign-info">
-                                        <div class="info-row"><span class="info-label">Start:</span> @c.StartDate.ToString("dd/MM/yyyy")</div>
-                                        <div class="info-row"><span class="info-label">End:</span> @c.EndDate.ToString("dd/MM/yyyy")</div>
-                                    </div>
-                                    <button type="button" class="details-btn" onclick="showDetails('sessionDuration-@c.Id')">Show Details</button>
-                                    <div id="sessionDuration-@c.Id" class="campaign-details hidden">
+                                    <button type="button" class="toggle-details-btn" onclick="toggleCampaignDetails('sessionDuration-@c.Id')" 
+                                            data-target="sessionDuration-@c.Id">
+                                        <span class="btn-text">Show Details</span>
+                                        <i class="fas fa-chevron-down toggle-icon"></i>
+                                    </button>
+                                    <div id="sessionDuration-@c.Id" class="campaign-details-content">
                                         @if (!string.IsNullOrEmpty(c.Description))
                                         {
-                                            <div class="mt-3"><span class="info-label d-block mb-1">Description:</span><p class="text-muted small">@c.Description</p></div>
-                                            <div class="info-row"><span class="info-label">Session:</span> @c.SessionDuration mins</div>
-                                            <div class="info-row"><span class="info-label">Voucher:</span> ₹@c.VoucherValue</div>
-                                            <div class="info-row"><span class="info-label">Validity:</span> @c.VoucherValidity days</div>
+                                            <div class="mt-3">
+                                                <div class="detail-label">Description</div>
+                                                <div class="detail-value">@c.Description</div>
+                                            </div>
+                                            <div class="campaign-detail-item">
+                                                <div class="detail-label">Session Duration</div>
+                                                <div class="detail-value">@c.SessionDuration mins</div>
+                                            </div>
+                                            <div class="campaign-detail-item">
+                                                <div class="detail-label">Voucher Value</div>
+                                                <div class="detail-value">₹@c.VoucherValue</div>
+                                            </div>
+                                            <div class="campaign-detail-item">
+                                                <div class="detail-label">Validity</div>
+                                                <div class="detail-value">@c.VoucherValidity days</div>
+                                            </div>
                                         }
                                     </div>
                                 </div>
@@ -947,6 +1040,29 @@ else
             document.getElementById(id).classList.toggle('hidden');
         }
 
+        function toggleCampaignDetails(id) {
+            var detailsDiv = document.getElementById(id);
+            var button = document.querySelector('[data-target="' + id + '"]');
+            var icon = button.querySelector('.toggle-icon');
+            var text = button.querySelector('.btn-text');
+            
+            if (!detailsDiv) return;
+            
+            var isHidden = detailsDiv.style.display === 'none' || window.getComputedStyle(detailsDiv).display === 'none';
+            
+            if (isHidden) {
+                detailsDiv.style.display = 'block';
+                icon.classList.remove('fa-chevron-down');
+                icon.classList.add('fa-chevron-up');
+                text.textContent = 'Hide Details';
+            } else {
+                detailsDiv.style.display = 'none';
+                icon.classList.remove('fa-chevron-up');
+                icon.classList.add('fa-chevron-down');
+                text.textContent = 'Show Details';
+            }
+        }
+
         function showCategoryProducts(cat) {
             // Note: JSON serialization converts property names to camelCase
             const filtered = materialsData.filter(m => m.category === cat);
@@ -1158,6 +1274,12 @@ else
             if (el && typeof bootstrap !== 'undefined') {
                 new bootstrap.Carousel(el, { interval: 5000, pause: 'hover' });
             }
+            
+            // Initialize campaign details as hidden
+            const campaignDetails = document.querySelectorAll('.campaign-details-content');
+            campaignDetails.forEach(detail => {
+                detail.style.display = 'none';
+            });
         });
     </script>
 }

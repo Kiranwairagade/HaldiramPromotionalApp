@@ -49,7 +49,6 @@ namespace HaldiramPromotionalApp.Controllers
                     return new Dictionary<string, int>();
                 }
             }
-            var vouchersToAdd = new List<Models.Voucher>();
 
             // Check PointsToCash campaigns (allocate vouchers per-order in multiples of threshold)
             foreach (var camp in pointsToCashCampaigns)
@@ -69,6 +68,7 @@ namespace HaldiramPromotionalApp.Controllers
                 if (orderPoints >= camp.VoucherGenerationThreshold)
                 {
                     int count = orderPoints / camp.VoucherGenerationThreshold;
+                    var vouchersToAdd = new List<Models.Voucher>();
 
                     for (int i = 0; i < count; i++)
                     {
@@ -92,7 +92,17 @@ namespace HaldiramPromotionalApp.Controllers
                         orderPoints -= camp.VoucherGenerationThreshold;
                     }
 
-                    
+                    if (vouchersToAdd.Any())
+                    {
+                        _context.Vouchers.AddRange(vouchersToAdd);
+                        await _context.SaveChangesAsync();
+
+                        // Notify dealer/user for each voucher
+                        foreach (var v in vouchersToAdd)
+                        {
+                            await _notificationService.CreateVoucherNotificationAsync(user.Id, v.VoucherCode, v.VoucherValue, v.Id);
+                        }
+                    }
                 }
             }
 
@@ -114,6 +124,7 @@ namespace HaldiramPromotionalApp.Controllers
                 if (orderPoints >= camp.VoucherGenerationThreshold)
                 {
                     int count = orderPoints / camp.VoucherGenerationThreshold;
+                    var vouchersToAdd = new List<Models.Voucher>();
 
                     for (int i = 0; i < count; i++)
                     {
@@ -136,17 +147,16 @@ namespace HaldiramPromotionalApp.Controllers
                         orderPoints -= camp.VoucherGenerationThreshold;
                     }
 
-                    
-                }
-            }
-            if (vouchersToAdd.Any())
-            {
-                _context.Vouchers.AddRange(vouchersToAdd);
-                await _context.SaveChangesAsync();
+                    if (vouchersToAdd.Any())
+                    {
+                        _context.Vouchers.AddRange(vouchersToAdd);
+                        await _context.SaveChangesAsync();
 
-                foreach (var v in vouchersToAdd)
-                {
-                    await _notificationService.CreateVoucherNotificationAsync(user.Id, v.VoucherCode, v.VoucherValue, v.Id);
+                        foreach (var v in vouchersToAdd)
+                        {
+                            await _notificationService.CreateVoucherNotificationAsync(user.Id, v.VoucherCode, v.VoucherValue, v.Id);
+                        }
+                    }
                 }
             }
         }

@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿<!DOCTYPE html>
+﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -68,6 +68,7 @@
             font-size: 0.875rem;
             font-weight: 500;
             transition: all 0.2s ease;
+            white-space: nowrap;
         }
         
         .nav-link-desktop:hover {
@@ -78,7 +79,7 @@
         /* Mobile navigation links */
         .nav-link-mobile {
             color: #4B5563;
-            padding: 0.5rem 0.75rem;
+            padding: 0.75rem 1rem;
             border-radius: var(--border-radius);
             font-size: 0.875rem;
             font-weight: 500;
@@ -97,6 +98,7 @@
             border-radius: var(--border-radius);
             font-size: 0.875rem;
             font-weight: 500;
+            white-space: nowrap;
         }
         
         /* Profile button */
@@ -188,6 +190,46 @@
             background-color: #EEF2FF;
         }
         
+        /* Bottom navigation for mobile */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: white;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-around;
+            padding: 0.5rem 0;
+            z-index: 100;
+        }
+        
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: #6b7280;
+            font-size: 0.75rem;
+            padding: 0.25rem;
+            min-width: 60px;
+        }
+        
+        .nav-item.active {
+            color: #4F46E5;
+        }
+        
+        .nav-item i {
+            font-size: 1rem;
+            margin-bottom: 0.25rem;
+        }
+        
+        /* Main content padding for mobile */
+        .main-content {
+            padding-bottom: 4rem; /* Space for bottom nav */
+            padding-top: 1rem;
+        }
+        
         /* Mobile view adjustments */
         @@media (max-width: 768px) {
             .header-content {
@@ -213,13 +255,52 @@
             }
             
             .nav-link-mobile {
-                font-size: 0.8125rem;
-                padding: 0.375rem 0.625rem;
+                font-size: 0.875rem;
+                padding: 0.75rem 1rem;
             }
             
             /* Adjust spacing for mobile */
             .user-info-container {
                 gap: 0.25rem;
+            }
+            
+            /* Hide desktop nav on mobile */
+            .desktop-nav {
+                display: none;
+            }
+            
+            /* Show mobile nav on mobile */
+            .mobile-nav {
+                display: block;
+            }
+            
+            /* Main content adjustments for mobile */
+            .main-content {
+                padding: 0.5rem;
+                padding-bottom: 4rem;
+            }
+            
+            /* Notification dropdown adjustments for mobile */
+            #notificationDropdown {
+                width: 90vw;
+                right: 5vw;
+                left: 5vw;
+            }
+        }
+        
+        @@media (min-width: 769px) {
+            /* Hide mobile nav on desktop */
+            .mobile-nav {
+                display: none;
+            }
+            
+            /* Show desktop nav on desktop */
+            .desktop-nav {
+                display: flex;
+            }
+            
+            .main-content {
+                padding: 1.5rem;
             }
         }
         
@@ -247,20 +328,55 @@
                 width: 1rem;
                 font-size: 0.5rem;
             }
+            
+            .main-content {
+                padding: 0.25rem;
+                padding-bottom: 4rem;
+            }
+            
+            .nav-item {
+                font-size: 0.625rem;
+                min-width: 45px;
+            }
+            
+            .nav-item i {
+                font-size: 0.875rem;
+            }
+        }
+        
+        /* Ensure content doesn't overflow on small screens */
+        @@media (max-width: 320px) {
+            .logo-text {
+                font-size: 0.75rem;
+                max-width: 80px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            
+            .user-name {
+                font-size: 0.5rem;
+                max-width: 50px;
+            }
+            
+            .nav-item {
+                font-size: 0.5rem;
+                min-width: 40px;
+                padding: 0.125rem;
+            }
         }
     </style>
 </head>
 <body class="bg-gray-150">
     <header class="bg-white shadow-md sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16">
-                <div class="flex">
+        <div class="max-w-7xl mx-auto px-2 sm:px-4 lg:px-6">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center">
                     <div class="flex-shrink-0 flex items-center">
                         <!-- Logo -->
-                        <img src="data:image/png;base64,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" alt="Haldiram Promotional Logo" class="h-10 w-14 mr-2">
-                        <a asp-area="" asp-controller="Home" asp-action="Index" class="text-xl font-bold text-indigo-600">Haldiram Promotional</a>
+                        <img src=data:image/png;base64,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 =" alt="Haldiram Promotional Logo" class="h-10 w-14 mr-2">
+                        <a asp-area="" asp-controller="Home" asp-action="Index" class="text-xl font-bold text-indigo-600 logo-text">Haldiram Promotional</a>
                     </div>
-                    <nav class="ml-6 hidden sm:flex items-center">
+                    <nav class="ml-4 hidden sm:flex items-center desktop-nav">
                         @if (Context.Session.GetString("UserName") != null)
                         {
                             var userRole = Context.Session.GetString("role");
@@ -299,13 +415,13 @@
                             }
                             else if (userRole == "Sales")
                             {
-                                <a asp-area="" asp-controller="Home" asp-action="SalesHome" class="text-gray-700 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">
+                                <a asp-area="" asp-controller="Home" asp-action="SalesHome" class="nav-link-desktop">
                                     Sales Dashboard
                                 </a>
                             }
                             else if (userRole == "Customer")
                             {
-                                <a asp-area="" asp-controller="Home" asp-action="CustomerHome" class="text-gray-700 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">
+                                <a asp-area="" asp-controller="Home" asp-action="CustomerHome" class="nav-link-desktop">
                                     Customer Dashboard
                                 </a>
                             }
@@ -316,7 +432,7 @@
                 <div class="flex items-center">
                     @if (Context.Session.GetString("UserName") != null)
                     {
-                        <div class="flex items-center space-x-3 user-info-container">
+                        <div class="flex items-center space-x-2 user-info-container">
                             @if (Context.Session.GetString("role") == "Dealer")
                             {
                                 <!-- Notification Icon -->
@@ -351,7 +467,7 @@
                                 @if (Convert.ToInt32(ViewData["AvailablePoints"] ?? ViewData["TotalPoints"] ?? 0) > 0)
                                 {
                                     <!-- Display available points only if greater than 0 -->
-                                    <span class="points-display" id="pointsDisplay">
+                                    <span class="points-display hidden sm:block" id="pointsDisplay">
                                         <i class="fas fa-coins"></i> Available Points: <span id="dealerPoints">@(ViewData["AvailablePoints"] ?? ViewData["TotalPoints"] ?? 0)</span>
                                     </span>
                                 }
@@ -361,9 +477,17 @@
                                 <button id="profileToggle" class="profile-btn">
                                     <i class="fas fa-user-circle fa-lg"></i>
                                 </button>
-                                <span class="user-name">Hello, @Context.Session.GetString("name")</span>
+                                <span class="user-name hidden md:block">Hello, @Context.Session.GetString("name")</span>
 
                                 <div id="profileDropdown" class="hidden absolute right-0 mt-10 bg-white border border-gray-200 rounded shadow-md" style="min-width:140px;">
+                                    @if (Convert.ToInt32(ViewData["AvailablePoints"] ?? ViewData["TotalPoints"] ?? 0) > 0)
+                                    {
+                                        <!-- Show points in mobile menu only if greater than 0 -->
+                                        <div class="px-3 py-2 text-sm text-gray-700 bg-yellow-100 rounded-md">
+                                            <i class="fas fa-coins"></i> Available Points: <span id="dealerPointsMobile">@(ViewData["AvailablePoints"] ?? ViewData["TotalPoints"] ?? 0)</span>
+                                        </div>
+                                    }
+
                                     <a asp-area="" asp-controller="Home" asp-action="Logout" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                                         <i class="fas fa-sign-out-alt mr-2"></i> Logout
                                     </a>
@@ -379,19 +503,19 @@
                     }
                 </div>
                 <!-- Mobile menu button -->
-                <div class="flex items-center sm:hidden">
+                @* <div class="flex items-center sm:hidden">
                     <button type="button" class="mobile-menu-btn" aria-controls="mobile-menu" aria-expanded="false">
                         <span class="sr-only">Open main menu</span>
                         <svg class="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                         </svg>
                     </button>
-                </div>
+                </div> *@
             </div>
         </div>
 
         <!-- Mobile menu, show/hide based on menu state. -->
-        <div class="sm:hidden hidden" id="mobile-menu">
+        <div class="sm:hidden hidden mobile-nav" id="mobile-menu">
             <div class="px-2 pt-2 pb-3 space-y-1">
                 @if (Context.Session.GetString("UserName") != null)
                 {
@@ -431,24 +555,24 @@
                     }
                     else if (userRole == "Sales")
                     {
-                        <a asp-area="" asp-controller="Home" asp-action="SalesHome" class="text-gray-700 hover:text-indigo-600 hover:bg-gray-50 block px-3 py-2 rounded-md text-base font-medium">
+                        <a asp-area="" asp-controller="Home" asp-action="SalesHome" class="nav-link-mobile block">
                             Sales Dashboard
                         </a>
                     }
                     else if (userRole == "Customer")
                     {
-                        <a asp-area="" asp-controller="Home" asp-action="CustomerHome" class="text-gray-700 hover:text-indigo-600 hover:bg-gray-50 block px-3 py-2 rounded-md text-base font-medium">
+                        <a asp-area="" asp-controller="Home" asp-action="CustomerHome" class="nav-link-mobile block">
                             Customer Dashboard
                         </a>
                     }
                     
                     @if (Convert.ToInt32(ViewData["AvailablePoints"] ?? ViewData["TotalPoints"] ?? 0) > 0)
-                                    {
-                                        <!-- Show points in mobile menu only if greater than 0 -->
-                                        <div class="px-3 py-2 text-sm text-gray-700 bg-yellow-100 rounded-md">
-                                            <i class="fas fa-coins"></i> Available Points: <span id="dealerPointsMobile">@(ViewData["AvailablePoints"] ?? ViewData["TotalPoints"] ?? 0)</span>
-                                        </div>
-                                    }
+                    {
+                        <!-- Show points in mobile menu only if greater than 0 -->
+                        <div class="px-3 py-2 text-sm text-gray-700 bg-yellow-100 rounded-md">
+                            <i class="fas fa-coins"></i> Available Points: <span id="dealerPointsMobile">@(ViewData["AvailablePoints"] ?? ViewData["TotalPoints"] ?? 0)</span>
+                        </div>
+                    }
                     
                     <a asp-area="" asp-controller="Home" asp-action="Logout" class="nav-link-mobile block">
                         <i class="fas fa-sign-out-alt"></i> Logout
@@ -463,7 +587,7 @@
             </div>
         </div>
     </header>
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div class="max-w-7xl mx-auto px-2 sm:px-4 lg:px-6 py-4 main-content">
         <!-- Display TempData messages -->
         @if (TempData["SuccessMessage"] != null)
         {
@@ -495,27 +619,27 @@
         <nav class="bottom-nav">
             <a href="@Url.Action("DealerHome", "Home")" class="nav-item @(currentAction == "DealerHome" && currentController == "Home" ? "active" : "")">
                 <i class="fas fa-home"></i>
-                <span>Home</span>
+                <span class="nav-label">Home</span>
             </a>
             <a href="@Url.Action("ViewCampaigns", "Home")" class="nav-item @(currentAction == "ViewCampaigns" && currentController == "Home" ? "active" : "")">
                 <i class="fas fa-bullhorn"></i>
-                <span>Campaigns</span>
+                <span class="nav-label">Campaigns</span>
             </a>
             <a href="@Url.Action("Index", "Orders")" class="nav-item @(currentAction == "Index" && currentController == "Orders" ? "active" : "")">
                 <i class="fas fa-shopping-bag"></i>
-                <span>Orders</span>
+                <span class="nav-label">Orders</span>
             </a>
             <a href="@Url.Action("PointsDetails", "Home")" class="nav-item @(currentAction == "PointsDetails" && currentController == "Home" ? "active" : "")">
                 <i class="fas fa-coins"></i>
-                <span>Points</span>
+                <span class="nav-label">Points</span>
             </a>
             <a href="@Url.Action("Vouchers", "Home")" class="nav-item @(currentAction == "Vouchers" && currentController == "Home" ? "active" : "")">
                 <i class="fas fa-ticket-alt"></i>
-                <span>Vouchers</span>
+                <span class="nav-label">Vouchers</span>
             </a>
             <a href="@Url.Action("History", "Home")" class="nav-item @(currentAction == "History" && currentController == "Home" ? "active" : "")">
                 <i class="fas fa-history"></i>
-                <span>History</span>
+                <span class="nav-label">History</span>
             </a>
         </nav>
     }
@@ -555,6 +679,27 @@
                     }
                 });
             }
+            
+            // Adjust bottom navigation for different screen sizes
+            function adjustBottomNav() {
+                const navItems = document.querySelectorAll('.nav-item');
+                const screenWidth = window.innerWidth;
+                
+                navItems.forEach(item => {
+                    const label = item.querySelector('.nav-label');
+                    if (screenWidth < 360) {
+                        // On very small screens, hide labels
+                        if (label) label.style.display = 'none';
+                    } else {
+                        // On larger screens, show labels
+                        if (label) label.style.display = 'block';
+                    }
+                });
+            }
+            
+            // Run on load and resize
+            adjustBottomNav();
+            window.addEventListener('resize', adjustBottomNav);
         });
     </script>
     @await RenderSectionAsync("Scripts", required: false)
