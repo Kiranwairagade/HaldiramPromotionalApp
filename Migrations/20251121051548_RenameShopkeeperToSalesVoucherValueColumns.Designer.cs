@@ -4,6 +4,7 @@ using HaldiramPromotionalApp.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HaldiramPromotionalApp.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251121051548_RenameShopkeeperToSalesVoucherValueColumns")]
+    partial class RenameShopkeeperToSalesVoucherValueColumns
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -67,106 +70,6 @@ namespace HaldiramPromotionalApp.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("AmountReachGoalCampaigns");
-                });
-
-            modelBuilder.Entity("HaldiramPromotionalApp.Models.Cust2EmpMap", b =>
-                {
-                    b.Property<int>("id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("id"));
-
-                    b.Property<string>("customer")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<int>("empt2custid")
-                        .HasColumnType("int");
-
-                    b.Property<string>("phone")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.HasKey("id");
-
-                    b.HasIndex("empt2custid");
-
-                    b.ToTable("Cust2EmpMaps");
-                });
-
-            modelBuilder.Entity("HaldiramPromotionalApp.Models.Customer_Master", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("ContactPerson")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<string>("Division")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<string>("PostalCode")
-                        .IsRequired()
-                        .HasMaxLength(6)
-                        .HasColumnType("nvarchar(6)");
-
-                    b.Property<int>("Sequence")
-                        .HasColumnType("int");
-
-                    b.Property<string>("accounttype")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("address")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("city")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("country")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("email")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("phoneno")
-                        .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)");
-
-                    b.Property<string>("route")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("shortname")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("state")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Customer_Masters");
                 });
 
             modelBuilder.Entity("HaldiramPromotionalApp.Models.DealerBasicOrder", b =>
@@ -249,29 +152,6 @@ namespace HaldiramPromotionalApp.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("DealerMasters");
-                });
-
-            modelBuilder.Entity("HaldiramPromotionalApp.Models.EmpToCustMap", b =>
-                {
-                    b.Property<int>("id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("id"));
-
-                    b.Property<string>("empl")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<string>("phoneno")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.HasKey("id");
-
-                    b.ToTable("EmpToCustMaps");
                 });
 
             modelBuilder.Entity("HaldiramPromotionalApp.Models.FreeProductCampaign", b =>
@@ -823,16 +703,8 @@ namespace HaldiramPromotionalApp.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("DealerId")
+                    b.Property<int>("DealerId")
                         .HasColumnType("int");
-
-                    b.Property<string>("EntityIdentifier")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("EntityType")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("ExpiryDate")
                         .HasColumnType("datetime2");
@@ -864,17 +736,6 @@ namespace HaldiramPromotionalApp.Migrations
                     b.HasIndex("DealerId");
 
                     b.ToTable("Vouchers");
-                });
-
-            modelBuilder.Entity("HaldiramPromotionalApp.Models.Cust2EmpMap", b =>
-                {
-                    b.HasOne("HaldiramPromotionalApp.Models.EmpToCustMap", "EmpToCustMaps")
-                        .WithMany("Cust2EmpMaps")
-                        .HasForeignKey("empt2custid")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("EmpToCustMaps");
                 });
 
             modelBuilder.Entity("HaldiramPromotionalApp.Models.MaterialImage", b =>
@@ -942,14 +803,11 @@ namespace HaldiramPromotionalApp.Migrations
                 {
                     b.HasOne("HaldiramPromotionalApp.Models.DealerMaster", "Dealer")
                         .WithMany()
-                        .HasForeignKey("DealerId");
+                        .HasForeignKey("DealerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Dealer");
-                });
-
-            modelBuilder.Entity("HaldiramPromotionalApp.Models.EmpToCustMap", b =>
-                {
-                    b.Navigation("Cust2EmpMaps");
                 });
 
             modelBuilder.Entity("HaldiramPromotionalApp.Models.Order", b =>

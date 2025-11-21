@@ -28,7 +28,11 @@ namespace HaldiramPromotionalApp.Data
         public DbSet<ShopkeeperMaster> ShopkeeperMasters { get; set; }
         public DbSet<Voucher> Vouchers { get; set; }
         public DbSet<Notification> Notifications { get; set; }
-        // public DbSet<MaterialPoints> MaterialPoints { get; set; }
         public DbSet<DealerBasicOrder> DealerBasicOrders { get; set; }
+        public DbSet<EmpToCustMap> EmpToCustMaps { get; set; } 
+        public DbSet<Cust2EmpMap> Cust2EmpMaps { get; set; } 
+        public DbSet<Customer_Master> Customer_Masters { get; set; }    
+
+
     }
 }
