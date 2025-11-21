@@ -58,7 +58,7 @@ namespace HaldiramPromotionalApp.Models
 
         public Voucher()
         {
-            IssueDate = DateTime.Now;
+            IssueDate = DateTime.UtcNow;
         }
     }
 }

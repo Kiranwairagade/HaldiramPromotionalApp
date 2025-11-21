@@ -21,9 +21,14 @@ namespace HaldiramPromotionalApp.Controllers
         }
 
         // GET: ShopkeeperMaster
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(int? pageNumber)
         {
-            return View(await _context.ShopkeeperMasters.ToListAsync());
+            int pageSize = 10; // Number of items per page
+            int pageIndex = pageNumber ?? 1;
+            var shopkeepers = from s in _context.ShopkeeperMasters
+                             select s;
+            var paginatedShopkeepers = await PaginatedList<ShopkeeperMaster>.CreateAsync(shopkeepers.AsNoTracking(), pageIndex, pageSize);
+            return View(paginatedShopkeepers);
         }
 
         // GET: ShopkeeperMaster/Details/5

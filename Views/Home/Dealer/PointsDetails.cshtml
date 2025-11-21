@@ -1,0 +1,61 @@
+@model IEnumerable<HaldiramPromotionalApp.Models.OrderItem>
+
+@{
+    ViewData["Title"] = "Points Details";
+    // Use pre-computed values provided by the controller (safer and consistent)
+    var totalPointsEarned = ViewData["TotalPointsEarned"] as int? ?? 0;
+    var availablePoints = ViewData["AvailablePoints"] as int? ?? 0;
+    var pointsUsed = ViewData["PointsUsed"] as int? ?? 0;
+}
+
+<link rel="stylesheet" href="~/css/DealerDashboard.css" />
+
+
+
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-header">
+            <h5><i class="fas fa-coins"></i> Points Details</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-12 col-md-6 col-lg-4 mb-3">
+                    <div class="points-card">
+                        <div class="points-code">Total Points Earned</div>
+                        <div class="points-details">
+                            <div class="points-detail-item">
+                               
+                                <div class="detail-value">@totalPointsEarned</div>
+                            </div>
+                            
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-6 col-lg-4 mb-3">
+                    <div class="points-card">
+                        <div class="points-code">Available Points</div>
+                        <div class="points-details">
+                            <div class="points-detail-item">                               
+                                <div class="detail-value">@availablePoints</div>
+                            </div>
+                            
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-6 col-lg-4 mb-3">
+                    <div class="points-card">
+                        <div class="points-code">Points Redeemed</div>
+                        <div class="points-details">
+                            <div class="points-detail-item">                        
+                                <div class="detail-value">@pointsUsed</div>
+                            </div>
+                            
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

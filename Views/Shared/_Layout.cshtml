@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿<!DOCTYPE html>
+﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -8,6 +8,247 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="~/css/DealerDashboard.css" />
+    <style>
+        :root {
+            --primary-color: #8CA9FF;
+            --success-color: #AAC4F5;
+            --info-color: #FFF8DE;
+            --light-color: #FFF2C6;
+            --border-radius: 0px;
+        }
+        
+        /* Update notification badge to use preferred colors */
+        #notificationCount {
+            background-color: var(--primary-color) !important;
+        }
+        
+        /* Update points display to use preferred colors */
+        #pointsDisplay, .points-display-mobile {
+            background-color: var(--light-color) !important;
+            color: #333 !important;
+        }
+        
+        /* Update profile dropdown */
+        #profileDropdown {
+            border-radius: var(--border-radius) !important;
+        }
+        
+        /* Update mobile menu */
+        #mobile-menu .rounded-md {
+            border-radius: var(--border-radius) !important;
+        }
+        
+        /* Update alert messages to use preferred colors */
+        .bg-green-100 {
+            background-color: var(--success-color) !important;
+        }
+        
+        .bg-red-100 {
+            background-color: var(--info-color) !important;
+        }
+        
+        /* Responsive logo and title adjustments */
+        .logo-img {
+            height: 2.5rem;
+            width: auto;
+            margin-right: 0.5rem;
+        }
+        
+        .logo-text {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #4F46E5;
+        }
+        
+        /* Desktop navigation links */
+        .nav-link-desktop {
+            color: #4B5563;
+            padding: 0.5rem 0.75rem;
+            border-radius: var(--border-radius);
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        
+        .nav-link-desktop:hover {
+            color: var(--primary-color);
+            background-color: #EEF2FF;
+        }
+        
+        /* Mobile navigation links */
+        .nav-link-mobile {
+            color: #4B5563;
+            padding: 0.5rem 0.75rem;
+            border-radius: var(--border-radius);
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        .nav-link-mobile:hover {
+            color: var(--primary-color);
+            background-color: #EEF2FF;
+        }
+        
+        /* Points display */
+        .points-display {
+            background-color: var(--light-color);
+            color: #333;
+            padding: 0.25rem 0.75rem;
+            border-radius: var(--border-radius);
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        /* Profile button */
+        .profile-btn {
+            background: transparent;
+            border: none;
+            border-radius: var(--border-radius);
+            padding: 0.25rem;
+            color: #4B5563;
+        }
+        
+        .profile-btn:hover {
+            color: var(--primary-color);
+            background-color: #EEF2FF;
+        }
+        
+        /* Profile container - fixed overlapping issue */
+        .profile-container {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-shrink: 0;
+        }
+        
+        /* User name display */
+        .user-name {
+            color: #4B5563;
+            font-size: 0.875rem;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 120px;
+        }
+        
+        /* Mobile menu button */
+        .mobile-menu-btn {
+            padding: 0.5rem;
+            border-radius: var(--border-radius);
+            color: #4B5563;
+        }
+        
+        .mobile-menu-btn:hover {
+            color: var(--primary-color);
+            background-color: #EEF2FF;
+        }
+        
+        /* Notification bell */
+        .notification-bell {
+            position: relative;
+            padding: 0.25rem;
+            border-radius: var(--border-radius);
+            color: #4B5563;
+        }
+        
+        .notification-bell:hover {
+            color: var(--primary-color);
+            background-color: #EEF2FF;
+        }
+        
+        /* Notification count */
+        .notification-count {
+            position: absolute;
+            top: -0.25rem;
+            right: -0.25rem;
+            background-color: var(--primary-color);
+            color: white;
+            font-size: 0.625rem;
+            font-weight: 600;
+            border-radius: 50%;
+            height: 1.25rem;
+            width: 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* Login button */
+        .login-btn {
+            color: #4B5563;
+            padding: 0.5rem 0.75rem;
+            border-radius: var(--border-radius);
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        .login-btn:hover {
+            color: var(--primary-color);
+            background-color: #EEF2FF;
+        }
+        
+        /* Mobile view adjustments */
+        @@media (max-width: 768px) {
+            .header-content {
+                padding: 0 0.5rem;
+            }
+            
+            .logo-img {
+                height: 2rem;
+            }
+            
+            .logo-text {
+                font-size: 1rem;
+            }
+            
+            .points-display {
+                font-size: 0.75rem;
+                padding: 0.25rem 0.5rem;
+            }
+            
+            .user-name {
+                font-size: 0.75rem;
+                max-width: 80px;
+            }
+            
+            .nav-link-mobile {
+                font-size: 0.8125rem;
+                padding: 0.375rem 0.625rem;
+            }
+            
+            /* Adjust spacing for mobile */
+            .user-info-container {
+                gap: 0.25rem;
+            }
+        }
+        
+        @@media (max-width: 480px) {
+            .logo-img {
+                height: 1.75rem;
+            }
+            
+            .logo-text {
+                font-size: 0.875rem;
+            }
+            
+            .points-display {
+                font-size: 0.625rem;
+                padding: 0.125rem 0.375rem;
+            }
+            
+            .user-name {
+                font-size: 0.625rem;
+                max-width: 60px;
+            }
+            
+            .notification-count {
+                height: 1rem;
+                width: 1rem;
+                font-size: 0.5rem;
+            }
+        }
+    </style>
 </head>
 <body class="bg-gray-150">
     <header class="bg-white shadow-md sticky top-0 z-50">
@@ -16,43 +257,43 @@
                 <div class="flex">
                     <div class="flex-shrink-0 flex items-center">
                         <!-- Logo -->
-                        <img src="data:image/png;base64,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" alt="Haldiram Promotional Logo" class="h-10 w-14 mr-2">
-                        <a asp-area="" asp-controller="Home" asp-action="Index" class="text-xl font-bold text-indigo-600">Haldiram Promotional</a>
+                        <img src="data:image/png;base64,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" alt="Haldiram Promotional Logo" class="logo-img">
+                        <a asp-area="" asp-controller="Home" asp-action="Index" class="logo-text">Haldiram Promotional</a>
                     </div>
-                    <nav class="ml-6 flex space-x-4 hidden sm:flex items-center">
+                    <nav class="ml-6 hidden sm:flex items-center">
                         @if (Context.Session.GetString("UserName") != null)
                         {
                             var userRole = Context.Session.GetString("role");
                             if (userRole == "Dealer")
                             {
-                                <a asp-area="" asp-controller="Home" asp-action="DealerHome" class="text-gray-700 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">
+                                <a asp-area="" asp-controller="Home" asp-action="DealerHome" class="nav-link-desktop">
                                     Dealer Dashboard
                                 </a>
                             }
                             else if (userRole == "Admin")
                             {
-                                <a asp-area="" asp-controller="Home" asp-action="AdminDashboard" class="text-gray-700 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">
+                                <a asp-area="" asp-controller="Home" asp-action="AdminDashboard" class="nav-link-desktop">
                                     Admin Dashboard
                                 </a>
-                                <a asp-area="" asp-controller="Campaigns" asp-action="CreateCampaign" class="text-gray-700 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">
+                                <a asp-area="" asp-controller="Campaigns" asp-action="CreateCampaign" class="nav-link-desktop">
                                     Create Campaign
                                 </a>
-                                <a asp-area="" asp-controller="Campaigns" asp-action="ViewCampaigns" class="text-gray-700 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">
+                                <a asp-area="" asp-controller="Campaigns" asp-action="ViewCampaigns" class="nav-link-desktop">
                                     View Campaigns
                                 </a>
-                                <a asp-area="" asp-controller="Posters" asp-action="Upload" class="text-gray-700 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">
+                                <a asp-area="" asp-controller="Posters" asp-action="Upload" class="nav-link-desktop">
                                     Upload Poster
                                 </a>
-                                <a asp-area="" asp-controller="MaterialImages" asp-action="Upload" class="text-gray-700 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">
+                                <a asp-area="" asp-controller="MaterialImages" asp-action="Upload" class="nav-link-desktop">
                                     Material Images
                                 </a>
-                                <a asp-area="" asp-controller="Products" asp-action="Index" class="text-gray-700 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">
+                                <a asp-area="" asp-controller="Products" asp-action="Index" class="nav-link-desktop">
                                     Products
                                 </a>
                             }
                             else if (userRole == "Shopkeeper")
                             {
-                                <a asp-area="" asp-controller="Home" asp-action="ShopkeeperHome" class="text-gray-700 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">
+                                <a asp-area="" asp-controller="Home" asp-action="ShopkeeperHome" class="nav-link-desktop">
                                     Shopkeeper Dashboard
                                 </a>
                             }
@@ -63,14 +304,14 @@
                 <div class="flex items-center">
                     @if (Context.Session.GetString("UserName") != null)
                     {
-                        <div class="flex items-center space-x-4">
+                        <div class="flex items-center space-x-3 user-info-container">
                             @if (Context.Session.GetString("role") == "Dealer")
                             {
                                 <!-- Notification Icon -->
                                 <div class="relative" id="notificationContainer">
-                                    <button id="notificationBell" class="text-gray-700 hover:text-indigo-600 relative p-1">
+                                    <button id="notificationBell" class="notification-bell">
                                         <i class="fas fa-bell fa-lg"></i>
-                                        <span id="notificationCount" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center" style="display: none;">0</span>
+                                        <span id="notificationCount" class="notification-count" style="display: none;">0</span>
                                     </button>
                                     <!-- Notification Dropdown -->
                                     <div id="notificationDropdown" class="absolute right-0 mt-2 bg-white rounded-md shadow-lg z-50 hidden border border-gray-200 overflow-hidden max-h-96 sm:max-h-[420px]">
@@ -95,17 +336,20 @@
                                 </div>
                                 
                                 }
-                                <!-- Always display available points -->
-                                <span class="text-gray-700 text-sm bg-yellow-100 px-2 py-1 rounded-full" id="pointsDisplay">
-                                    <i class="fas fa-coins"></i> Available Points: <span id="dealerPoints">@(ViewData["AvailablePoints"] ?? ViewData["TotalPoints"] ?? 0)</span>
-                                </span>
+                                @if (Convert.ToInt32(ViewData["AvailablePoints"] ?? ViewData["TotalPoints"] ?? 0) > 0)
+                                {
+                                    <!-- Display available points only if greater than 0 -->
+                                    <span class="points-display" id="pointsDisplay">
+                                        <i class="fas fa-coins"></i> Available Points: <span id="dealerPoints">@(ViewData["AvailablePoints"] ?? ViewData["TotalPoints"] ?? 0)</span>
+                                    </span>
+                                }
                             
                             <!-- Profile icon and name; clicking icon shows logout -->
-                            <div class="relative" id="profileContainer" style="display:flex;align-items:center;gap:8px;">
-                                <button id="profileToggle" class="flex items-center text-gray-700 hover:text-indigo-600 p-1 rounded-full" style="background:transparent;border:none;">
+                            <div class="profile-container" id="profileContainer">
+                                <button id="profileToggle" class="profile-btn">
                                     <i class="fas fa-user-circle fa-lg"></i>
                                 </button>
-                                <span class="text-gray-700 text-sm">Hello, @Context.Session.GetString("name")</span>
+                                <span class="user-name">Hello, @Context.Session.GetString("name")</span>
 
                                 <div id="profileDropdown" class="hidden absolute right-0 mt-10 bg-white border border-gray-200 rounded shadow-md" style="min-width:140px;">
                                     <a asp-area="" asp-controller="Home" asp-action="Logout" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
@@ -117,14 +361,14 @@
                     }
                     else
                     {
-                        <a asp-area="" asp-controller="Home" asp-action="Login" class="text-gray-700 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">
-                            <i class="fas fa-sign-in-alt"></i> Login
+                        <a asp-area="" asp-controller="Home" asp-action="Login" class="login-btn">
+                            <i class="fas fa-sign-in-alt"></i> <span class="hidden sm:inline">Login</span>
                         </a>
                     }
                 </div>
                 <!-- Mobile menu button -->
                 <div class="flex items-center sm:hidden">
-                    <button type="button" class="inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-indigo-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500" aria-controls="mobile-menu" aria-expanded="false">
+                    <button type="button" class="mobile-menu-btn" aria-controls="mobile-menu" aria-expanded="false">
                         <span class="sr-only">Open main menu</span>
                         <svg class="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
@@ -142,50 +386,53 @@
                     var userRole = Context.Session.GetString("role");
                     if (userRole == "Dealer")
                     {
-                        <a asp-area="" asp-controller="Home" asp-action="DealerHome" class="text-gray-700 hover:text-indigo-600 hover:bg-gray-50 block px-3 py-2 rounded-md text-base font-medium">
+                        <a asp-area="" asp-controller="Home" asp-action="DealerHome" class="nav-link-mobile block">
                             Dealer Dashboard
                         </a>
                     }
                     else if (userRole == "Admin")
                     {
-                        <a asp-area="" asp-controller="Home" asp-action="AdminDashboard" class="text-gray-700 hover:text-indigo-600 hover:bg-gray-50 block px-3 py-2 rounded-md text-base font-medium">
+                        <a asp-area="" asp-controller="Home" asp-action="AdminDashboard" class="nav-link-mobile block">
                             Admin Dashboard
                         </a>
-                        <a asp-area="" asp-controller="Campaigns" asp-action="CreateCampaign" class="text-gray-700 hover:text-indigo-600 hover:bg-gray-50 block px-3 py-2 rounded-md text-base font-medium">
+                        <a asp-area="" asp-controller="Campaigns" asp-action="CreateCampaign" class="nav-link-mobile block">
                             Create Campaign
                         </a>
-                        <a asp-area="" asp-controller="Campaigns" asp-action="ViewCampaigns" class="text-gray-700 hover:text-indigo-600 hover:bg-gray-50 block px-3 py-2 rounded-md text-base font-medium">
+                        <a asp-area="" asp-controller="Campaigns" asp-action="ViewCampaigns" class="nav-link-mobile block">
                             View Campaigns
                         </a>
-                        <a asp-area="" asp-controller="Posters" asp-action="Upload" class="text-gray-700 hover:text-indigo-600 hover:bg-gray-50 block px-3 py-2 rounded-md text-base font-medium">
+                        <a asp-area="" asp-controller="Posters" asp-action="Upload" class="nav-link-mobile block">
                             Upload Poster
                         </a>
-                        <a asp-area="" asp-controller="MaterialImages" asp-action="Upload" class="text-gray-700 hover:text-indigo-600 hover:bg-gray-50 block px-3 py-2 rounded-md text-base font-medium">
+                        <a asp-area="" asp-controller="MaterialImages" asp-action="Upload" class="nav-link-mobile block">
                             Material Images
                         </a>
-                        <a asp-area="" asp-controller="Products" asp-action="Index" class="text-gray-700 hover:text-indigo-600 hover:bg-gray-50 block px-3 py-2 rounded-md text-base font-medium">
+                        <a asp-area="" asp-controller="Products" asp-action="Index" class="nav-link-mobile block">
                             Products
                         </a>
                     }
                     else if (userRole == "Shopkeeper")
                     {
-                        <a asp-area="" asp-controller="Home" asp-action="ShopkeeperHome" class="text-gray-700 hover:text-indigo-600 hover:bg-gray-50 block px-3 py-2 rounded-md text-base font-medium">
+                        <a asp-area="" asp-controller="Home" asp-action="ShopkeeperHome" class="nav-link-mobile block">
                             Shopkeeper Dashboard
                         </a>
                     }
                     
-                    <!-- Always show points in mobile menu as well -->
-                    <div class="px-3 py-2 text-sm text-gray-700 bg-yellow-100 rounded-md">
-                        <i class="fas fa-coins"></i> Available Points: <span id="dealerPointsMobile">@(ViewData["AvailablePoints"] ?? ViewData["TotalPoints"] ?? 0)</span>
-                    </div>
+                    @if (Convert.ToInt32(ViewData["AvailablePoints"] ?? ViewData["TotalPoints"] ?? 0) > 0)
+                                    {
+                                        <!-- Show points in mobile menu only if greater than 0 -->
+                                        <div class="px-3 py-2 text-sm text-gray-700 bg-yellow-100 rounded-md">
+                                            <i class="fas fa-coins"></i> Available Points: <span id="dealerPointsMobile">@(ViewData["AvailablePoints"] ?? ViewData["TotalPoints"] ?? 0)</span>
+                                        </div>
+                                    }
                     
-                    <a asp-area="" asp-controller="Home" asp-action="Logout" class="text-gray-700 hover:text-indigo-600 hover:bg-gray-50 block px-3 py-2 rounded-md text-base font-medium">
+                    <a asp-area="" asp-controller="Home" asp-action="Logout" class="nav-link-mobile block">
                         <i class="fas fa-sign-out-alt"></i> Logout
                     </a>
                 }
                 else
                 {
-                    <a asp-area="" asp-controller="Home" asp-action="Login" class="text-gray-700 hover:text-indigo-600 hover:bg-gray-50 block px-3 py-2 rounded-md text-base font-medium">
+                    <a asp-area="" asp-controller="Home" asp-action="Login" class="nav-link-mobile block">
                         <i class="fas fa-sign-in-alt"></i> Login
                     </a>
                 }

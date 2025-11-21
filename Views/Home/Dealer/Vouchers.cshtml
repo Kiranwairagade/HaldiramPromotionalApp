@@ -7,240 +7,218 @@
 
 <link rel="stylesheet" href="~/css/DealerDashboard.css" />
 
-<style>
-    /* Page-specific overrides: stronger card shadow and remove all hover effects on vouchers page */
-    .vouchers-grid .voucher-card {
-        box-shadow: 0 12px 28px rgba(16,185,129,0.10) !important;
-        transition: none !important;
-    }
+<div class="container-fluid">
+    
 
-    /* Disable hover/transform effects for any element inside voucher cards */
-    .vouchers-grid .voucher-card:hover,
-    .vouchers-grid .voucher-card *:hover,
-    .vouchers-grid .redeem-btn:hover,
-    .vouchers-grid .badge:hover {
-        transform: none !important;
-        box-shadow: 0 12px 28px rgba(16,185,129,0.10) !important;
-    }
+    <div class="card">
+        <div class="card-header">
+            <h5><i class="fas fa-filter"></i> Voucher Filters</h5>
+        </div>
+        <div class="card-body">
+            <div class="voucher-filters">
+                <label>Filter:</label>
+                <select id="voucherStatusFilter">
+                    <option value="All">All</option>
+                    <option value="Active">Active</option>
+                    <option value="Expired">Expired</option>
+                    <option value="Redeemed">Redeemed</option>
+                </select>
 
-    /* Remove transitions inside voucher area to prevent hover animations */
-    .vouchers-grid .voucher-card,
-    .vouchers-grid .voucher-card * {
-        transition: none !important;
-    }
-</style>
-
-<div class="dashboard-container">
-    <h2 class="section-header">My Vouchers</h2>
-
-    <div class="voucher-filters" style="display:flex;gap:8px;margin:0.5rem 0 1rem 0;align-items:center;">
-        <label style="font-weight:600;">Filter:</label>
-        <select id="voucherStatusFilter" style="padding:6px;border-radius:4px;border:1px solid #ddd;">
-            <option value="All">All</option>
-            <option value="Active">Active</option>
-            <option value="Expired">Expired</option>
-            <option value="Redeemed">Redeemed</option>
-        </select>
-
-        <select id="voucherCampaignFilter" style="padding:6px;border-radius:4px;border:1px solid #ddd;">
-            <option value="All">All Campaigns</option>
-            <option value="PointsToCash">PointsToCash</option>
-            <option value="FreeProduct">FreeProduct</option>
-            <option value="PointsReward">PointsReward</option>
-            <option value="AmountReachGoal">AmountReachGoal</option>
-            <option value="SessionDurationReward">SessionDurationReward</option>
-        </select>
-        <button id="voucherApplyFilters" class="btn bg-white" style="margin-left:6px;padding:6px 10px;">Apply</button>
-        <button id="voucherClearFilters" class="btn bg-white" style="margin-left:4px;padding:6px 10px;">Clear</button>
+                <select id="voucherCampaignFilter">
+                    <option value="All">All Campaigns</option>
+                    <option value="PointsToCash">PointsToCash</option>
+                    <option value="FreeProduct">FreeProduct</option>
+                    <option value="PointsReward">PointsReward</option>
+                    <option value="AmountReachGoal">AmountReachGoal</option>
+                    <option value="SessionDurationReward">SessionDurationReward</option>
+                </select>
+                <button id="voucherApplyFilters" class="btn btn-outline-primary">Apply</button>
+                <button id="voucherClearFilters" class="btn btn-outline-primary">Clear</button>
+            </div>
+        </div>
     </div>
     
-    @if (Model.Vouchers != null && Model.Vouchers.Any())
-    {
-        <!-- Render initial 10 vouchers on server; further vouchers will be fetched via AJAX (lazy load) -->
-        <div id="vouchersGrid" class="vouchers-grid" data-current-page="1" data-page-size="25" data-has-more="true">
-            @foreach (var voucher in Model.Vouchers.Take(10))
+    <div class="card">
+        <div class="card-header">
+            <h5><i class="fas fa-ticket-alt"></i> Vouchers</h5>
+        </div>
+        <div class="card-body">
+            @if (Model.Vouchers != null && Model.Vouchers.Any())
             {
-                <div class="voucher-card @(voucher.IsRedeemed ? "redeemed" : "")">
-                    <div class="voucher-header">
-                        @{
-                            var campaignDetails = Model.VoucherCampaignDetails.ContainsKey(voucher.Id) ? 
-                                Model.VoucherCampaignDetails[voucher.Id] : new VoucherCampaignDetails();
-                        }
-                        
-                        @if (campaignDetails.CampaignType == "PointsToCash")
-                        {
-                            <h3 class="voucher-title">₹<span class="voucher-value-large">@voucher.VoucherValue</span> Cash Voucher</h3>
-                        }
-                        else if (campaignDetails.CampaignType == "FreeProduct")
-                        {
-                            <h3 class="voucher-title">Free Product Voucher</h3>
-                        }
-                        else if (campaignDetails.CampaignType == "PointsReward")
-                        {
-                            <h3 class="voucher-title">Reward Voucher</h3>
-                        }
-                        else if (campaignDetails.CampaignType == "AmountReachGoal")
-                        {
-                            <h3 class="voucher-title">₹<span class="voucher-value-large">@voucher.VoucherValue</span> Achievement Voucher</h3>
-                        }
-                        else if (campaignDetails.CampaignType == "SessionDurationReward")
-                        {
-                            <h3 class="voucher-title">₹<span class="voucher-value-large">@voucher.VoucherValue</span> Session Reward</h3>
-                        }
-                        else
-                        {
-                            <h3 class="voucher-title">₹@voucher.VoucherValue Voucher</h3>
-                        }
-                        
-                        @if (voucher.IsRedeemed)
-                        {
-                            <span class="badge badge-redeemed">Redeemed</span>
-                        }
-                        else if (DateTime.Now > voucher.ExpiryDate)
-                        {
-                            <span class="badge badge-expired">Expired</span>
-                        }
-                        else
-                        {
-                            <span class="badge badge-active">Active</span>
-                        }
-                    </div>
-                    
-                    <div class="voucher-details">
-                        <div class="info-row">
-                            <span class="info-label">Voucher Code:</span>
-                            <span class="info-value">@voucher.VoucherCode</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">Campaign:</span>
-                            <span class="info-value">@campaignDetails.CampaignName</span>
-                        </div>
-                        
-                        @if (campaignDetails.CampaignType == "PointsToCash")
-                        {
-                            <div class="info-row">
-                                <span class="info-label">Cash Value:</span>
-                                <span class="info-value voucher-value-large">₹@voucher.VoucherValue</span>
-                            </div>
-                        }
-                        else if (campaignDetails.CampaignType == "FreeProduct")
-                        {
-                            <div class="info-row">
-                                <span class="info-label">Free Products:</span>
-                                <span class="info-value">
-                                    @if (campaignDetails.FreeProducts.Any())
-                                    {
-                                        foreach (var product in campaignDetails.FreeProducts)
-                                        {
-                                            <div><span class="voucher-value-large">@product.Value</span> x @product.Key</div>
-                                        }
-                                    }
-                                    else
-                                    {
-                                        <span>Free products based on your purchases</span>
-                                    }
-                                </span>
-                            </div>
-                        }
-                        else if (campaignDetails.CampaignType == "PointsReward")
-                        {
-                            <div class="info-row">
-                                <span class="info-label">Reward:</span>
-                                <span class="info-value voucher-value-large">@campaignDetails.RewardProductName</span>
-                            </div>
-                        }
-                        else if (campaignDetails.CampaignType == "AmountReachGoal")
-                        {
-                            <div class="info-row">
-                                <span class="info-label">Voucher Value:</span>
-                                <span class="info-value voucher-value-large">₹@voucher.VoucherValue</span>
-                            </div>
-                            <div class="info-row">
-                                <span class="info-label">Target Amount:</span>
-                                <span class="info-value">₹@campaignDetails.TargetAmount</span>
-                            </div>
-                        }
-                        else if (campaignDetails.CampaignType == "SessionDurationReward")
-                        {
-                            <div class="info-row">
-                                <span class="info-label">Reward Value:</span>
-                                <span class="info-value voucher-value-large">₹@voucher.VoucherValue</span>
-                            </div>
-                            <div class="info-row">
-                                <span class="info-label">Session Duration:</span>
-                                <span class="info-value">@campaignDetails.SessionDuration minutes</span>
-                            </div>
-                        }
-                        
-                        @{
-                            var totalDays = (voucher.ExpiryDate.Date - voucher.IssueDate.Date).Days;
-                            var expiryStr = voucher.ExpiryDate.ToString("dd/MM/yyyy");
-                        }
-                        <div class="info-row">
-                            <span class="info-label">Validity:</span>
-                            <span class="info-value">@((totalDays > 0) ? $"Expires after {totalDays} days (Expiry: {expiryStr})" : $"Expiry: {expiryStr}")</span>
-                        </div>
-                        @if (voucher.PointsUsed > 0)
-                        {
-                            <div class="info-row">
-                                <span class="info-label">Points Used:</span>
-                                <span class="info-value">@voucher.PointsUsed</span>
-                            </div>
-                        }
-                    </div>
-                    
-                    @if (!voucher.IsRedeemed && DateTime.Now <= voucher.ExpiryDate)
+                <!-- Render initial 10 vouchers on server; further vouchers will be fetched via AJAX (lazy load) -->
+                <div id="vouchersGrid" class="vouchers-grid" data-current-page="1" data-page-size="25" data-has-more="true">
+                    @foreach (var voucher in Model.Vouchers.Take(10))
                     {
-                        <div class="voucher-qrcode">
-                            @{
-                                var qrCodeBase64 = Model.VoucherQRCodeData.ContainsKey(voucher.Id) ? Model.VoucherQRCodeData[voucher.Id] : "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==";
+                        <div class="voucher-card @(voucher.IsRedeemed ? "redeemed" : "")">
+                            <div class="voucher-header">
+                                @{
+                                    var campaignDetails = Model.VoucherCampaignDetails.ContainsKey(voucher.Id) ? 
+                                        Model.VoucherCampaignDetails[voucher.Id] : new VoucherCampaignDetails();
+                                }
+                                
+                                @if (campaignDetails.CampaignType == "PointsToCash")
+                                {
+                                    <h3 class="voucher-title">₹<span class="voucher-value-large">@voucher.VoucherValue</span> Cash Voucher</h3>
+                                }
+                                else if (campaignDetails.CampaignType == "FreeProduct")
+                                {
+                                    <h3 class="voucher-title">Free Product Voucher</h3>
+                                }
+                                else if (campaignDetails.CampaignType == "PointsReward")
+                                {
+                                    <h3 class="voucher-title">Reward Voucher</h3>
+                                }
+                                else if (campaignDetails.CampaignType == "AmountReachGoal")
+                                {
+                                    <h3 class="voucher-title">₹<span class="voucher-value-large">@voucher.VoucherValue</span> Achievement Voucher</h3>
+                                }
+                                else if (campaignDetails.CampaignType == "SessionDurationReward")
+                                {
+                                    <h3 class="voucher-title">₹<span class="voucher-value-large">@voucher.VoucherValue</span> Session Reward</h3>
+                                }
+                                else
+                                {
+                                    <h3 class="voucher-title">₹@voucher.VoucherValue Voucher</h3>
+                                }
+                                
+                                @if (voucher.IsRedeemed)
+                                {
+                                    <span class="voucher-status redeemed">Redeemed</span>
+                                }
+                                else if (DateTime.UtcNow > voucher.ExpiryDate)
+                                {
+                                    <span class="voucher-status expired">Expired</span>
+                                }
+                                else
+                                {
+                                    <span class="voucher-status active">Active</span>
+                                }
+                            </div>
+                            
+                            <div class="voucher-details">
+                                <div class="voucher-detail-item">
+                                    <div class="detail-label">Voucher Code</div>
+                                    <div class="detail-value">@voucher.VoucherCode</div>
+                                </div>
+                                <div class="voucher-detail-item">
+                                    <div class="detail-label">Campaign</div>
+                                    <div class="detail-value">@campaignDetails.CampaignName</div>
+                                </div>
+                                
+                                @if (campaignDetails.CampaignType == "PointsToCash")
+                                {
+                                    <div class="voucher-detail-item">
+                                        <div class="detail-label">Cash Value</div>
+                                        <div class="detail-value voucher-value-large">₹@voucher.VoucherValue</div>
+                                    </div>
+                                }
+                                else if (campaignDetails.CampaignType == "FreeProduct")
+                                {
+                                    <div class="voucher-detail-item">
+                                        <div class="detail-label">Free Products</div>
+                                        <div class="detail-value">
+                                            @if (campaignDetails.FreeProducts.Any())
+                                            {
+                                                @foreach (var product in campaignDetails.FreeProducts)
+                                                {
+                                                    <div><span class="voucher-value-large">@product.Value</span> x @product.Key</div>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <span>Free products based on your purchases</span>
+                                            }
+                                        </div>
+                                    </div>
+                                }
+                                else if (campaignDetails.CampaignType == "PointsReward")
+                                {
+                                    <div class="voucher-detail-item">
+                                        <div class="detail-label">Reward</div>
+                                        <div class="detail-value voucher-value-large">@campaignDetails.RewardProductName</div>
+                                    </div>
+                                }
+                                else if (campaignDetails.CampaignType == "AmountReachGoal")
+                                {
+                                    <div class="voucher-detail-item">
+                                        <div class="detail-label">Voucher Value</div>
+                                        <div class="detail-value voucher-value-large">₹@voucher.VoucherValue</div>
+                                    </div>
+                                    <div class="voucher-detail-item">
+                                        <div class="detail-label">Target Amount</div>
+                                        <div class="detail-value">₹@campaignDetails.TargetAmount</div>
+                                    </div>
+                                }
+                                else if (campaignDetails.CampaignType == "SessionDurationReward")
+                                {
+                                    <div class="voucher-detail-item">
+                                        <div class="detail-label">Reward Value</div>
+                                        <div class="detail-value voucher-value-large">₹@voucher.VoucherValue</div>
+                                    </div>
+                                    <div class="voucher-detail-item">
+                                        <div class="detail-label">Session Duration</div>
+                                        <div class="detail-value">@campaignDetails.SessionDuration minutes</div>
+                                    </div>
+                                }
+                                
+                                @{
+                                    var totalDays = (voucher.ExpiryDate.Date - voucher.IssueDate.Date).Days;
+                                    var expiryStr = voucher.ExpiryDate.ToString("dd/MM/yyyy");
+                                }
+                                <div class="voucher-detail-item">
+                                    <div class="detail-label">Validity</div>
+                                    <div class="detail-value">@((totalDays > 0) ? $"Expires after {totalDays} days (Expiry: {expiryStr})" : $"Expiry: {expiryStr}")</div>
+                                </div>
+                                @if (voucher.PointsUsed > 0)
+                                {
+                                    <div class="voucher-detail-item">
+                                        <div class="detail-label">Points Used</div>
+                                        <div class="detail-value">@voucher.PointsUsed</div>
+                                    </div>
+                                }
+                            </div>
+                            
+                            @if (!voucher.IsRedeemed && DateTime.UtcNow <= voucher.ExpiryDate)
+                            {
+                                <div class="voucher-qrcode">
+                                    @{
+                                        var qrCodeBase64 = Model.VoucherQRCodeData.ContainsKey(voucher.Id) ? Model.VoucherQRCodeData[voucher.Id] : "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==";
+                                    }
+                                    <div class="qrcode-placeholder">
+                                        <img src="data:image/png;base64,@qrCodeBase64" alt="QR Code" class="qrcode-image">
+                                    </div>
+                                    <p class="qrcode-instruction">Show this QR code at the counter to redeem</p>
+                                </div>
                             }
-                            <div class="qrcode-placeholder">
-                                <img src="data:image/png;base64,@qrCodeBase64" alt="QR Code" class="qrcode-image">
-                            </div>
-                            <p class="qrcode-instruction">Show this QR code at the counter to redeem</p>
-                        </div>
-                        
-                        <button class="redeem-btn" onclick="redeemVoucher(@voucher.Id)">
-                            Redeem Voucher
-                        </button>
-                    }
-                    else if (voucher.IsRedeemed)
-                    {
-                        <div class="redeemed-info">
-                            <p>Redeemed on @voucher.RedeemedDate?.ToString("dd/MM/yyyy")</p>
-                        </div>
-                    }
-                    else if (DateTime.Now > voucher.ExpiryDate)
-                    {
-                        <div class="expired-info">
-                            <p>This voucher has expired</p>
+                            else if (voucher.IsRedeemed)
+                            {
+                                <div class="redeemed-info">
+                                    <p>Redeemed on @voucher.RedeemedDate?.ToString("dd/MM/yyyy")</p>
+                                </div>
+                            }
+                            else if (DateTime.UtcNow > voucher.ExpiryDate)
+                            {
+                                <div class="expired-info">
+                                    <p>This voucher has expired</p>
+                                </div>
+                            }
                         </div>
                     }
                 </div>
             }
+            else
+            {
+                <div class="empty-vouchers">
+                    <i class="fas fa-ticket-alt"></i>
+                    <h4>No Vouchers Available</h4>
+                    <p>You haven't generated any vouchers yet. Earn more points to generate vouchers!</p>
+                </div>
+            }
         </div>
-    }
-    else
-    {
-        <div class="empty-state">
-            <div class="empty-state-icon">No vouchers available.</div>
-            <p>You haven't generated any vouchers yet. Earn more points to generate vouchers!</p>
-        </div>
-    }
-
+    </div>
 </div>
 
 <script>
-    function redeemVoucher(voucherId) {
-        if (confirm('Are you sure you want to redeem this voucher?')) {
-            // In a real implementation, this would make an AJAX call to the server
-            alert('Voucher redeemed successfully!');
-            // Refresh the page to show updated status
-            location.reload();
-        }
-    }
-
     // Lazy loading: initial page (1) is server-rendered with 10 items.
     // Subsequent loads will request `GetVouchersPage?page=X&pageSize=25`.
     (function () {
@@ -283,21 +261,21 @@
             const campaignType = getProp(v, 'CampaignType') || '';
             const title = titleMap[campaignType] || `₹${getProp(v,'VoucherValue') || ''} Voucher`;
 
-            let statusBadge = '<span class="badge badge-active">Active</span>';
+            let statusBadge = '<span class="voucher-status active">Active</span>';
             const now = new Date();
             const expiry = new Date(getProp(v,'ExpiryDate'));
-            if (getProp(v,'IsRedeemed')) statusBadge = '<span class="badge badge-redeemed">Redeemed</span>';
-            else if (!isNaN(expiry) && now > expiry) statusBadge = '<span class="badge badge-expired">Expired</span>';
+            if (getProp(v,'IsRedeemed')) statusBadge = '<span class="voucher-status redeemed">Redeemed</span>';
+            else if (!isNaN(expiry) && now > expiry) statusBadge = '<span class="voucher-status expired">Expired</span>';
 
             let detailsHtml = '';
-            detailsHtml += `<div class="info-row"><span class="info-label">Voucher Code:</span><span class="info-value">${getProp(v,'VoucherCode') || ''}</span></div>`;
-            detailsHtml += `<div class="info-row"><span class="info-label">Campaign:</span><span class="info-value">${getProp(v,'CampaignName') || ''}</span></div>`;
+            detailsHtml += `<div class="voucher-detail-item"><div class="detail-label">Voucher Code</div><div class="detail-value">${getProp(v,'VoucherCode') || ''}</div></div>`;
+            detailsHtml += `<div class="voucher-detail-item"><div class="detail-label">Campaign</div><div class="detail-value">${getProp(v,'CampaignName') || ''}</div></div>`;
 
             if (campaignType === 'PointsToCash') {
-                detailsHtml += `<div class="info-row"><span class="info-label">Cash Value:</span><span class="info-value voucher-value-large">₹${getProp(v,'VoucherValue') || ''}</span></div>`;
+                detailsHtml += `<div class="voucher-detail-item"><div class="detail-label">Cash Value</div><div class="detail-value voucher-value-large">₹${getProp(v,'VoucherValue') || ''}</div></div>`;
             } else if (campaignType === 'FreeProduct') {
                 const freeProducts = getProp(v,'FreeProducts') || {};
-                detailsHtml += `<div class="info-row"><span class="info-label">Free Products:</span><span class="info-value">`;
+                detailsHtml += `<div class="voucher-detail-item"><div class="detail-label">Free Products</div><div class="detail-value">`;
                 if (freeProducts && Object.keys(freeProducts).length) {
                     for (const [k, qty] of Object.entries(freeProducts)) {
                         detailsHtml += `<div><span class="voucher-value-large">${qty}</span> x ${k}</div>`;
@@ -305,13 +283,13 @@
                 } else {
                     detailsHtml += `<span>Free products based on your purchases</span>`;
                 }
-                detailsHtml += `</span></div>`;
+                detailsHtml += `</div></div>`;
             } else if (campaignType === 'PointsReward') {
-                detailsHtml += `<div class="info-row"><span class="info-label">Reward:</span><span class="info-value voucher-value-large">${getProp(v,'RewardProductName') || ''}</span></div>`;
+                detailsHtml += `<div class="voucher-detail-item"><div class="detail-label">Reward</div><div class="detail-value voucher-value-large">${getProp(v,'RewardProductName') || ''}</div></div>`;
             } else if (campaignType === 'AmountReachGoal') {
-                detailsHtml += `<div class="info-row"><span class="info-label">Voucher Value:</span><span class="info-value voucher-value-large">₹${getProp(v,'VoucherValue') || ''}</span></div>`;
+                detailsHtml += `<div class="voucher-detail-item"><div class="detail-label">Voucher Value</div><div class="detail-value voucher-value-large">₹${getProp(v,'VoucherValue') || ''}</div></div>`;
             } else if (campaignType === 'SessionDurationReward') {
-                detailsHtml += `<div class="info-row"><span class="info-label">Reward Value:</span><span class="info-value voucher-value-large">₹${getProp(v,'VoucherValue') || ''}</span></div>`;
+                detailsHtml += `<div class="voucher-detail-item"><div class="detail-label">Reward Value</div><div class="detail-value voucher-value-large">₹${getProp(v,'VoucherValue') || ''}</div></div>`;
             }
 
             const issueDate = getProp(v,'IssueDate');
@@ -320,10 +298,10 @@
             const expiryDt = expiryDate ? new Date(expiryDate) : null;
             const totalDays = (issueDt && expiryDt) ? ((expiryDt.setHours(0,0,0,0) - issueDt.setHours(0,0,0,0)) / (1000 * 60 * 60 * 24)) : 0;
             const validityText = (totalDays > 0) ? `Expires after ${Math.round(totalDays)} days (Expiry: ${isoToDisplay(expiryDate)})` : `Expiry: ${isoToDisplay(expiryDate)}`;
-            detailsHtml += `<div class="info-row"><span class="info-label">Validity:</span><span class="info-value">${validityText}</span></div>`;
+            detailsHtml += `<div class="voucher-detail-item"><div class="detail-label">Validity</div><div class="detail-value">${validityText}</div></div>`;
             const pointsUsed = getProp(v,'PointsUsed');
             if (pointsUsed && pointsUsed > 0) {
-                detailsHtml += `<div class="info-row"><span class="info-label">Points Used:</span><span class="info-value">${pointsUsed}</span></div>`;
+                detailsHtml += `<div class="voucher-detail-item"><div class="detail-label">Points Used</div><div class="detail-value">${pointsUsed}</div></div>`;
             }
 
             const qrBase64 = getProp(v,'QRCodeBase64') || '';
@@ -332,8 +310,10 @@
             const isRedeemedVal = getProp(v,'IsRedeemed');
             const nowForQr = new Date();
             const isExpired = expiryDt ? (nowForQr > expiryDt) : false;
+            
+            // Removed redeem button and related code
             const qrHtml = (!isRedeemedVal && !isExpired)
-                ? `<div class="voucher-qrcode"><div class="qrcode-placeholder"><img src="data:image/png;base64,${qrBase64}" alt="QR Code" class="qrcode-image"></div><p class="qrcode-instruction">Show this QR code at the counter to redeem</p></div><button class="redeem-btn" onclick="redeemVoucher(${idVal})">Redeem Voucher</button>`
+                ? `<div class="voucher-qrcode"><div class="qrcode-placeholder"><img src="data:image/png;base64,${qrBase64}" alt="QR Code" class="qrcode-image"></div><p class="qrcode-instruction">Show this QR code at the counter to redeem</p></div>`
                 : isRedeemedVal ? `<div class="redeemed-info"><p>Redeemed on ${redeemedDateVal ? isoToDisplay(redeemedDateVal) : ''}</p></div>` : `<div class="expired-info"><p>This voucher has expired</p></div>`;
 
             return `<div class="voucher-card ${isRedeemedVal ? 'redeemed' : ''}"><div class="voucher-header"><h3 class="voucher-title">${title}</h3>${statusBadge}</div><div class="voucher-details">${detailsHtml}</div>${qrHtml}</div>`;
