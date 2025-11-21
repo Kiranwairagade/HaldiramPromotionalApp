@@ -22,7 +22,7 @@ namespace HaldiramPromotionalApp.Controllers
         {
             if (order == null || dealer == null || user == null) return;
 
-            var now = DateTime.Now;
+            var now = DateTime.UtcNow;
 
             // Load active campaigns that are currently running
             var pointsToCashCampaigns = await _context.PointsToCashCampaigns
@@ -49,6 +49,7 @@ namespace HaldiramPromotionalApp.Controllers
                     return new Dictionary<string, int>();
                 }
             }
+            var vouchersToAdd = new List<Models.Voucher>();
 
             // Check PointsToCash campaigns (allocate vouchers per-order in multiples of threshold)
             foreach (var camp in pointsToCashCampaigns)
@@ -68,7 +69,6 @@ namespace HaldiramPromotionalApp.Controllers
                 if (orderPoints >= camp.VoucherGenerationThreshold)
                 {
                     int count = orderPoints / camp.VoucherGenerationThreshold;
-                    var vouchersToAdd = new List<Models.Voucher>();
 
                     for (int i = 0; i < count; i++)
                     {
@@ -81,10 +81,10 @@ namespace HaldiramPromotionalApp.Controllers
                             CampaignId = camp.Id,
                             VoucherValue = camp.VoucherValue,
                             PointsUsed = camp.VoucherGenerationThreshold,
-                            IssueDate = DateTime.Now,
-                            ExpiryDate = DateTime.Now.AddDays(camp.VoucherValidity),
+                            IssueDate = DateTime.UtcNow,
+                            ExpiryDate = DateTime.UtcNow.AddDays(camp.VoucherValidity),
                             IsRedeemed = false,
-                            QRCodeData = $"{code}|{dealer.Id}|{camp.VoucherValue}|{DateTime.Now.AddDays(camp.VoucherValidity):yyyy-MM-dd}|Order:{order.Id}"
+                            QRCodeData = $"{code}|{dealer.Id}|{camp.VoucherValue}|{DateTime.UtcNow.AddDays(camp.VoucherValidity):yyyy-MM-dd}|Order:{order.Id}"
                         };
 
                         vouchersToAdd.Add(voucher);
@@ -92,17 +92,7 @@ namespace HaldiramPromotionalApp.Controllers
                         orderPoints -= camp.VoucherGenerationThreshold;
                     }
 
-                    if (vouchersToAdd.Any())
-                    {
-                        _context.Vouchers.AddRange(vouchersToAdd);
-                        await _context.SaveChangesAsync();
-
-                        // Notify dealer/user for each voucher
-                        foreach (var v in vouchersToAdd)
-                        {
-                            await _notificationService.CreateVoucherNotificationAsync(user.Id, v.VoucherCode, v.VoucherValue, v.Id);
-                        }
-                    }
+                    
                 }
             }
 
@@ -124,7 +114,6 @@ namespace HaldiramPromotionalApp.Controllers
                 if (orderPoints >= camp.VoucherGenerationThreshold)
                 {
                     int count = orderPoints / camp.VoucherGenerationThreshold;
-                    var vouchersToAdd = new List<Models.Voucher>();
 
                     for (int i = 0; i < count; i++)
                     {
@@ -137,26 +126,27 @@ namespace HaldiramPromotionalApp.Controllers
                             CampaignId = camp.Id,
                             VoucherValue = 0m,
                             PointsUsed = camp.VoucherGenerationThreshold,
-                            IssueDate = DateTime.Now,
-                            ExpiryDate = DateTime.Now.AddDays(camp.VoucherValidity),
+                            IssueDate = DateTime.UtcNow,
+                            ExpiryDate = DateTime.UtcNow.AddDays(camp.VoucherValidity),
                             IsRedeemed = false,
-                            QRCodeData = $"{code}|{dealer.Id}|0|{DateTime.Now.AddDays(camp.VoucherValidity):yyyy-MM-dd}|Order:{order.Id}"
+                            QRCodeData = $"{code}|{dealer.Id}|0|{DateTime.UtcNow.AddDays(camp.VoucherValidity):yyyy-MM-dd}|Order:{order.Id}"
                         };
 
                         vouchersToAdd.Add(voucher);
                         orderPoints -= camp.VoucherGenerationThreshold;
                     }
 
-                    if (vouchersToAdd.Any())
-                    {
-                        _context.Vouchers.AddRange(vouchersToAdd);
-                        await _context.SaveChangesAsync();
+                    
+                }
+            }
+            if (vouchersToAdd.Any())
+            {
+                _context.Vouchers.AddRange(vouchersToAdd);
+                await _context.SaveChangesAsync();
 
-                        foreach (var v in vouchersToAdd)
-                        {
-                            await _notificationService.CreateVoucherNotificationAsync(user.Id, v.VoucherCode, v.VoucherValue, v.Id);
-                        }
-                    }
+                foreach (var v in vouchersToAdd)
+                {
+                    await _notificationService.CreateVoucherNotificationAsync(user.Id, v.VoucherCode, v.VoucherValue, v.Id);
                 }
             }
         }
@@ -192,7 +182,7 @@ namespace HaldiramPromotionalApp.Controllers
                 .ThenInclude(oi => oi.Material)
                 .Where(o => o.DealerId == dealer.Id) // Filter by dealer ID
                 .ToListAsync();
-            return View("~/Views/Dealer/Orders/Index.cshtml", orders);
+            return View("~/Views/Home/Dealer/Orders/Index.cshtml", orders);
         }
 
         // GET: Orders/Details/5
@@ -213,7 +203,7 @@ namespace HaldiramPromotionalApp.Controllers
                 return NotFound();
             }
 
-            return View("~/Views/Dealer/Orders/Details.cshtml", order);
+            return View("~/Views/Home/Dealer/Orders/Details.cshtml", order);
         }
 
         // GET: Orders/GetOrderDetails/5
@@ -314,7 +304,7 @@ namespace HaldiramPromotionalApp.Controllers
                 // Create the order with user information and dealer ID
                 var order = new Order
                 {
-                    OrderDate = DateTime.Now,
+                    OrderDate = DateTime.UtcNow,
                     UserId = user.Id,
                     DealerId = dealer.Id, // Set the DealerId from the DealerMaster record
                     OrderStatus = "Pending",

@@ -103,7 +103,7 @@ namespace HaldiramPromotionalApp.Controllers
             {
                 // Check PointsToCash campaigns for automatic voucher generation (allocate in multiples)
                 var pointsToCashCampaigns = await _context.PointsToCashCampaigns
-                    .Where(c => c.IsActive && c.StartDate <= DateTime.Now && c.EndDate >= DateTime.Now)
+                    .Where(c => c.IsActive && c.StartDate <= DateTime.UtcNow && c.EndDate >= DateTime.UtcNow)
                     .ToListAsync();
 
                 System.Diagnostics.Debug.WriteLine($"Found {pointsToCashCampaigns.Count} active PointsToCash campaigns");
@@ -126,7 +126,7 @@ namespace HaldiramPromotionalApp.Controllers
                             var vouchers = new List<Voucher>();
                             for (int i = 0; i < toCreate; i++)
                             {
-                                var voucherCode = $"PTC{dealer.Id}{campaign.Id}{DateTime.Now:yyyyMMddHHmmss}{i}";
+                                var voucherCode = $"PTC{dealer.Id}{campaign.Id}{DateTime.UtcNow:yyyyMMddHHmmss}{i}";
                                 var voucher = new Voucher
                                 {
                                     VoucherCode = voucherCode,
@@ -135,9 +135,9 @@ namespace HaldiramPromotionalApp.Controllers
                                     CampaignId = campaign.Id,
                                     VoucherValue = campaign.VoucherValue,
                                     PointsUsed = campaign.VoucherGenerationThreshold,
-                                    IssueDate = DateTime.Now,
-                                    ExpiryDate = DateTime.Now.AddDays(campaign.VoucherValidity),
-                                    QRCodeData = $"{voucherCode}|{dealer.Id}|{campaign.VoucherValue}|{DateTime.Now.AddDays(campaign.VoucherValidity):yyyy-MM-dd}"
+                                    IssueDate = DateTime.UtcNow,
+                                    ExpiryDate = DateTime.UtcNow.AddDays(campaign.VoucherValidity),
+                                    QRCodeData = $"{voucherCode}|{dealer.Id}|{campaign.VoucherValue}|{DateTime.UtcNow.AddDays(campaign.VoucherValidity):yyyy-MM-dd}"
                                 };
 
                                 vouchers.Add(voucher);
@@ -166,7 +166,7 @@ namespace HaldiramPromotionalApp.Controllers
 
                 // Check PointsReward campaigns for automatic voucher generation
                 var pointsRewardCampaigns = await _context.PointsRewardCampaigns
-                    .Where(c => c.IsActive && c.StartDate <= DateTime.Now && c.EndDate >= DateTime.Now)
+                    .Where(c => c.IsActive && c.StartDate <= DateTime.UtcNow && c.EndDate >= DateTime.UtcNow)
                     .ToListAsync();
                 
                 // Log campaign count for debugging
@@ -190,7 +190,7 @@ namespace HaldiramPromotionalApp.Controllers
                             var vouchers = new List<Voucher>();
                             for (int i = 0; i < toCreate; i++)
                             {
-                                var voucherCode = $"PTR{dealer.Id}{campaign.Id}{DateTime.Now:yyyyMMddHHmmss}{i}";
+                                var voucherCode = $"PTR{dealer.Id}{campaign.Id}{DateTime.UtcNow:yyyyMMddHHmmss}{i}";
                                 var voucher = new Voucher
                                 {
                                     VoucherCode = voucherCode,
@@ -199,9 +199,9 @@ namespace HaldiramPromotionalApp.Controllers
                                     CampaignId = campaign.Id,
                                     VoucherValue = 100,
                                     PointsUsed = campaign.VoucherGenerationThreshold,
-                                    IssueDate = DateTime.Now,
-                                    ExpiryDate = DateTime.Now.AddDays(campaign.VoucherValidity),
-                                    QRCodeData = $"{voucherCode}|{dealer.Id}|100|{DateTime.Now.AddDays(campaign.VoucherValidity):yyyy-MM-dd}"
+                                    IssueDate = DateTime.UtcNow,
+                                    ExpiryDate = DateTime.UtcNow.AddDays(campaign.VoucherValidity),
+                                    QRCodeData = $"{voucherCode}|{dealer.Id}|100|{DateTime.UtcNow.AddDays(campaign.VoucherValidity):yyyy-MM-dd}"
                                 };
 
                                 vouchers.Add(voucher);
@@ -230,7 +230,7 @@ namespace HaldiramPromotionalApp.Controllers
 
                 // Check AmountReachGoal campaigns for automatic voucher generation
                 var amountReachGoalCampaigns = await _context.AmountReachGoalCampaigns
-                    .Where(c => c.IsActive && c.StartDate <= DateTime.Now && c.EndDate >= DateTime.Now)
+                    .Where(c => c.IsActive && c.StartDate <= DateTime.UtcNow && c.EndDate >= DateTime.UtcNow)
                     .ToListAsync();
 
                 // Log campaign count for debugging
@@ -256,7 +256,7 @@ namespace HaldiramPromotionalApp.Controllers
                         if (!existingVoucher)
                         {
                             // Generate voucher
-                            var voucherCode = $"ARG{dealer.Id}{campaign.Id}{DateTime.Now:yyyyMMddHHmmss}";
+                            var voucherCode = $"ARG{dealer.Id}{campaign.Id}{DateTime.UtcNow:yyyyMMddHHmmss}";
                             var voucher = new Voucher
                             {
                                 VoucherCode = voucherCode,
@@ -265,9 +265,9 @@ namespace HaldiramPromotionalApp.Controllers
                                 CampaignId = campaign.Id,
                                 VoucherValue = campaign.VoucherValue,
                                 PointsUsed = 0, // No points used for this campaign type
-                                IssueDate = DateTime.Now,
-                                ExpiryDate = DateTime.Now.AddDays(campaign.VoucherValidity),
-                                QRCodeData = $"{voucherCode}|{dealer.Id}|{campaign.VoucherValue}|{DateTime.Now.AddDays(campaign.VoucherValidity):yyyy-MM-dd}"
+                                IssueDate = DateTime.UtcNow,
+                                ExpiryDate = DateTime.UtcNow.AddDays(campaign.VoucherValidity),
+                                QRCodeData = $"{voucherCode}|{dealer.Id}|{campaign.VoucherValue}|{DateTime.UtcNow.AddDays(campaign.VoucherValidity):yyyy-MM-dd}"
                             };
 
                             _context.Vouchers.Add(voucher);
@@ -294,7 +294,7 @@ namespace HaldiramPromotionalApp.Controllers
 
                 // Check FreeProduct campaigns for automatic voucher generation
                 var freeProductCampaigns = await _context.FreeProductCampaigns
-                    .Where(c => c.IsActive && c.StartDate <= DateTime.Now && c.EndDate >= DateTime.Now)
+                    .Where(c => c.IsActive && c.StartDate <= DateTime.UtcNow && c.EndDate >= DateTime.UtcNow)
                     .ToListAsync();
 
                 // Log campaign count for debugging
@@ -365,7 +365,7 @@ namespace HaldiramPromotionalApp.Controllers
                                     var vouchers = new List<Voucher>();
                                     for (int i = 0; i < toCreate; i++)
                                     {
-                                        var voucherCode = $"FRP{dealer.Id}{campaign.Id}{DateTime.Now:yyyyMMddHHmmss}{i}";
+                                        var voucherCode = $"FRP{dealer.Id}{campaign.Id}{DateTime.UtcNow:yyyyMMddHHmmss}{i}";
                                         var voucher = new Voucher
                                         {
                                             VoucherCode = voucherCode,
@@ -374,9 +374,9 @@ namespace HaldiramPromotionalApp.Controllers
                                             CampaignId = campaign.Id,
                                             VoucherValue = 0,
                                             PointsUsed = 0,
-                                            IssueDate = DateTime.Now,
-                                            ExpiryDate = DateTime.Now.AddDays(30),
-                                            QRCodeData = $"{voucherCode}|{dealer.Id}|0|{DateTime.Now.AddDays(30):yyyy-MM-dd}"
+                                            IssueDate = DateTime.UtcNow,
+                                            ExpiryDate = DateTime.UtcNow.AddDays(30),
+                                            QRCodeData = $"{voucherCode}|{dealer.Id}|0|{DateTime.UtcNow.AddDays(30):yyyy-MM-dd}"
                                         };
 
                                         vouchers.Add(voucher);
@@ -556,7 +556,7 @@ namespace HaldiramPromotionalApp.Controllers
 
                 // Get all vouchers that can be redeemed by this shopkeeper (not redeemed yet and not expired)
                 var vouchers = await _context.Vouchers
-                    .Where(v => !v.IsRedeemed && v.ExpiryDate > DateTime.Now)
+                    .Where(v => !v.IsRedeemed && v.ExpiryDate > DateTime.UtcNow)
                     .OrderByDescending(v => v.IssueDate)
                     .ToListAsync();
 
@@ -919,7 +919,7 @@ namespace HaldiramPromotionalApp.Controllers
                 // Calculate summary values server-side and pass to view via ViewData
                 var totalPointsEarned = orderItems?.Sum(oi => oi.Points) ?? 0;
                 var pointsUsed = await _context.Vouchers
-                    .Where(v => v.DealerId == dealer.Id)
+                    .Where(v => v.DealerId == dealer.Id && v.IsRedeemed)
                     .SumAsync(v => (int?)v.PointsUsed) ?? 0;
                 var availablePoints = totalPointsEarned - pointsUsed;
 
@@ -927,7 +927,7 @@ namespace HaldiramPromotionalApp.Controllers
                 ViewData["AvailablePoints"] = availablePoints;
                 ViewData["PointsUsed"] = pointsUsed;
 
-                return View("~/Views/Home/PointsDetails.cshtml", orderItems);
+                return View("~/Views/Home/Dealer/PointsDetails.cshtml", orderItems);
             }
             catch (Exception ex)
             {
@@ -1262,7 +1262,7 @@ namespace HaldiramPromotionalApp.Controllers
                     .OrderBy(v => v.IsRedeemed)
                     .ThenByDescending(v => v.ExpiryDate)
                     .ThenByDescending(v => v.IssueDate)
-                    .ToListAsync();
+                    .Take(10).ToListAsync();
                 
                 // Log voucher count for debugging
                 System.Diagnostics.Debug.WriteLine($"Found {vouchers.Count} vouchers for dealer {dealer.Id}");
@@ -1474,7 +1474,7 @@ namespace HaldiramPromotionalApp.Controllers
                 }
 
                 // Generate unique voucher code
-                var voucherCode = $"V{dealer.Id}{DateTime.Now:yyyyMMddHHmmss}";
+                var voucherCode = $"V{dealer.Id}{DateTime.UtcNow:yyyyMMddHHmmss}";
 
                 // Create voucher
                 var voucher = new Voucher
@@ -1485,9 +1485,9 @@ namespace HaldiramPromotionalApp.Controllers
                     CampaignId = campaignId,
                     VoucherValue = voucherValue,
                     PointsUsed = pointsToUse,
-                    IssueDate = DateTime.Now,
-                    ExpiryDate = DateTime.Now.AddDays(voucherValidity),
-                    QRCodeData = $"{voucherCode}|{dealer.Id}|{voucherValue}|{DateTime.Now.AddDays(voucherValidity):yyyy-MM-dd}"
+                    IssueDate = DateTime.UtcNow,
+                    ExpiryDate = DateTime.UtcNow.AddDays(voucherValidity),
+                    QRCodeData = $"{voucherCode}|{dealer.Id}|{voucherValue}|{DateTime.UtcNow.AddDays(voucherValidity):yyyy-MM-dd}"
                 };
 
                 _context.Vouchers.Add(voucher);
@@ -1544,10 +1544,10 @@ namespace HaldiramPromotionalApp.Controllers
                             query = query.Where(v => v.IsRedeemed);
                             break;
                         case "Expired":
-                            query = query.Where(v => v.ExpiryDate < DateTime.Now);
+                            query = query.Where(v => v.ExpiryDate < DateTime.UtcNow);
                             break;
                         case "Active":
-                            query = query.Where(v => !v.IsRedeemed && v.ExpiryDate >= DateTime.Now);
+                            query = query.Where(v => !v.IsRedeemed && v.ExpiryDate >= DateTime.UtcNow);
                             break;
                     }
                 }
@@ -1675,6 +1675,70 @@ namespace HaldiramPromotionalApp.Controllers
             }
         }
 
+        [HttpGet]
+        public async Task<IActionResult> GetProductsPage(int page = 1, int pageSize = 10, string category = "__all__")
+        {
+            // Returns paginated products for the logged-in dealer as JSON
+            if (HttpContext.Session.GetString("UserName") == null || HttpContext.Session.GetString("role") != "Dealer")
+            {
+                return Unauthorized();
+            }
+
+            try
+            {
+                if (page < 1) page = 1;
+                if (pageSize < 1) pageSize = 10;
+
+                // Get all active materials
+                var query = _context.MaterialMaster.Where(m => m.isactive);
+
+                // Apply category filter if specified
+                if (!string.IsNullOrEmpty(category) && category != "__all__")
+                {
+                    query = query.Where(m => m.Category == category);
+                }
+
+                var total = await query.CountAsync();
+                var skip = (page - 1) * pageSize;
+                var materials = await query.Skip(skip).Take(pageSize).ToListAsync();
+
+                // Get material images for these materials
+                var materialIds = materials.Select(m => m.Id).ToList();
+                var materialImages = await _context.MaterialImages
+                    .Include(mi => mi.MaterialMaster)
+                    .Where(mi => materialIds.Contains(mi.MaterialMaster.Id))
+                    .ToListAsync();
+
+                // Build response objects
+                var resultList = new List<object>();
+                foreach (var material in materials)
+                {
+                    // Try to find a matching material image
+                    var materialImage = materialImages?.FirstOrDefault(mi => mi.MaterialMaster?.material3partycode == material.material3partycode);
+                    
+                    resultList.Add(new
+                    {
+                        material.Id,
+                        material.Materialname,
+                        material.ShortName,
+                        material.material3partycode,
+                        material.dealerprice,
+                        material.Category,
+                        ImagePath = materialImage?.ImagePath ?? string.Empty
+                    });
+                }
+
+                var hasMore = skip + materials.Count < total;
+
+                return Ok(new { products = resultList, hasMore, nextPage = page + 1 });
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error in GetProductsPage: {ex.Message}");
+                return StatusCode(500);
+            }
+        }
+
         private string GenerateQRCodeBase64(string data)
         {
             try
@@ -1746,7 +1810,7 @@ namespace HaldiramPromotionalApp.Controllers
                     }
 
                     // Check if voucher is expired
-                    if (DateTime.Now > voucher.ExpiryDate)
+                    if (DateTime.UtcNow > voucher.ExpiryDate)
                     {
                         TempData["ErrorMessage"] = "This voucher has expired.";
                         return RedirectToAction("Vouchers");
@@ -1754,7 +1818,7 @@ namespace HaldiramPromotionalApp.Controllers
 
                     // Redeem the voucher
                     voucher.IsRedeemed = true;
-                    voucher.RedeemedDate = DateTime.Now;
+                    voucher.RedeemedDate = DateTime.UtcNow;
 
                     _context.Vouchers.Update(voucher);
                     await _context.SaveChangesAsync();
@@ -1800,7 +1864,7 @@ namespace HaldiramPromotionalApp.Controllers
                     }
 
                     // Check if voucher is expired
-                    if (DateTime.Now > voucher.ExpiryDate)
+                    if (DateTime.UtcNow > voucher.ExpiryDate)
                     {
                         TempData["ErrorMessage"] = "This voucher has expired.";
                         return RedirectToAction("ShopkeeperHome");
@@ -1808,7 +1872,7 @@ namespace HaldiramPromotionalApp.Controllers
 
                     // Redeem the voucher
                     voucher.IsRedeemed = true;
-                    voucher.RedeemedDate = DateTime.Now;
+                    voucher.RedeemedDate = DateTime.UtcNow;
 
                     _context.Vouchers.Update(voucher);
                     await _context.SaveChangesAsync();
@@ -1927,14 +1991,14 @@ namespace HaldiramPromotionalApp.Controllers
                 }
 
                 // Check if voucher is expired
-                if (DateTime.Now > voucher.ExpiryDate)
+                if (DateTime.UtcNow > voucher.ExpiryDate)
                 {
                     return Json(new { success = false, message = "This voucher has expired." });
                 }
 
                 // Redeem the voucher
                 voucher.IsRedeemed = true;
-                voucher.RedeemedDate = DateTime.Now;
+                voucher.RedeemedDate = DateTime.UtcNow;
 
                 _context.Vouchers.Update(voucher);
                 await _context.SaveChangesAsync();
@@ -1990,7 +2054,7 @@ namespace HaldiramPromotionalApp.Controllers
                 //     Description = ProductDescription, 
                 //     Price = ProductPrice, 
                 //     Quantity = Quantity,
-                //     RedemptionDate = DateTime.Now
+                //     RedemptionDate = DateTime.UtcNow
                 // };
                 // _context.RedeemedProducts.Add(productDetails);
                 // await _context.SaveChangesAsync();
@@ -2156,7 +2220,7 @@ namespace HaldiramPromotionalApp.Controllers
                         Title = "New Campaign Started",
                         Message = "Points to Cash campaign \"Diwali Special\" has started!",
                         Type = "campaign",
-                        CreatedDate = DateTime.Now.AddMinutes(-30)
+                        CreatedDate = DateTime.UtcNow.AddMinutes(-30)
                     },
                     new Notification
                     {
@@ -2164,7 +2228,7 @@ namespace HaldiramPromotionalApp.Controllers
                         Title = "Order Placed",
                         Message = "Your order #12345 has been placed successfully!",
                         Type = "order",
-                        CreatedDate = DateTime.Now.AddHours(-2)
+                        CreatedDate = DateTime.UtcNow.AddHours(-2)
                     },
                     new Notification
                     {
@@ -2172,7 +2236,7 @@ namespace HaldiramPromotionalApp.Controllers
                         Title = "Voucher Generated",
                         Message = "Voucher V123456789 worth ₹500 has been generated!",
                         Type = "voucher",
-                        CreatedDate = DateTime.Now.AddHours(-5)
+                        CreatedDate = DateTime.UtcNow.AddHours(-5)
                     }
                 };
 
@@ -2218,7 +2282,7 @@ namespace HaldiramPromotionalApp.Controllers
                         Title = "New Campaign Started",
                         Message = "Exciting new campaign 'Summer Sale' is now live!",
                         Type = "campaign",
-                        CreatedDate = DateTime.Now.AddMinutes(-30)
+                        CreatedDate = DateTime.UtcNow.AddMinutes(-30)
                     },
                     new Notification
                     {
@@ -2226,7 +2290,7 @@ namespace HaldiramPromotionalApp.Controllers
                         Title = "Order Confirmation",
                         Message = "Your order #ORD-7890 has been confirmed and is being processed.",
                         Type = "order",
-                        CreatedDate = DateTime.Now.AddHours(-2)
+                        CreatedDate = DateTime.UtcNow.AddHours(-2)
                     },
                     new Notification
                     {
@@ -2234,7 +2298,7 @@ namespace HaldiramPromotionalApp.Controllers
                         Title = "Voucher Available",
                         Message = "You have a new voucher worth ₹500 available for use.",
                         Type = "voucher",
-                        CreatedDate = DateTime.Now.AddHours(-5)
+                        CreatedDate = DateTime.UtcNow.AddHours(-5)
                     }
                 };
 

@@ -9,17 +9,6 @@
     // Prevent the layout from rendering its bottom navigation
     ViewData["HideLayoutBottomNav"] = true;
 
-    // Function to get category image URLs
-    string GetCategoryImageUrl(string category)
-    {
-        return category switch
-        {
-            "Dairy Products" => "https://plus.unsplash.com/premium_photo-1695042864778-6d67ec3953e9?ixlib=rb-4.1.0&auto=format&fit=crop&q=80&w=870",
-            "Bakery Products" => "https://images.unsplash.com/photo-1598373182133-52452f7691ef?ixlib=rb-4.1.0&auto=format&fit=crop&q=80&w=870",
-            _ => "https://images.unsplash.com/photo-1605020420320-3460820a7d67?ixlib=rb-4.1.0&auto=format&fit=crop&q=80&w=870"
-        };
-    }
-
     // Function to get points for a material from active campaigns
     int GetPointsForMaterial(int materialId)
     {
@@ -86,380 +75,389 @@ else
     <div class="dashboard-container">
 
         <!-- Posters Carousel -->
-        @if (Model.Posters != null && Model.Posters.Any())
-        {
-            <div id="posterCarousel" class="carousel slide carousel-container" data-bs-ride="carousel">
-                <div class="carousel-inner">
-                    @for (int i = 0; i < Model.Posters.Count; i++)
-                    {
-                        var poster = Model.Posters[i];
-                        <div class="carousel-item @(i == 0 ? "active" : "")">
-                            <div class="carousel-item-content">
-                                @if (!string.IsNullOrEmpty(poster.ImagePath))
-                                {
-                                    <img src="@poster.ImagePath" alt="@poster.Message" class="product-image">
-                                    <div class="carousel-gradient"></div>
-                                }
-                                <div class="carousel-text">
-                                    <h3 class="carousel-title">@poster.Message</h3>
-                                    <div class="carousel-dates">
-    <span>From: @poster.ShowFrom.ToString("dd/MM/yyyy")</span>
-    <span>Until: @poster.ShowUntil.ToString("dd/MM/yyyy")</span>
-</div>
-
-                                </div>
-                            </div>
-                        </div>
-                    }
-                </div>
-
-                @if (Model.Posters.Count > 1)
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-bullhorn"></i> Latest Updates</h5>
+            </div>
+            <div class="card-body">
+                @if (Model.Posters != null && Model.Posters.Any())
                 {
-                    <button class="carousel-control-prev" type="button" data-bs-target="#posterCarousel" data-bs-slide="prev">
-                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                        <span class="visually-hidden">Previous</span>
-                    </button>
-                    <button class="carousel-control-next" type="button" data-bs-target="#posterCarousel" data-bs-slide="next">
-                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                        <span class="visually-hidden">Next</span>
-                    </button>
-                    <div class="carousel-indicators">
-                        @for (int i = 0; i < Model.Posters.Count; i++)
+                    <div id="posterCarousel" class="carousel slide carousel-container" data-bs-ride="carousel">
+                        <div class="carousel-inner">
+                            @for (int i = 0; i < Model.Posters.Count; i++)
+                            {
+                                var poster = Model.Posters[i];
+                                <div class="carousel-item @(i == 0 ? "active" : "")">
+                                    <div class="carousel-item-content">
+                                        @if (!string.IsNullOrEmpty(poster.ImagePath))
+                                        {
+                                            <img src="@poster.ImagePath" alt="@poster.Message" class="product-image">
+                                            <div class="carousel-gradient"></div>
+                                        }
+                                        <div class="carousel-text">
+                                            <h3 class="carousel-title">@poster.Message</h3>
+                                            <div class="carousel-dates">
+                                                <span>From: @poster.ShowFrom.ToString("dd/MM/yyyy")</span>
+                                                <span>Until: @poster.ShowUntil.ToString("dd/MM/yyyy")</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+
+                        @if (Model.Posters.Count > 1)
                         {
-                            <button type="button" data-bs-target="#posterCarousel" data-bs-slide-to="@i" class="@(i == 0 ? "active" : "")" aria-current="true" aria-label="Slide @(i+1)"></button>
+                            <button class="carousel-control-prev" type="button" data-bs-target="#posterCarousel" data-bs-slide="prev">
+                                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                <span class="visually-hidden">Previous</span>
+                            </button>
+                            <button class="carousel-control-next" type="button" data-bs-target="#posterCarousel" data-bs-slide="next">
+                                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                <span class="visually-hidden">Next</span>
+                            </button>
+                            <div class="carousel-indicators">
+                                @for (int i = 0; i < Model.Posters.Count; i++)
+                                {
+                                    <button type="button" data-bs-target="#posterCarousel" data-bs-slide-to="@i" class="@(i == 0 ? "active" : "")" aria-current="true" aria-label="Slide @(i+1)"></button>
+                                }
+                            </div>
                         }
                     </div>
                 }
+                else
+                {
+                    <div class="empty-state">
+                        <i class="fas fa-info-circle"></i>
+                        <h4>No Updates Available</h4>
+                        <p>There are no updates available at the moment.</p>
+                    </div>
+                }
             </div>
-        }
-        else
-        {
-            <div class="empty-state">
-                <div class="empty-state-icon">No updates available at the moment.</div>
-            </div>
-        }
+        </div>
 
         <!-- Active Campaigns -->
-        <div class="campaigns-section">
-            <h2 class="section-header">Active Campaigns</h2>
-            @{
-                var hasCampaigns = Model.Campaigns.DetailedPointsToCashCampaigns.Any() ||
-                                   Model.Campaigns.DetailedPointsRewardCampaigns.Any() ||
-                                   Model.Campaigns.DetailedFreeProductCampaigns.Any() ||
-                                   Model.Campaigns.AmountReachGoalCampaigns.Any() ||
-                                   Model.Campaigns.SessionDurationRewardCampaigns.Any();
-            }
+        <div class="section-card">
+            <div class="section-header">
+                <h5><i class="fas fa-gift"></i> Active Campaigns</h5>
+            </div>
+            <div class="section-body">
+                @{
+                    var hasCampaigns = Model.Campaigns.DetailedPointsToCashCampaigns.Any() ||
+                                       Model.Campaigns.DetailedPointsRewardCampaigns.Any() ||
+                                       Model.Campaigns.DetailedFreeProductCampaigns.Any() ||
+                                       Model.Campaigns.AmountReachGoalCampaigns.Any() ||
+                                       Model.Campaigns.SessionDurationRewardCampaigns.Any();
+                }
 
-            @if (hasCampaigns)
-            {
-                <div class="campaigns-slider-container">
-                    <div class="campaigns-slider">
-                        <!-- Points to Cash -->
-                        @foreach (var c in Model.Campaigns.DetailedPointsToCashCampaigns)
-                        {
-                            <div class="campaign-card">
-                                <div class="campaign-image">
-                                    <img src="@(c.ImagePath ?? "https://placehold.co/600x400/cccccc/000000?text=No+Image")" alt="@c.CampaignName" onerror="this.onerror=null;this.src='https://placehold.co/600x400/cccccc/000000?text=No+Image';">
-                                </div>
-                                <div class="campaign-header">
-                                    <h3 class="campaign-title">@c.CampaignName</h3>
-                                    <span class="badge @(c.IsActive ? "badge-active" : "badge-inactive")">
-                                        @(c.IsActive ? "Active" : "Inactive")
-                                    </span>
-                                </div>
-                                <div class="campaign-info">
-                                    <div class="info-row"><span class="info-label">Start:</span> <span class="date-value">@c.StartDate.ToString("dd MMM yyyy")</span></div>
-                                    <div class="info-row"><span class="info-label">End:</span> <span class="date-value">@c.EndDate.ToString("dd MMM yyyy")</span></div>
-                                   
-                                </div>
-                                <button type="button" class="details-btn" onclick="showDetails('pointsToCash-@c.Id')">Show Details</button>
-                                <div id="pointsToCash-@c.Id" class="campaign-details hidden">
-                                    <div class="info-row"><span class="info-label">Threshold:</span> @c.VoucherGenerationThreshold points</div>
-                                    <div class="info-row"><span class="info-label">Voucher:</span> ₹@c.VoucherValue</div>
-                                    @if (!string.IsNullOrEmpty(c.Description))
-                                    {
-                                        <div class="mt-3"><span class="info-label d-block mb-1">Description:</span><p class="text-muted small">@c.Description</p></div>
-                                        <div class="info-row"><span class="info-label">Validity:</span> @c.VoucherValidity days</div>
-                                    }
-                                </div>
-                            </div>
-                        }
-
-                        <!-- Points Reward -->
-                        @foreach (var c in Model.Campaigns.DetailedPointsRewardCampaigns)
-                        {
-                            <div class="campaign-card">
-                                <div class="campaign-image">
-                                    <img src="@(c.ImagePath ?? "https://placehold.co/600x400/cccccc/000000?text=No+Image")" alt="@c.CampaignName" onerror="this.onerror=null;this.src='https://placehold.co/600x400/cccccc/000000?text=No+Image';">
-                                </div>
-                                <div class="campaign-header">
-                                    <h3 class="campaign-title">@c.CampaignName</h3>
-                                    <span class="badge @(c.IsActive ? "badge-active" : "badge-inactive")">
-                                        @(c.IsActive ? "Active" : "Inactive")
-                                    </span>
-                                </div>
-                                <div class="campaign-info">
-                                    <div class="info-row"><span class="info-label">Start:</span> <span class="date-value">@c.StartDate.ToString("dd MMM yyyy")</span></div>
-                                    <div class="info-row"><span class="info-label">End:</span> <span class="date-value">@c.EndDate.ToString("dd MMM yyyy")</span></div>
-                                
-                                </div>
-                                <button type="button" class="details-btn" onclick="showDetails('pointsReward-@c.Id')">Show Details</button>
-                                <div id="pointsReward-@c.Id" class="campaign-details hidden">
-                                    <div class="info-row"><span class="info-label">Threshold:</span> @c.VoucherGenerationThreshold points</div>
-                                    @if (c.RewardProduct != null)
-                                    {
-                                        <div class="mt-3"><span class="info-label d-block mb-1">Reward:</span><strong>@c.RewardProduct.ProductName</strong></div>
-                                    }
-                                    @if (!string.IsNullOrEmpty(c.Description))
-                                    {
-                                        <div class="mt-3"><span class="info-label d-block mb-1">Description:</span><p class="text-muted small">@c.Description</p></div>
-                                        <div class="info-row"><span class="info-label">Validity:</span> @c.VoucherValidity days</div>
-                                    }
-                                </div>
-                            </div>
-                        }
-
-                        <!-- Free Product -->
-                        @foreach (var c in Model.Campaigns.DetailedFreeProductCampaigns)
-                        {
-                            <div class="campaign-card">
-                                <div class="campaign-image">
-                                    <img src="@(c.ImagePath ?? "https://placehold.co/600x400/cccccc/000000?text=No+Image")" alt="@c.CampaignName" onerror="this.onerror=null;this.src='https://placehold.co/600x400/cccccc/000000?text=No+Image';">
-                                </div>
-                                <div class="campaign-header">
-                                    <h3 class="campaign-title">@c.CampaignName</h3>
-                                    <span class="badge @(c.IsActive ? "badge-active" : "badge-inactive")">
-                                        @(c.IsActive ? "Active" : "Inactive")
-                                    </span>
-                                </div>
-                                <div class="campaign-info">
-                                    <div class="info-row"><span class="info-label">Start:</span> @c.StartDate.ToString("dd/MM/yyyy")</div>
-                                    <div class="info-row"><span class="info-label">End:</span> @c.EndDate.ToString("dd/MM/yyyy")</div>
-                                </div>
-                                <button type="button" class="details-btn" onclick="showDetails('freeProduct-@c.Id')">Show Details</button>
-                                <div id="freeProduct-@c.Id" class="campaign-details hidden">
-                                    @if (c.FreeProductDetails?.Any() == true)
-                                    {
-                                        <div class="mt-3">
-                                            <span class="info-label d-block mb-1">Free Products:</span>
-                                            @foreach (var kvp in c.FreeProductDetails)
-                                            {
-                                                <p class="mb-1"><strong>@kvp.Value.FreeProductName</strong> (Qty: @kvp.Value.FreeQuantity)</p>
-                                            }
-                                        </div>
-                                    }
-                                    @if (!string.IsNullOrEmpty(c.Description))
-                                    {
-                                        <div class="mt-3"><span class="info-label d-block mb-1">Description:</span><p class="text-muted small">@c.Description</p></div>
-                                    }
-                                </div>
-                            </div>
-                        }
-
-                        <!-- Amount Reach -->
-                        @foreach (var c in Model.Campaigns.AmountReachGoalCampaigns)
-                        {
-                            <div class="campaign-card">
-                                <div class="campaign-image">
-                                    <img src="@(c.ImagePath ?? "https://placehold.co/600x400/cccccc/000000?text=No+Image")" alt="@c.CampaignName" onerror="this.onerror=null;this.src='https://placehold.co/600x400/cccccc/000000?text=No+Image';">
-                                </div>
-                                <div class="campaign-header">
-                                    <h3 class="campaign-title">@c.CampaignName</h3>
-                                    <span class="badge @(c.IsActive ? "badge-active" : "badge-inactive")">
-                                        @(c.IsActive ? "Active" : "Inactive")
-                                    </span>
-                                </div>
-                                <div class="campaign-info">
-                                    <div class="info-row"><span class="info-label">Start:</span> @c.StartDate.ToString("dd/MM/yyyy")</div>
-                                    <div class="info-row"><span class="info-label">End:</span> @c.EndDate.ToString("dd/MM/yyyy")</div>
-                                    
-                                </div>
-                                <button type="button" class="details-btn" onclick="showDetails('amountReach-@c.Id')">Show Details</button>
-                                <div id="amountReach-@c.Id" class="campaign-details hidden">
-                                    @if (!string.IsNullOrEmpty(c.Description))
-                                    {
-                                        <div class="mt-3"><span class="info-label d-block mb-1">Description:</span><p class="text-muted small">@c.Description</p></div>
-                                        <div class="info-row"><span class="info-label">Target:</span> ₹@c.TargetAmount</div>
+                @if (hasCampaigns)
+                {
+                    <div class="campaigns-slider-container">
+                        <div class="campaigns-slider">
+                            <!-- Points to Cash -->
+                            @foreach (var c in Model.Campaigns.DetailedPointsToCashCampaigns)
+                            {
+                                <div class="campaign-card">
+                                    <div class="campaign-image">
+                                        <img src="@(c.ImagePath ?? "https://placehold.co/600x400/cccccc/000000?text=No+Image")" alt="@c.CampaignName" onerror="this.onerror=null;this.src='https://placehold.co/600x400/cccccc/000000?text=No+Image';">
+                                    </div>
+                                    <div class="campaign-header">
+                                        <h3 class="campaign-title">@c.CampaignName</h3>
+                                        <span class="badge @(c.IsActive ? "badge-active" : "badge-inactive")">
+                                            @(c.IsActive ? "Active" : "Inactive")
+                                        </span>
+                                    </div>
+                                    <div class="campaign-info">
+                                        <div class="info-row"><span class="info-label">Start:</span> <span class="date-value">@c.StartDate.ToString("dd MMM yyyy")</span></div>
+                                        <div class="info-row"><span class="info-label">End:</span> <span class="date-value">@c.EndDate.ToString("dd MMM yyyy")</span></div>
+                                    </div>
+                                    <button type="button" class="details-btn" onclick="showDetails('pointsToCash-@c.Id')">Show Details</button>
+                                    <div id="pointsToCash-@c.Id" class="campaign-details hidden">
+                                        <div class="info-row"><span class="info-label">Threshold:</span> @c.VoucherGenerationThreshold points</div>
                                         <div class="info-row"><span class="info-label">Voucher:</span> ₹@c.VoucherValue</div>
-                                        <div class="info-row"><span class="info-label">Validity:</span> @c.VoucherValidity days</div>
-                                    }
+                                        @if (!string.IsNullOrEmpty(c.Description))
+                                        {
+                                            <div class="mt-3"><span class="info-label d-block mb-1">Description:</span><p class="text-muted small">@c.Description</p></div>
+                                            <div class="info-row"><span class="info-label">Validity:</span> @c.VoucherValidity days</div>
+                                        }
+                                    </div>
                                 </div>
-                            </div>
-                        }
+                            }
 
-                        <!-- Session Duration -->
-                        @foreach (var c in Model.Campaigns.SessionDurationRewardCampaigns)
-                        {
-                            <div class="campaign-card">
-                                <div class="campaign-image">
-                                    <img src="@(c.ImagePath ?? "https://placehold.co/600x400/cccccc/000000?text=No+Image")" alt="@c.CampaignName" onerror="this.onerror=null;this.src='https://placehold.co/600x400/cccccc/000000?text=No+Image';">
+                            <!-- Points Reward -->
+                            @foreach (var c in Model.Campaigns.DetailedPointsRewardCampaigns)
+                            {
+                                <div class="campaign-card">
+                                    <div class="campaign-image">
+                                        <img src="@(c.ImagePath ?? "https://placehold.co/600x400/cccccc/000000?text=No+Image")" alt="@c.CampaignName" onerror="this.onerror=null;this.src='https://placehold.co/600x400/cccccc/000000?text=No+Image';">
+                                    </div>
+                                    <div class="campaign-header">
+                                        <h3 class="campaign-title">@c.CampaignName</h3>
+                                        <span class="badge @(c.IsActive ? "badge-active" : "badge-inactive")">
+                                            @(c.IsActive ? "Active" : "Inactive")
+                                        </span>
+                                    </div>
+                                    <div class="campaign-info">
+                                        <div class="info-row"><span class="info-label">Start:</span> <span class="date-value">@c.StartDate.ToString("dd MMM yyyy")</span></div>
+                                        <div class="info-row"><span class="info-label">End:</span> <span class="date-value">@c.EndDate.ToString("dd MMM yyyy")</span></div>
+                                    </div>
+                                    <button type="button" class="details-btn" onclick="showDetails('pointsReward-@c.Id')">Show Details</button>
+                                    <div id="pointsReward-@c.Id" class="campaign-details hidden">
+                                        <div class="info-row"><span class="info-label">Threshold:</span> @c.VoucherGenerationThreshold points</div>
+                                        @if (c.RewardProduct != null)
+                                        {
+                                            <div class="mt-3"><span class="info-label d-block mb-1">Reward:</span><strong>@c.RewardProduct.ProductName</strong></div>
+                                        }
+                                        @if (!string.IsNullOrEmpty(c.Description))
+                                        {
+                                            <div class="mt-3"><span class="info-label d-block mb-1">Description:</span><p class="text-muted small">@c.Description</p></div>
+                                            <div class="info-row"><span class="info-label">Validity:</span> @c.VoucherValidity days</div>
+                                        }
+                                    </div>
                                 </div>
-                                <div class="campaign-header">
-                                    <h3 class="campaign-title">@c.CampaignName</h3>
-                                    <span class="badge @(c.IsActive ? "badge-active" : "badge-inactive")">
-                                        @(c.IsActive ? "Active" : "Inactive")
-                                    </span>
+                            }
+
+                            <!-- Free Product -->
+                            @foreach (var c in Model.Campaigns.DetailedFreeProductCampaigns)
+                            {
+                                <div class="campaign-card">
+                                    <div class="campaign-image">
+                                        <img src="@(c.ImagePath ?? "https://placehold.co/600x400/cccccc/000000?text=No+Image")" alt="@c.CampaignName" onerror="this.onerror=null;this.src='https://placehold.co/600x400/cccccc/000000?text=No+Image';">
+                                    </div>
+                                    <div class="campaign-header">
+                                        <h3 class="campaign-title">@c.CampaignName</h3>
+                                        <span class="badge @(c.IsActive ? "badge-active" : "badge-inactive")">
+                                            @(c.IsActive ? "Active" : "Inactive")
+                                        </span>
+                                    </div>
+                                    <div class="campaign-info">
+                                        <div class="info-row"><span class="info-label">Start:</span> @c.StartDate.ToString("dd/MM/yyyy")</div>
+                                        <div class="info-row"><span class="info-label">End:</span> @c.EndDate.ToString("dd/MM/yyyy")</div>
+                                    </div>
+                                    <button type="button" class="details-btn" onclick="showDetails('freeProduct-@c.Id')">Show Details</button>
+                                    <div id="freeProduct-@c.Id" class="campaign-details hidden">
+                                        @if (c.FreeProductDetails?.Any() == true)
+                                        {
+                                            <div class="mt-3">
+                                                <span class="info-label d-block mb-1">Free Products:</span>
+                                                @foreach (var kvp in c.FreeProductDetails)
+                                                {
+                                                    <p class="mb-1"><strong>@kvp.Value.FreeProductName</strong> (Qty: @kvp.Value.FreeQuantity)</p>
+                                                }
+                                            </div>
+                                        }
+                                        @if (!string.IsNullOrEmpty(c.Description))
+                                        {
+                                            <div class="mt-3"><span class="info-label d-block mb-1">Description:</span><p class="text-muted small">@c.Description</p></div>
+                                        }
+                                    </div>
                                 </div>
-                                <div class="campaign-info">
-                                    <div class="info-row"><span class="info-label">Start:</span> @c.StartDate.ToString("dd/MM/yyyy")</div>
-                                    <div class="info-row"><span class="info-label">End:</span> @c.EndDate.ToString("dd/MM/yyyy")</div>
-                                   
+                            }
+
+                            <!-- Amount Reach -->
+                            @foreach (var c in Model.Campaigns.AmountReachGoalCampaigns)
+                            {
+                                <div class="campaign-card">
+                                    <div class="campaign-image">
+                                        <img src="@(c.ImagePath ?? "https://placehold.co/600x400/cccccc/000000?text=No+Image")" alt="@c.CampaignName" onerror="this.onerror=null;this.src='https://placehold.co/600x400/cccccc/000000?text=No+Image';">
+                                    </div>
+                                    <div class="campaign-header">
+                                        <h3 class="campaign-title">@c.CampaignName</h3>
+                                        <span class="badge @(c.IsActive ? "badge-active" : "badge-inactive")">
+                                            @(c.IsActive ? "Active" : "Inactive")
+                                        </span>
+                                    </div>
+                                    <div class="campaign-info">
+                                        <div class="info-row"><span class="info-label">Start:</span> @c.StartDate.ToString("dd/MM/yyyy")</div>
+                                        <div class="info-row"><span class="info-label">End:</span> @c.EndDate.ToString("dd/MM/yyyy")</div>
+                                    </div>
+                                    <button type="button" class="details-btn" onclick="showDetails('amountReach-@c.Id')">Show Details</button>
+                                    <div id="amountReach-@c.Id" class="campaign-details hidden">
+                                        @if (!string.IsNullOrEmpty(c.Description))
+                                        {
+                                            <div class="mt-3"><span class="info-label d-block mb-1">Description:</span><p class="text-muted small">@c.Description</p></div>
+                                            <div class="info-row"><span class="info-label">Target:</span> ₹@c.TargetAmount</div>
+                                            <div class="info-row"><span class="info-label">Voucher:</span> ₹@c.VoucherValue</div>
+                                            <div class="info-row"><span class="info-label">Validity:</span> @c.VoucherValidity days</div>
+                                        }
+                                    </div>
                                 </div>
-                                <button type="button" class="details-btn" onclick="showDetails('sessionDuration-@c.Id')">Show Details</button>
-                                <div id="sessionDuration-@c.Id" class="campaign-details hidden">
-                                    @if (!string.IsNullOrEmpty(c.Description))
-                                    {
-                                        <div class="mt-3"><span class="info-label d-block mb-1">Description:</span><p class="text-muted small">@c.Description</p></div>
-                                        <div class="info-row"><span class="info-label">Session:</span> @c.SessionDuration mins</div>
-                                        <div class="info-row"><span class="info-label">Voucher:</span> ₹@c.VoucherValue</div>
-                                        <div class="info-row"><span class="info-label">Validity:</span> @c.VoucherValidity days</div>
-                                    }
+                            }
+
+                            <!-- Session Duration -->
+                            @foreach (var c in Model.Campaigns.SessionDurationRewardCampaigns)
+                            {
+                                <div class="campaign-card">
+                                    <div class="campaign-image">
+                                        <img src="@(c.ImagePath ?? "https://placehold.co/600x400/cccccc/000000?text=No+Image")" alt="@c.CampaignName" onerror="this.onerror=null;this.src='https://placehold.co/600x400/cccccc/000000?text=No+Image';">
+                                    </div>
+                                    <div class="campaign-header">
+                                        <h3 class="campaign-title">@c.CampaignName</h3>
+                                        <span class="badge @(c.IsActive ? "badge-active" : "badge-inactive")">
+                                            @(c.IsActive ? "Active" : "Inactive")
+                                        </span>
+                                    </div>
+                                    <div class="campaign-info">
+                                        <div class="info-row"><span class="info-label">Start:</span> @c.StartDate.ToString("dd/MM/yyyy")</div>
+                                        <div class="info-row"><span class="info-label">End:</span> @c.EndDate.ToString("dd/MM/yyyy")</div>
+                                    </div>
+                                    <button type="button" class="details-btn" onclick="showDetails('sessionDuration-@c.Id')">Show Details</button>
+                                    <div id="sessionDuration-@c.Id" class="campaign-details hidden">
+                                        @if (!string.IsNullOrEmpty(c.Description))
+                                        {
+                                            <div class="mt-3"><span class="info-label d-block mb-1">Description:</span><p class="text-muted small">@c.Description</p></div>
+                                            <div class="info-row"><span class="info-label">Session:</span> @c.SessionDuration mins</div>
+                                            <div class="info-row"><span class="info-label">Voucher:</span> ₹@c.VoucherValue</div>
+                                            <div class="info-row"><span class="info-label">Validity:</span> @c.VoucherValidity days</div>
+                                        }
+                                    </div>
                                 </div>
-                            </div>
-                        }
+                            }
+                        </div>
                     </div>
-                </div>
-            }
-            else
-            {
-                <div class="empty-state">
-                    <div class="empty-state-icon">No active campaigns at the moment.</div>
-                </div>
-            }
+                }
+                else
+                {
+                    <div class="empty-state">
+                        <i class="fas fa-gift"></i>
+                        <h4>No Active Campaigns</h4>
+                        <p>There are no active campaigns at the moment.</p>
+                    </div>
+                }
+            </div>
         </div>
 
         <!-- Recent Order -->
-        <div class="campaigns-section">
-            <h2 class="section-header">Repeat Order</h2>
-            @if (Model.RecentDealerBasicOrders != null && Model.RecentDealerBasicOrders.Any())
-            {
-                <div class="recent-order-container">
-                    <div class="order-header">
-                        <div class="order-info">
-                            <h3 class="order-title">Repeat Orders</h3>
-                            <span class="badge badge-active">Active</span>
+        <div class="section-card">
+            <div class="section-header">
+                <h5><i class="fas fa-history"></i> Repeat Order</h5>
+            </div>
+            <div class="section-body">
+                @if (Model.RecentDealerBasicOrders != null && Model.RecentDealerBasicOrders.Any())
+                {
+                    <div class="recent-order-container">
+                        <div class="order-header">
+                            <div class="order-info">
+                                <h3 class="order-title">Repeat Orders</h3>
+                                <span class="badge badge-active">Active</span>
+                            </div>
+                            <div class="order-details">
+                                <div class="info-row"><span class="info-label">Total Items:</span> @Model.RecentDealerBasicOrders.Count()</div>
+                            </div>
                         </div>
-                        <div class="order-details">
-                            <div class="info-row"><span class="info-label">Total Items:</span> @Model.RecentDealerBasicOrders.Count()</div>
-                        </div>
-                    </div>
 
-                    <div class="order-items-grid">
-                        @foreach (var item in Model.RecentDealerBasicOrders)
+                        <div class="order-items-grid">
+                            @foreach (var item in Model.RecentDealerBasicOrders)
+                            {
+                                // Try to find a matching material image based on SapCode
+                                var materialImage = Model.MaterialImages?.FirstOrDefault(mi => mi.MaterialMaster?.material3partycode == item.SapCode);
+                                <div class="product-card" data-material-id="@item.Id">
+                                    <div class="product-image-wrapper">
+                                        <img src="@(materialImage?.ImagePath ?? "https://placehold.co/600x600/cccccc/000000?text=No+Image")"
+                                             alt="@item.MaterialName" class="product-image"
+                                             onerror="this.onerror=null;this.src='https://placehold.co/600x600/cccccc/000000?text=No+Image';">
+                                    </div>
+                                    <div class="product-content">
+                                        <h3 class="product-title">@item.MaterialName</h3>
+                                        <p class="product-sku">SAP: @item.SapCode</p>
+                                        <p class="product-sku">Short Code: @item.ShortCode</p>
+                                        <div class="product-price-row">
+                                            <span class="product-price">₹@item.Rate</span>
+                                        </div>
+                                        <div class="quantity-section">
+                                            <label class="quantity-label">Qty:</label>
+                                            <div class="quantity-controls">
+                                                <button class="quantity-btn" onclick="changeQuantity(this, -1, @item.Id)">-</button>
+                                                <input type="number" class="quantity-input" value="@item.Quantity" min="1" data-material-id="@item.Id">
+                                                <button class="quantity-btn" onclick="changeQuantity(this, 1, @item.Id)">+</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+
+                        <button type="button" class="checkout-btn" style="margin-top:1rem;width:100%" onclick="reorderWithUpdatedQuantities()">
+                            Add All Items to Cart
+                        </button>
+                    </div>
+                }
+                else
+                {
+                    <div class="empty-state">
+                        <i class="fas fa-history"></i>
+                        <h4>No Previous Orders</h4>
+                        <p>You haven't placed any orders yet.</p>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- All Products -->
+        <div class="section-card">
+            <div class="section-header">
+                <h5><i class="fas fa-box"></i> All Products</h5>
+            </div>
+            <div class="section-body">
+                @{
+                    var activeCategoriesForFilter = Model.Materials?.Where(m => m.isactive).Select(m => m.Category).Distinct().ToList() ?? new List<string>();
+                }
+                <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1rem;">
+                    <label for="categoryFilter" style="font-weight:600;color:var(--gray-700);">Filter:</label>
+                    <select id="categoryFilter" onchange="filterAllProducts(this.value)" style="padding:0.35rem 0.5rem;border-radius:0.25rem;border:1px solid var(--gray-200);">
+                        <option value="__all__">All Products</option>
+                        @foreach (var cat in activeCategoriesForFilter)
                         {
-                            // Try to find a matching material image based on SapCode
-                            var materialImage = Model.MaterialImages?.FirstOrDefault(mi => mi.MaterialMaster?.material3partycode == item.SapCode);
-                            <div class="product-card" data-material-id="@item.Id">
+                            <option value="@cat">@cat</option>
+                        }
+                    </select>
+                </div>
+                @if (Model.Materials?.Any() == true)
+                {
+                    <!-- Render initial 10 products on server; further products will be fetched via AJAX (lazy load) -->
+                    <div id="productsGrid" class="products-grid" data-current-page="1" data-page-size="25" data-has-more="true">
+                        @foreach (var m in Model.Materials.Where(x => x.isactive).Take(10))
+                        {
+                            var img = Model.MaterialImages?.FirstOrDefault(mi => mi.MaterialMaster?.material3partycode == m.material3partycode);
+                            <div class="product-card" data-category="@m.Category">
                                 <div class="product-image-wrapper">
-                                    <img src="@(materialImage?.ImagePath ?? "https://placehold.co/600x600/cccccc/000000?text=No+Image")"
-                                         alt="@item.MaterialName" class="product-image"
+                                    <img src="@(img?.ImagePath ?? "https://placehold.co/600x600/cccccc/000000?text=No+Image")"
+                                         alt="@m.Materialname" class="product-image"
                                          onerror="this.onerror=null;this.src='https://placehold.co/600x600/cccccc/000000?text=No+Image';">
                                 </div>
                                 <div class="product-content">
-                                    <h3 class="product-title">@item.MaterialName</h3>
-                                    <p class="product-sku">SAP: @item.SapCode</p>
-                                    <p class="product-sku">Short Code: @item.ShortCode</p>
+                                    <h3 class="product-title">@m.Materialname</h3>
+                                    <p class="product-shortname">@m.ShortName</p>
+                                    <p class="product-sku">SKU: @m.material3partycode</p>
                                     <div class="product-price-row">
-                                        <span class="product-price">₹@item.Rate</span>
+                                        <span class="product-price">₹@m.dealerprice</span>
+                                        <span class="product-points">Pts: @GetPointsForMaterial(m.Id)</span>
                                     </div>
                                     <div class="quantity-section">
                                         <label class="quantity-label">Qty:</label>
                                         <div class="quantity-controls">
-                                            <button class="quantity-btn" onclick="changeQuantity(this, -1, @item.Id)">-</button>
-                                            <input type="number" class="quantity-input" value="@item.Quantity" min="1" data-material-id="@item.Id">
-                                            <button class="quantity-btn" onclick="changeQuantity(this, 1, @item.Id)">+</button>
+                                            <button class="quantity-btn" onclick="changeQuantity(this, -1)">-</button>
+                                            <input type="number" class="quantity-input" value="1" min="1" onchange="updateQuantity(this)">
+                                            <button class="quantity-btn" onclick="changeQuantity(this, 1)">+</button>
                                         </div>
                                     </div>
-                                    @*<button class="add-to-cart-btn" onclick="updateCartItem(@item.Id, this)" style="margin-top:0.5rem;">
-                                        Update in Cart
-                                    </button>*@
+                                    <button class="add-to-cart-btn" onclick="addToCart(this, '@m.material3partycode', '@m.Materialname', @m.dealerprice, @m.Id)">
+                                        Add to Cart
+                                    </button>
                                 </div>
                             </div>
                         }
                     </div>
-
-                    <button type="button" class="checkout-btn" style="margin-top:1rem;width:100%" onclick="reorderWithUpdatedQuantities()">
-                        Add All Items to Cart
-                    </button>
-                </div>
-            }
-            else
-            {
-                <div class="empty-state">
-                    <div class="empty-state-icon">No previous orders found.</div>
-                </div>
-            }
-        </div>
-
-        <!-- Categories removed per request -->
-
-        <!-- Category Products (Hidden by default) -->
-        <div id="categoryProductsSection" class="products-section" style="display:none;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
-                <h2 class="section-header" id="categorySectionTitle">Category Products</h2>
-                <button class="btn btn-secondary" onclick="hideCategoryProducts()" style="padding:0.5rem 1rem;font-size:0.9rem;">Back</button>
+                }
+                else
+                {
+                    <div class="empty-state">
+                        <i class="fas fa-box"></i>
+                        <h4>No Products Available</h4>
+                        <p>There are no products available at the moment.</p>
+                    </div>
+                }
             </div>
-            <div id="categoryProductsGrid" class="products-grid"></div>
-        </div>
-
-        <!-- All Products -->
-        <div class="products-section" id="allProductsSection">
-            <h2 class="section-header">All Products</h2>
-            @{
-                var activeCategoriesForFilter = Model.Materials?.Where(m => m.isactive).Select(m => m.Category).Distinct().ToList() ?? new List<string>();
-            }
-            <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1rem;">
-                <label for="categoryFilter" style="font-weight:600;color:var(--gray-700);">Filter:</label>
-                <select id="categoryFilter" onchange="filterAllProducts(this.value)" style="padding:0.35rem 0.5rem;border-radius:0.25rem;border:1px solid var(--gray-200);">
-                    <option value="__all__">All Products</option>
-                    @foreach (var cat in activeCategoriesForFilter)
-                    {
-                        <option value="@cat">@cat</option>
-                    }
-                </select>
-            </div>
-            @if (Model.Materials?.Any() == true)
-            {
-                <div class="products-grid">
-                    @foreach (var m in Model.Materials.Where(x => x.isactive))
-                    {
-                        var img = Model.MaterialImages?.FirstOrDefault(mi => mi.MaterialMaster?.material3partycode == m.material3partycode);
-                        <div class="product-card" data-category="@m.Category">
-                            <div class="product-image-wrapper">
-                                <img src="@(img?.ImagePath ?? "https://placehold.co/600x600/cccccc/000000?text=No+Image")"
-                                     alt="@m.Materialname" class="product-image"
-                                     onerror="this.onerror=null;this.src='https://placehold.co/600x600/cccccc/000000?text=No+Image';">
-                            </div>
-                            <div class="product-content">
-                                <h3 class="product-title">@m.Materialname</h3>
-                                <p class="product-shortname">@m.ShortName</p>
-                                <p class="product-sku">SKU: @m.material3partycode</p>
-                                <div class="product-price-row">
-                                    <span class="product-price">₹@m.dealerprice</span>
-                                    <span class="product-points">Pts: @GetPointsForMaterial(m.Id)</span>
-                                </div>
-                                <div class="quantity-section">
-                                    <label class="quantity-label">Qty:</label>
-                                    <div class="quantity-controls">
-                                        <button class="quantity-btn" onclick="changeQuantity(this, -1)">-</button>
-                                        <input type="number" class="quantity-input" value="1" min="1" onchange="updateQuantity(this)">
-                                        <button class="quantity-btn" onclick="changeQuantity(this, 1)">+</button>
-                                    </div>
-                                </div>
-                                <button class="add-to-cart-btn" onclick="addToCart(this, '@m.material3partycode', '@m.Materialname', @m.dealerprice, @m.Id)">
-                                    Add to Cart
-                                </button>
-                            </div>
-                        </div>
-                    }
-                </div>
-            }
-            else
-            {
-                <div class="empty-state">
-                    <div class="empty-state-icon">No products available.</div>
-                </div>
-            }
         </div>
 
         <!-- Cart -->
@@ -469,6 +467,10 @@ else
                 <button class="close-cart" onclick="toggleCart()">×</button>
             </div>
             <div class="cart-items" id="cartItems"></div>
+            <div class="eligible-campaigns" id="eligibleCampaigns" style="padding: 1rem; border-top: 1px solid var(--gray-200); background-color: var(--gray-50);">
+                <h4 style="margin-top: 0; color: var(--primary);">Eligible Campaigns</h4>
+                <div id="campaignsInfo">Add items to see eligible campaigns</div>
+            </div>
             <div class="cart-footer">
                 <div class="cart-total">
                     <span>Total:</span>
@@ -591,6 +593,7 @@ else
             if (cart.length === 0) {
                 itemsDiv.innerHTML = '<p style="text-align:center;color:var(--gray-500);padding:2rem;">Your cart is empty</p>';
                 totalSpan.textContent = '₹0.00';
+                updateEligibleCampaignsDisplay(); // Update campaigns display when cart is empty
                 return;
             }
 
@@ -632,13 +635,129 @@ else
                                 <button class="quantity-btn" onclick="changeCartItemQuantity(${index}, 1)">+</button>
                             </div>
                             <div class="cart-item-actions">
-                                <button class="remove-item" onclick="removeFromCart('${item.sku}')">Remove</button>
+                                <button class="remove-item" onclick="removeFromCart('${item.sku}')"></button>
                             </div>
                         </div>
                     </div>`;
             });
             itemsDiv.innerHTML = html;
             totalSpan.textContent = `₹${total.toFixed(2)} (Pts: ${totalPoints})`;
+            
+            // Update eligible campaigns display
+            updateEligibleCampaignsDisplay();
+        }
+
+        // Function to calculate and display eligible campaigns
+        function updateEligibleCampaignsDisplay() {
+            const campaignsInfoDiv = document.getElementById('campaignsInfo');
+            
+            // Get campaigns data from the model
+            const pointsToCashCampaigns = @Html.Raw(Json.Serialize(Model.Campaigns.DetailedPointsToCashCampaigns));
+            const pointsRewardCampaigns = @Html.Raw(Json.Serialize(Model.Campaigns.DetailedPointsRewardCampaigns));
+            const amountReachGoalCampaigns = @Html.Raw(Json.Serialize(Model.Campaigns.AmountReachGoalCampaigns));
+            const freeProductCampaigns = @Html.Raw(Json.Serialize(Model.Campaigns.DetailedFreeProductCampaigns));
+            
+            if (cart.length === 0) {
+                campaignsInfoDiv.innerHTML = '<p style="color: var(--gray-500); font-style: italic;">Add items to see eligible campaigns</p>';
+                return;
+            }
+            
+            let html = '';
+            let hasEligibleCampaigns = false;
+            
+            // Calculate total points in cart
+            let cartPoints = 0;
+            cart.forEach(item => {
+                const pointsPerUnit = getPointsForMaterialJS(item.materialId);
+                cartPoints += pointsPerUnit * item.quantity;
+            });
+            
+            // Calculate total cart value
+            let cartValue = 0;
+            cart.forEach(item => {
+                cartValue += item.price * item.quantity;
+            });
+            
+            // Check Points to Cash Campaigns
+            pointsToCashCampaigns.forEach(campaign => {
+                if (campaign.isActive) {
+                    const pointsNeeded = campaign.voucherGenerationThreshold - cartPoints;
+                    if (pointsNeeded <= 0) {
+                        html += `
+                            <div style="background-color: var(--success-light); padding: 0.75rem; border-radius: var(--border-radius); margin-bottom: 0.5rem;">
+                                <div style="font-weight: bold; color: var(--success);">${campaign.campaignName}</div>
+                                <div style="font-size: 0.85rem;">✓ Eligible for ₹${campaign.voucherValue} voucher</div>
+                            </div>`;
+                        hasEligibleCampaigns = true;
+                    } else {
+                        html += `
+                            <div style="background-color: var(--info); padding: 0.75rem; border-radius: var(--border-radius); margin-bottom: 0.5rem;">
+                                <div style="font-weight: bold; color: var(--primary);">${campaign.campaignName}</div>
+                                <div style="font-size: 0.85rem;">Need ${pointsNeeded} more points for ₹${campaign.voucherValue} voucher</div>
+                            </div>`;
+                    }
+                }
+            });
+            
+            // Check Points Reward Campaigns
+            pointsRewardCampaigns.forEach(campaign => {
+                if (campaign.isActive) {
+                    const pointsNeeded = campaign.voucherGenerationThreshold - cartPoints;
+                    if (pointsNeeded <= 0) {
+                        html += `
+                            <div style="background-color: var(--success-light); padding: 0.75rem; border-radius: var(--border-radius); margin-bottom: 0.5rem;">
+                                <div style="font-weight: bold; color: var(--success);">${campaign.campaignName}</div>
+                                <div style="font-size: 0.85rem;">✓ Eligible for reward</div>
+                            </div>`;
+                        hasEligibleCampaigns = true;
+                    } else {
+                        html += `
+                            <div style="background-color: var(--info); padding: 0.75rem; border-radius: var(--border-radius); margin-bottom: 0.5rem;">
+                                <div style="font-weight: bold; color: var(--primary);">${campaign.campaignName}</div>
+                                <div style="font-size: 0.85rem;">Need ${pointsNeeded} more points for reward</div>
+                            </div>`;
+                    }
+                }
+            });
+            
+            // Check Amount Reach Goal Campaigns
+            amountReachGoalCampaigns.forEach(campaign => {
+                if (campaign.isActive) {
+                    const amountNeeded = campaign.targetAmount - cartValue;
+                    if (amountNeeded <= 0) {
+                        html += `
+                            <div style="background-color: var(--success-light); padding: 0.75rem; border-radius: var(--border-radius); margin-bottom: 0.5rem;">
+                                <div style="font-weight: bold; color: var(--success);">${campaign.campaignName}</div>
+                                <div style="font-size: 0.85rem;">✓ Eligible for ₹${campaign.voucherValue} voucher</div>
+                            </div>`;
+                        hasEligibleCampaigns = true;
+                    } else {
+                        html += `
+                            <div style="background-color: var(--info); padding: 0.75rem; border-radius: var(--border-radius); margin-bottom: 0.5rem;">
+                                <div style="font-weight: bold; color: var(--primary);">${campaign.campaignName}</div>
+                                <div style="font-size: 0.85rem;">Spend ₹${amountNeeded.toFixed(2)} more for ₹${campaign.voucherValue} voucher</div>
+                            </div>`;
+                    }
+                }
+            });
+            
+            // For Free Product Campaigns, we would need more complex logic based on specific materials
+            // This is a simplified version for demonstration
+            freeProductCampaigns.forEach(campaign => {
+                if (campaign.isActive) {
+                    html += `
+                        <div style="background-color: var(--info); padding: 0.75rem; border-radius: var(--border-radius); margin-bottom: 0.5rem;">
+                            <div style="font-weight: bold; color: var(--primary);">${campaign.campaignName}</div>
+                            <div style="font-size: 0.85rem;">Check details for free product eligibility</div>
+                        </div>`;
+                }
+            });
+            
+            if (!hasEligibleCampaigns) {
+                html = html || '<p style="color: var(--gray-500); font-style: italic;">No campaigns are currently eligible. Add more items to qualify!</p>';
+            }
+            
+            campaignsInfoDiv.innerHTML = html;
         }
 
         function changeCartItemQuantity(index, delta) {
@@ -897,6 +1016,141 @@ else
             const grid = document.querySelector('#allProductsSection .products-grid');
             if (grid) grid.scrollIntoView({ behavior: 'smooth' });
         }
+
+        // Lazy loading: initial page (1) is server-rendered with 10 items.
+        // Subsequent loads will request `GetProductsPage?page=X&pageSize=25`.
+        (function () {
+            const grid = document.getElementById('productsGrid');
+            if (!grid) return;
+
+            let nextPage = 2; // first page already rendered
+            const subsequentPageSize = parseInt(grid.dataset.pageSize || '25', 10);
+            let loading = false;
+            let hasMore = true;
+            let currentCategory = '__all__';
+
+            function buildProductHtml(m) {
+                // Try to find a matching material image
+                let imageUrl = 'https://placehold.co/600x600/cccccc/000000?text=No+Image';
+                if (m.imagePath) {
+                    imageUrl = m.imagePath;
+                } else if (materialImagesData && materialImagesData.length > 0) {
+                    const materialImage = materialImagesData.find(mi => mi.materialMaster?.material3partycode === m.material3partycode);
+                    if (materialImage && materialImage.imagePath) {
+                        imageUrl = materialImage.imagePath;
+                    }
+                }
+
+                // Calculate points for material
+                const points = getPointsForMaterialJS(m.id);
+
+                return `
+                    <div class="product-card" data-category="${m.category || ''}">
+                        <div class="product-image-wrapper">
+                            <img src="${imageUrl}" alt="${m.materialname}" class="product-image" onerror="this.onerror=null;this.src='https://placehold.co/600x600/cccccc/000000?text=No+Image';">
+                        </div>
+                        <div class="product-content">
+                            <h3 class="product-title">${m.materialname}</h3>
+                            <p class="product-shortname">${m.shortName || ''}</p>
+                            <p class="product-sku">SKU: ${m.material3partycode}</p>
+                            <div class="product-price-row">
+                                <span class="product-price">₹${m.dealerprice}</span>
+                                <span class="product-points">Pts: ${points}</span>
+                            </div>
+                            <div class="quantity-section">
+                                <label class="quantity-label">Qty:</label>
+                                <div class="quantity-controls">
+                                    <button class="quantity-btn" onclick="changeQuantity(this, -1)">-</button>
+                                    <input type="number" class="quantity-input" value="1" min="1" onchange="updateQuantity(this)">
+                                    <button class="quantity-btn" onclick="changeQuantity(this, 1)">+</button>
+                                </div>
+                            </div>
+                            <button class="add-to-cart-btn" onclick="addToCart(this, '${m.material3partycode}', '${m.materialname}', ${m.dealerprice}, ${m.id})">
+                                Add to Cart
+                            </button>
+                        </div>
+                    </div>`;
+            }
+
+            async function loadMore() {
+                if (loading || !hasMore) return;
+                loading = true;
+                try {
+                    const resp = await fetch(`/Home/GetProductsPage?page=${nextPage}&pageSize=${subsequentPageSize}&category=${encodeURIComponent(currentCategory)}`);
+                    if (!resp.ok) {
+                        loading = false;
+                        return;
+                    }
+                    const data = await resp.json();
+                    if (data && data.products && data.products.length) {
+                        for (const m of data.products) {
+                            const html = buildProductHtml(m);
+                            const wrapper = document.createElement('div');
+                            wrapper.innerHTML = html;
+                            const appended = wrapper.firstElementChild;
+                            grid.appendChild(appended);
+                        }
+                        hasMore = !!data.hasMore;
+                        nextPage = data.nextPage || (nextPage + 1);
+                    } else {
+                        hasMore = false;
+                    }
+                } catch (e) {
+                    console.error('Error loading products', e);
+                }
+                loading = false;
+            }
+
+            // Reload grid with category filter applied (fetch first page from API)
+            async function reloadWithCategory() {
+                if (loading) return;
+                loading = true;
+                try {
+                    grid.innerHTML = '';
+                    // fetch first page with a smaller pageSize to render quickly
+                    const pageSize = 10;
+                    const resp = await fetch(`/Home/GetProductsPage?page=1&pageSize=${pageSize}&category=${encodeURIComponent(currentCategory)}`);
+                    if (!resp.ok) {
+                        loading = false;
+                        return;
+                    }
+                    const data = await resp.json();
+                    if (data && data.products && data.products.length) {
+                        for (const m of data.products) {
+                            const html = buildProductHtml(m);
+                            const wrapper = document.createElement('div');
+                            wrapper.innerHTML = html;
+                            const appended = wrapper.firstElementChild;
+                            grid.appendChild(appended);
+                        }
+                        hasMore = !!data.hasMore;
+                        nextPage = data.nextPage || 2;
+                    } else {
+                        hasMore = false;
+                        nextPage = 2;
+                    }
+                } catch (e) {
+                    console.error('Error reloading products', e);
+                }
+                loading = false;
+            }
+
+            // Load more when user scrolls near bottom
+            window.addEventListener('scroll', function () {
+                if ((window.innerHeight + window.scrollY) >= (document.body.offsetHeight - 300)) {
+                    loadMore();
+                }
+            });
+
+            // Wire up category filter control
+            const categorySelect = document.getElementById('categoryFilter');
+            if (categorySelect) {
+                categorySelect.addEventListener('change', function () {
+                    currentCategory = categorySelect.value;
+                    reloadWithCategory();
+                });
+            }
+        })();
 
         // Initialize Carousel
         document.addEventListener('DOMContentLoaded', () => {

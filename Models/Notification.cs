@@ -45,7 +45,7 @@ namespace HaldiramPromotionalApp.Models
 
         public Notification()
         {
-            CreatedDate = DateTime.Now;
+            CreatedDate = DateTime.UtcNow;
         }
     }
 }
