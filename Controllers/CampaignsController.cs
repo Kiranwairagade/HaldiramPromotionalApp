@@ -117,6 +117,8 @@ namespace HaldiramPromotionalApp.Controllers
                         VoucherValidity = viewModel.VoucherValidity,
                         Materials = viewModel.SelectedMaterialIds != null ? string.Join(",", viewModel.SelectedMaterialIds) : "",
                         MaterialPoints = viewModel.MaterialPoints != null ? JsonSerializer.Serialize(viewModel.MaterialPoints) : "{}",
+                        SalesVoucherValue = viewModel.SalesVoucherValue,
+                        DistributorVoucherValue = viewModel.DistributorVoucherValue,
                         ImagePath = imagePath,
                         IsActive = viewModel.IsActive
                     };
@@ -253,6 +255,8 @@ namespace HaldiramPromotionalApp.Controllers
                         Materials = viewModel.SelectedMaterialIds != null ? string.Join(",", viewModel.SelectedMaterialIds) : "",
                         MaterialPoints = viewModel.MaterialPoints != null ? JsonSerializer.Serialize(viewModel.MaterialPoints) : "{}",
                         RewardProductId = viewModel.RewardProductId,
+                        SalesVoucherValue = viewModel.SalesVoucherValue,
+                        DistributorVoucherValue = viewModel.DistributorVoucherValue,
                         ImagePath = imagePath,
                         IsActive = viewModel.IsActive
                     };
@@ -472,6 +476,8 @@ namespace HaldiramPromotionalApp.Controllers
                         MaterialQuantities = filteredMaterialQuantities.Any() ? JsonSerializer.Serialize(filteredMaterialQuantities) : "{}",
                         FreeProducts = filteredFreeProducts.Any() ? JsonSerializer.Serialize(filteredFreeProducts) : "{}",
                         FreeQuantities = filteredFreeQuantities.Any() ? JsonSerializer.Serialize(filteredFreeQuantities) : "{}",
+                        SalesVoucherValue = viewModel.SalesVoucherValue,
+                        DistributorVoucherValue = viewModel.DistributorVoucherValue,
                         ImagePath = imagePath,
                         IsActive = viewModel.IsActive
                     };
@@ -600,6 +606,8 @@ namespace HaldiramPromotionalApp.Controllers
                         TargetAmount = viewModel.TargetAmount,
                         VoucherValue = viewModel.VoucherValue,
                         VoucherValidity = viewModel.VoucherValidity,
+                        SalesVoucherValue = viewModel.SalesVoucherValue,
+                        DistributorVoucherValue = viewModel.DistributorVoucherValue,
                         ImagePath = imagePath,
                         IsActive = viewModel.IsActive
                     };
@@ -714,6 +722,8 @@ namespace HaldiramPromotionalApp.Controllers
                         SessionDuration = viewModel.SessionDuration,
                         VoucherValue = viewModel.VoucherValue,
                         VoucherValidity = viewModel.VoucherValidity,
+                        SalesVoucherValue = viewModel.SalesVoucherValue,
+                        DistributorVoucherValue = viewModel.DistributorVoucherValue,
                         ImagePath = imagePath,
                         IsActive = viewModel.IsActive
                     };
@@ -1208,6 +1218,8 @@ namespace HaldiramPromotionalApp.Controllers
                 SelectedMaterialIds = selectedMaterialIds,
                 MaterialPoints = materialPoints,
                 RewardProductId = campaign.RewardProductId,
+                SalesVoucherValue = campaign.SalesVoucherValue,
+                DistributorVoucherValue = campaign.DistributorVoucherValue,
                 IsActive = campaign.IsActive,
                 AllMaterials = materials.Select(m => new MaterialViewModel
                 {
@@ -1294,6 +1306,8 @@ namespace HaldiramPromotionalApp.Controllers
                     campaign.Materials = viewModel.SelectedMaterialIds != null ? string.Join(",", viewModel.SelectedMaterialIds) : "";
                     campaign.MaterialPoints = viewModel.MaterialPoints != null ? JsonSerializer.Serialize(viewModel.MaterialPoints) : "{}";
                     campaign.RewardProductId = viewModel.RewardProductId;
+                    campaign.SalesVoucherValue = viewModel.SalesVoucherValue;
+                    campaign.DistributorVoucherValue = viewModel.DistributorVoucherValue;
                     campaign.ImagePath = imagePath;
                     campaign.IsActive = viewModel.IsActive;
 
@@ -1387,6 +1401,8 @@ namespace HaldiramPromotionalApp.Controllers
                 MaterialQuantities = materialQuantities,
                 FreeProducts = freeProducts,
                 FreeQuantities = freeQuantities,
+                SalesVoucherValue = campaign.SalesVoucherValue,
+                DistributorVoucherValue = campaign.DistributorVoucherValue,
                 IsActive = campaign.IsActive,
                 AllMaterials = materials.Select(m => new MaterialViewModel
                 {
@@ -1560,6 +1576,8 @@ namespace HaldiramPromotionalApp.Controllers
                     campaign.MaterialQuantities = filteredMaterialQuantities.Any() ? JsonSerializer.Serialize(filteredMaterialQuantities) : "{}";
                     campaign.FreeProducts = filteredFreeProducts.Any() ? JsonSerializer.Serialize(filteredFreeProducts) : "{}";
                     campaign.FreeQuantities = filteredFreeQuantities.Any() ? JsonSerializer.Serialize(filteredFreeQuantities) : "{}";
+                    campaign.SalesVoucherValue = viewModel.SalesVoucherValue;
+                    campaign.DistributorVoucherValue = viewModel.DistributorVoucherValue;
                     campaign.ImagePath = imagePath;
                     campaign.IsActive = viewModel.IsActive;
 
@@ -1661,6 +1679,8 @@ namespace HaldiramPromotionalApp.Controllers
                 TargetAmount = campaign.TargetAmount,
                 VoucherValue = campaign.VoucherValue,
                 VoucherValidity = campaign.VoucherValidity,
+                SalesVoucherValue = campaign.SalesVoucherValue,
+                DistributorVoucherValue = campaign.DistributorVoucherValue,
                 IsActive = campaign.IsActive
             };
 
@@ -1730,6 +1750,8 @@ namespace HaldiramPromotionalApp.Controllers
                     campaign.TargetAmount = viewModel.TargetAmount;
                     campaign.VoucherValue = viewModel.VoucherValue;
                     campaign.VoucherValidity = viewModel.VoucherValidity;
+                    campaign.SalesVoucherValue = viewModel.SalesVoucherValue;
+                    campaign.DistributorVoucherValue = viewModel.DistributorVoucherValue;
                     campaign.ImagePath = imagePath;
                     campaign.IsActive = viewModel.IsActive;
 
@@ -1788,6 +1810,8 @@ namespace HaldiramPromotionalApp.Controllers
                 SessionDuration = campaign.SessionDuration,
                 VoucherValue = campaign.VoucherValue,
                 VoucherValidity = campaign.VoucherValidity,
+                SalesVoucherValue = campaign.SalesVoucherValue,
+                DistributorVoucherValue = campaign.DistributorVoucherValue,
                 IsActive = campaign.IsActive
             };
 
@@ -1857,6 +1881,8 @@ namespace HaldiramPromotionalApp.Controllers
                     campaign.SessionDuration = viewModel.SessionDuration;
                     campaign.VoucherValue = viewModel.VoucherValue;
                     campaign.VoucherValidity = viewModel.VoucherValidity;
+                    campaign.SalesVoucherValue = viewModel.SalesVoucherValue;
+                    campaign.DistributorVoucherValue = viewModel.DistributorVoucherValue;
                     campaign.ImagePath = imagePath;
                     campaign.IsActive = viewModel.IsActive;
 
@@ -2105,5 +2131,35 @@ namespace HaldiramPromotionalApp.Controllers
             }
             return RedirectToAction("ViewCampaigns");
         }
+
+        // Temporary method to check database schema
+        [HttpGet]
+        public IActionResult CheckDatabaseSchema()
+        {
+            try
+            {
+                // Using raw SQL to check column names
+                var columnInfo = _context.Database.SqlQueryRaw<ColumnInfo>(@"
+                    SELECT COLUMN_NAME, TABLE_NAME 
+                    FROM INFORMATION_SCHEMA.COLUMNS 
+                    WHERE COLUMN_NAME LIKE '%VoucherValue%' 
+                    ORDER BY TABLE_NAME, COLUMN_NAME").ToList();
+                
+                ViewBag.ColumnInfo = columnInfo;
+                return View("CheckDatabaseSchema");
+            }
+            catch (Exception ex)
+            {
+                ViewBag.Error = ex.Message;
+                return View("Error");
+            }
+        }
+    }
+    
+    // Helper class for column information
+    public class ColumnInfo
+    {
+        public string COLUMN_NAME { get; set; }
+        public string TABLE_NAME { get; set; }
     }
 }

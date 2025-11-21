@@ -89,6 +89,12 @@ namespace HaldiramPromotionalApp.ViewModels
         [Display(Name = "All Materials")]
         public List<MaterialViewModel> AllMaterials { get; set; } = new List<MaterialViewModel>();
         
+        [Display(Name = "Sales Voucher Value (₹)")]
+        public decimal SalesVoucherValue { get; set; } = 0;
+        
+        [Display(Name = "Distributor Voucher Value (₹)")]
+        public decimal DistributorVoucherValue { get; set; } = 0;
+        
         [Display(Name = "Campaign Image")]
         public string? ImagePath { get; set; }
         
@@ -138,6 +144,12 @@ namespace HaldiramPromotionalApp.ViewModels
         [Display(Name = "All Products")]
         public List<ProductViewModel> AllProducts { get; set; } = new List<ProductViewModel>();
         
+        [Display(Name = "Sales Voucher Value (₹)")]
+        public decimal SalesVoucherValue { get; set; } = 0;
+        
+        [Display(Name = "Distributor Voucher Value (₹)")]
+        public decimal DistributorVoucherValue { get; set; } = 0;
+        
         [Display(Name = "Campaign Image")]
         public string? ImagePath { get; set; }
         
@@ -186,6 +198,12 @@ namespace HaldiramPromotionalApp.ViewModels
         [Display(Name = "All Products")]
         public List<ProductViewModel> AllProducts { get; set; } = new List<ProductViewModel>();
         
+        [Display(Name = "Sales Voucher Value (₹)")]
+        public decimal SalesVoucherValue { get; set; } = 0;
+        
+        [Display(Name = "Distributor Voucher Value (₹)")]
+        public decimal DistributorVoucherValue { get; set; } = 0;
+        
         [Display(Name = "Campaign Image")]
         public string? ImagePath { get; set; }
         
@@ -222,6 +240,12 @@ namespace HaldiramPromotionalApp.ViewModels
         [Required]
         [Display(Name = "Voucher Validity (Days)")]
         public int VoucherValidity { get; set; }
+        
+        [Display(Name = "Sales Voucher Value (₹)")]
+        public decimal SalesVoucherValue { get; set; } = 0;
+        
+        [Display(Name = "Distributor Voucher Value (₹)")]
+        public decimal DistributorVoucherValue { get; set; } = 0;
         
         [Display(Name = "All Materials")]
         public List<MaterialViewModel> AllMaterials { get; set; } = new List<MaterialViewModel>();
@@ -262,6 +286,12 @@ namespace HaldiramPromotionalApp.ViewModels
         [Required]
         [Display(Name = "Voucher Validity (Days)")]
         public int VoucherValidity { get; set; }
+        
+        [Display(Name = "Sales Voucher Value (₹)")]
+        public decimal SalesVoucherValue { get; set; } = 0;
+        
+        [Display(Name = "Distributor Voucher Value (₹)")]
+        public decimal DistributorVoucherValue { get; set; } = 0;
         
         [Display(Name = "All Materials")]
         public List<MaterialViewModel> AllMaterials { get; set; } = new List<MaterialViewModel>();

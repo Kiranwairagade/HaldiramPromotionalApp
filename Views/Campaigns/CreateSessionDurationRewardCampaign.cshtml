@@ -76,6 +76,18 @@
                         <span asp-validation-for="VoucherValidity" class="text-red-500 text-xs"></span>
                     </div>
                     
+                    <div>
+                        <label asp-for="SalesVoucherValue" class="block text-xs font-medium text-gray-700 mb-1">Sales Voucher Value (₹)</label>
+                        <input asp-for="SalesVoucherValue" type="number" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm" placeholder="Sales voucher value in ₹" />
+                        <span asp-validation-for="SalesVoucherValue" class="text-red-500 text-xs"></span>
+                    </div>
+                    
+                    <div>
+                        <label asp-for="DistributorVoucherValue" class="block text-xs font-medium text-gray-700 mb-1">Distributor Voucher Value (₹)</label>
+                        <input asp-for="DistributorVoucherValue" type="number" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm" placeholder="Distributor voucher value in ₹" />
+                        <span asp-validation-for="DistributorVoucherValue" class="text-red-500 text-xs"></span>
+                    </div>
+                    
                     <div class="md:col-span-2">
                         <label asp-for="Description" class="block text-xs font-medium text-gray-700 mb-1">Description</label>
                         <textarea asp-for="Description" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm" rows="3" placeholder="Campaign description"></textarea>

@@ -37,6 +37,14 @@ namespace HaldiramPromotionalApp.Models
         [Display(Name = "Free Quantities")]
         public string? FreeQuantities { get; set; } // JSON string of material ID to free quantity mapping
 
+        [Display(Name = "Sales Voucher Value (₹)")]
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal SalesVoucherValue { get; set; } = 0;
+
+        [Display(Name = "Distributor Voucher Value (₹)")]
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal DistributorVoucherValue { get; set; } = 0;
+
         [Display(Name = "Campaign Image")]
         public string? ImagePath { get; set; }
 

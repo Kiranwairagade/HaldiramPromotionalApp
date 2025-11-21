@@ -47,6 +47,14 @@ namespace HaldiramPromotionalApp.Models
         [ForeignKey("RewardProductId")]
         public virtual Product? RewardProduct { get; set; }
 
+        [Display(Name = "Sales Voucher Value (₹)")]
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal SalesVoucherValue { get; set; } = 0;
+
+        [Display(Name = "Distributor Voucher Value (₹)")]
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal DistributorVoucherValue { get; set; } = 0;
+
         [Display(Name = "Campaign Image")]
         public string? ImagePath { get; set; }
 
