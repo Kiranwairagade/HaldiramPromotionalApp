@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HaldiramPromotionalApp.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251121101712_UpdateVoucherModelForEntityTypes")]
-    partial class UpdateVoucherModelForEntityTypes
+    [Migration("20251122015015_UpdateRedeemedProductsForRewardVouchers")]
+    partial class UpdateRedeemedProductsForRewardVouchers
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -275,6 +275,81 @@ namespace HaldiramPromotionalApp.Migrations
                     b.HasKey("id");
 
                     b.ToTable("EmpToCustMaps");
+                });
+
+            modelBuilder.Entity("HaldiramPromotionalApp.Models.EmployeeMaster", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Department")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Designation")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("EmpCode")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("EmployeeType")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Grade")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("MiddileName")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("PhoneNumber")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<string>("Route")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Segment")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("UserType")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("isActive")
+                        .HasColumnType("bit");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("EmployeeMasters");
                 });
 
             modelBuilder.Entity("HaldiramPromotionalApp.Models.FreeProductCampaign", b =>
@@ -694,6 +769,41 @@ namespace HaldiramPromotionalApp.Migrations
                     b.ToTable("Products");
                 });
 
+            modelBuilder.Entity("HaldiramPromotionalApp.Models.RedeemedProduct", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("Price")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("ProductName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("RedemptionDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("VoucherId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("VoucherId");
+
+                    b.ToTable("RedeemedProducts");
+                });
+
             modelBuilder.Entity("HaldiramPromotionalApp.Models.SessionDurationRewardCampaign", b =>
                 {
                     b.Property<int>("Id")
@@ -826,16 +936,8 @@ namespace HaldiramPromotionalApp.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("DealerId")
+                    b.Property<int>("DealerId")
                         .HasColumnType("int");
-
-                    b.Property<string>("EntityIdentifier")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("EntityType")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("ExpiryDate")
                         .HasColumnType("datetime2");
@@ -941,11 +1043,24 @@ namespace HaldiramPromotionalApp.Migrations
                     b.Navigation("RewardProduct");
                 });
 
+            modelBuilder.Entity("HaldiramPromotionalApp.Models.RedeemedProduct", b =>
+                {
+                    b.HasOne("HaldiramPromotionalApp.Models.Voucher", "Voucher")
+                        .WithMany()
+                        .HasForeignKey("VoucherId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Voucher");
+                });
+
             modelBuilder.Entity("HaldiramPromotionalApp.Models.Voucher", b =>
                 {
                     b.HasOne("HaldiramPromotionalApp.Models.DealerMaster", "Dealer")
                         .WithMany()
-                        .HasForeignKey("DealerId");
+                        .HasForeignKey("DealerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Dealer");
                 });

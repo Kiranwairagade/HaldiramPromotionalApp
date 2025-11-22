@@ -572,13 +572,16 @@ namespace HaldiramPromotionalApp.Controllers
                     .OrderByDescending(v => v.IssueDate)
                     .ToListAsync();
 
-                // Get redemption history (recently redeemed vouchers)
-                // Include dealer information for better context
+                // Get redemption history (recently redeemed vouchers) for this shopkeeper
                 var redemptionHistory = await _context.Vouchers
                     .Include(v => v.Dealer)
                     .Where(v => v.IsRedeemed)
                     .OrderByDescending(v => v.RedeemedDate)
                     .Take(20) // Limit to 20 most recent redemptions
+                    .ToListAsync();
+
+                // Get redeemed products for displaying in the history
+                var redeemedProducts = await _context.RedeemedProducts
                     .ToListAsync();
 
                 // Generate QR code data for each voucher
@@ -605,6 +608,7 @@ namespace HaldiramPromotionalApp.Controllers
                     VoucherQRCodeData = voucherQRCodeData,
                     Shopkeeper = shopkeeper,
                     RedemptionHistory = redemptionHistory, // Add redemption history to the view model
+                    RedeemedProducts = redeemedProducts, // Add redeemed products to the view model
                     ShowProductForm = showProductForm,
                     VoucherId = voucherId
                 };
@@ -941,12 +945,6 @@ namespace HaldiramPromotionalApp.Controllers
             }
         }
         
-        public IActionResult Logout()
-        {
-            HttpContext.Session.Clear();
-            HttpContext.Session.Remove("UserName");
-            return RedirectToAction("Login");
-        }
 
         public async Task<IActionResult> PointsDetails()
         {
@@ -1042,9 +1040,15 @@ namespace HaldiramPromotionalApp.Controllers
                     .OrderByDescending(v => v.RedeemedDate)
                     .ToListAsync();
 
+                // Get redeemed products for displaying in the history
+                var redeemedProducts = await _context.RedeemedProducts
+                    .Where(rp => rp.Voucher.DealerId == dealer.Id)
+                    .ToListAsync();
+
                 var viewModel = new VoucherViewModel
                 {
                     RedemptionHistory = redemptionHistory,
+                    RedeemedProducts = redeemedProducts, // Add redeemed products to the view model
                     Dealer = dealer
                 };
 
@@ -2045,11 +2049,10 @@ namespace HaldiramPromotionalApp.Controllers
 
             try
             {
-                // In a real implementation, you would save these product details to a database
-                // For now, we'll just show a success message
-                
                 // Find the voucher to get its details
-                var voucher = await _context.Vouchers.FirstOrDefaultAsync(v => v.Id == voucherId);
+                var voucher = await _context.Vouchers
+                    .Include(v => v.Dealer)
+                    .FirstOrDefaultAsync(v => v.Id == voucherId);
                 
                 if (voucher == null)
                 {
@@ -2057,19 +2060,43 @@ namespace HaldiramPromotionalApp.Controllers
                     return RedirectToAction("ShopkeeperHome");
                 }
                 
-                // Here you would typically save the product details to a database table
-                // For example:
-                // var productDetails = new RedeemedProduct 
-                // { 
-                //     VoucherId = voucherId, 
-                //     ProductName = ProductName, 
-                //     Description = ProductDescription, 
-                //     Price = ProductPrice, 
-                //     Quantity = Quantity,
-                //     RedemptionDate = DateTime.UtcNow
-                // };
-                // _context.RedeemedProducts.Add(productDetails);
-                // await _context.SaveChangesAsync();
+                // Create a new redeemed product entry
+                var productDetails = new RedeemedProduct 
+                { 
+                    VoucherId = voucherId, 
+                    ProductName = ProductName, 
+                    Description = ProductDescription, 
+                    Price = ProductPrice, 
+                    Quantity = Quantity,
+                    RedemptionDate = DateTime.UtcNow,
+                    VoucherType = voucher.CampaignType
+                };
+                
+                // If this is a PointsReward voucher, get the reward product details
+                if (voucher.CampaignType == "PointsReward")
+                {
+                    var pointsRewardCampaign = await _context.PointsRewardCampaigns
+                        .Include(c => c.RewardProduct)
+                        .FirstOrDefaultAsync(c => c.Id == voucher.CampaignId);
+                    
+                    if (pointsRewardCampaign?.RewardProduct != null)
+                    {
+                        productDetails.RewardProductId = pointsRewardCampaign.RewardProductId;
+                        // Override with reward product details if not provided in the form
+                        if (string.IsNullOrEmpty(ProductName))
+                        {
+                            productDetails.ProductName = pointsRewardCampaign.RewardProduct.ProductName;
+                        }
+                        if (ProductPrice == 0)
+                        {
+                            productDetails.Price = pointsRewardCampaign.RewardProduct.Price;
+                        }
+                    }
+                }
+                
+                // Add the product details to the database
+                _context.RedeemedProducts.Add(productDetails);
+                await _context.SaveChangesAsync();
                 
                 TempData["SuccessMessage"] = $"Voucher {voucher.VoucherCode} redeemed successfully! Product details saved.";
                 return RedirectToAction("ShopkeeperHome");
