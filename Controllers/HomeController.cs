@@ -821,6 +821,8 @@ namespace HaldiramPromotionalApp.Controllers
                 return RedirectToAction("Index");
             }
             
+            // Clear any existing session data to ensure clean login
+            HttpContext.Session.Clear();
             return View();
         }
         
@@ -1292,6 +1294,15 @@ namespace HaldiramPromotionalApp.Controllers
                 // Redirect to dealer home page if there's an error
                 return RedirectToAction("DealerHome");
             }
+        }
+
+        public IActionResult Logout()
+        {
+            HttpContext.Session.Clear();
+            HttpContext.Session.Remove("UserName");
+            HttpContext.Session.Remove("role");
+            HttpContext.Session.Remove("name");
+            return RedirectToAction("Login");
         }
 
         public async Task<IActionResult> Vouchers()

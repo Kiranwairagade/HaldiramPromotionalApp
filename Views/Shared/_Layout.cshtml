@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿<!DOCTYPE html>
+﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -488,12 +488,13 @@
                                         </div>
                                     }
 
-                                    <a asp-area="" asp-controller="Home" asp-action="Logout" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    <button type="submit" form="logoutForm" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                                         <i class="fas fa-sign-out-alt mr-2"></i> Logout
-                                    </a>
+                                    </button>
                                 </div>
                             </div>
                         </div>
+                        <form asp-area="" asp-controller="Home" asp-action="Logout" method="post" id="logoutForm" style="display: none;"></form>
                     }
                     else
                     {
@@ -574,9 +575,9 @@
                         </div>
                     }
                     
-                    <a asp-area="" asp-controller="Home" asp-action="Logout" class="nav-link-mobile block">
+                    <button type="submit" form="logoutForm" class="nav-link-mobile block w-full text-left">
                         <i class="fas fa-sign-out-alt"></i> Logout
-                    </a>
+                    </button>
                 }
                 else
                 {
