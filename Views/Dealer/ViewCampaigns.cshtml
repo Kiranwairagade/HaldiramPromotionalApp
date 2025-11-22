@@ -1,0 +1,538 @@
+@model ViewCampaignsViewModel
+@{
+    ViewData["Title"] = "Campaigns";
+}
+
+<link rel="stylesheet" href="~/css/DealerDashboard.css" />
+
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-header">
+            <h5><i class="fas fa-bullhorn"></i> Campaigns</h5>
+        </div>
+        <div class="card-body">
+            <!-- Points to Cash Campaigns -->
+            <div class="mb-4">
+                <h2 class="section-header">
+                    <i class="fas fa-money-bill-wave text-green-600"></i>
+                    Points to Cash Campaigns
+                </h2>
+                @if (Model.DetailedPointsToCashCampaigns.Any())
+                {
+                    <div class="grid">
+                        @foreach (var campaign in Model.DetailedPointsToCashCampaigns)
+                        {
+                            <div class="campaign-card">
+                                <!-- Image with Status Badge -->
+                                <div class="campaign-image-container">
+                                    @if (!string.IsNullOrEmpty(campaign.ImagePath))
+                                    {
+                                        <img src="@campaign.ImagePath" alt="@campaign.CampaignName" class="campaign-image" onerror="this.onerror=null;this.src='https://placehold.co/600x400/cccccc/000000?text=No+Image+Available';" />
+                                    }
+                                    else
+                                    {
+                                        <div class="campaign-image-placeholder">
+                                            <i class="fas fa-image text-gray-400 text-2xl"></i>
+                                        </div>
+                                    }
+                                    <div class="campaign-status-badge @(campaign.IsActive ? "active" : "inactive")">
+                                        @(campaign.IsActive ? "Active" : "Inactive")
+                                    </div>
+                                </div>
+                                
+                                <!-- Campaign Title -->
+                                <div class="campaign-title">@campaign.CampaignName</div>
+                                
+                                <!-- Dates in one row -->
+                                <div class="campaign-dates">
+                                    <span class="date-item">
+                                        <i class="fas fa-calendar-start"></i>
+                                        <span>@campaign.StartDate.ToString("dd/MM/yyyy")</span>
+                                    </span>
+                                    <span class="date-item">
+                                        <i class="fas fa-calendar-end"></i>
+                                        <span>@campaign.EndDate.ToString("dd/MM/yyyy")</span>
+                                    </span>
+                                </div>
+                                
+                                <!-- Toggle Details Button -->
+                                <button type="button" class="toggle-details-btn" onclick="toggleDetails('pointsToCash-@campaign.Id')" 
+                                        data-target="pointsToCash-@campaign.Id">
+                                    <span class="btn-text">Show Details</span>
+                                    <i class="fas fa-chevron-down toggle-icon"></i>
+                                </button>
+                                
+                                <!-- Details Content -->
+                                <div id="pointsToCash-@campaign.Id" class="campaign-details-content">
+                                    <div class="campaign-detail-item">
+                                        <div class="detail-label">Threshold</div>
+                                        <div class="detail-value">@campaign.VoucherGenerationThreshold points</div>
+                                    </div>
+                                    <div class="campaign-detail-item">
+                                        <div class="detail-label">Voucher Value</div>
+                                        <div class="detail-value">₹@campaign.VoucherValue</div>
+                                    </div>
+                                    
+                                    @if (campaign.MaterialDetails.Any())
+                                    {
+                                        <div class="mt-3">
+                                            <div class="detail-label">Materials (@campaign.MaterialDetails.Count)</div>
+                                            @foreach (var material in campaign.MaterialDetails)
+                                            {
+                                                <div class="d-flex justify-content-between mt-2">
+                                                    <span>@material.MaterialName</span>
+                                                    <span>@material.Points points</span>
+                                                </div>
+                                            }
+                                        </div>
+                                    }
+                                    
+                                    @if (!string.IsNullOrEmpty(campaign.Description))
+                                    {
+                                        <div class="mt-3">
+                                            <div class="detail-label">Description</div>
+                                            <div class="detail-value">@campaign.Description</div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="empty-campaigns">
+                        <i class="fas fa-money-bill-wave"></i>
+                        <h4>No Points to Cash Campaigns</h4>
+                        <p>There are no Points to Cash campaigns available at the moment.</p>
+                    </div>
+                }
+            </div>
+
+            <!-- Points Reward Campaigns -->
+            <div class="mb-4">
+                <h2 class="section-header">
+                    <i class="fas fa-gift text-blue-600"></i>
+                    Points Reward Campaigns
+                </h2>
+                @if (Model.DetailedPointsRewardCampaigns.Any())
+                {
+                    <div class="grid">
+                        @foreach (var campaign in Model.DetailedPointsRewardCampaigns)
+                        {
+                            <div class="campaign-card">
+                                <!-- Image with Status Badge -->
+                                <div class="campaign-image-container">
+                                    @if (!string.IsNullOrEmpty(campaign.ImagePath))
+                                    {
+                                        <img src="@campaign.ImagePath" alt="@campaign.CampaignName" class="campaign-image" onerror="this.onerror=null;this.src='https://placehold.co/600x400/cccccc/000000?text=No+Image+Available';" />
+                                    }
+                                    else
+                                    {
+                                        <div class="campaign-image-placeholder">
+                                            <i class="fas fa-image text-gray-400 text-2xl"></i>
+                                        </div>
+                                    }
+                                    <div class="campaign-status-badge @(campaign.IsActive ? "active" : "inactive")">
+                                        @(campaign.IsActive ? "Active" : "Inactive")
+                                    </div>
+                                </div>
+                                
+                                <!-- Campaign Title -->
+                                <div class="campaign-title">@campaign.CampaignName</div>
+                                
+                                <!-- Dates in one row -->
+                                <div class="campaign-dates">
+                                    <span class="date-item">
+                                        <i class="fas fa-calendar-start"></i>
+                                        <span>@campaign.StartDate.ToString("dd/MM/yyyy")</span>
+                                    </span>
+                                    <span class="date-item">
+                                        <i class="fas fa-calendar-end"></i>
+                                        <span>@campaign.EndDate.ToString("dd/MM/yyyy")</span>
+                                    </span>
+                                </div>
+                                
+                                <!-- Toggle Details Button -->
+                                <button type="button" class="toggle-details-btn" onclick="toggleDetails('pointsReward-@campaign.Id')" 
+                                        data-target="pointsReward-@campaign.Id">
+                                    <span class="btn-text">Show Details</span>
+                                    <i class="fas fa-chevron-down toggle-icon"></i>
+                                </button>
+                                
+                                <!-- Details Content -->
+                                <div id="pointsReward-@campaign.Id" class="campaign-details-content">
+                                    <div class="campaign-detail-item">
+                                        <div class="detail-label">Threshold</div>
+                                        <div class="detail-value">@campaign.VoucherGenerationThreshold points</div>
+                                    </div>
+                                    
+                                    @if (campaign.MaterialDetails.Any())
+                                    {
+                                        <div class="mt-3">
+                                            <div class="detail-label">Materials (@campaign.MaterialDetails.Count)</div>
+                                            @foreach (var material in campaign.MaterialDetails)
+                                            {
+                                                <div class="d-flex justify-content-between mt-2">
+                                                    <span>@material.MaterialName</span>
+                                                    <span>@material.Points points</span>
+                                                </div>
+                                            }
+                                        </div>
+                                    }
+                                    
+                                    @if (campaign.RewardProduct != null)
+                                    {
+                                        <div class="mt-3">
+                                            <div class="detail-label">Reward Product</div>
+                                            <div class="detail-value">@campaign.RewardProduct.ProductName</div>
+                                        </div>
+                                    }
+                                    
+                                    @if (!string.IsNullOrEmpty(campaign.Description))
+                                    {
+                                        <div class="mt-3">
+                                            <div class="detail-label">Description</div>
+                                            <div class="detail-value">@campaign.Description</div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="empty-campaigns">
+                        <i class="fas fa-gift"></i>
+                        <h4>No Points Reward Campaigns</h4>
+                        <p>There are no Points Reward campaigns available at the moment.</p>
+                    </div>
+                }
+            </div>
+
+            <!-- Free Product Campaigns -->
+            <div class="mb-4">
+                <h2 class="section-header">
+                    <i class="fas fa-box-open text-purple-600"></i>
+                    Free Product Campaigns
+                </h2>
+                @if (Model.DetailedFreeProductCampaigns.Any())
+                {
+                    <div class="grid">
+                        @foreach (var campaign in Model.DetailedFreeProductCampaigns)
+                        {
+                            <div class="campaign-card">
+                                <!-- Image with Status Badge -->
+                                <div class="campaign-image-container">
+                                    @if (!string.IsNullOrEmpty(campaign.ImagePath))
+                                    {
+                                        <img src="@campaign.ImagePath" alt="@campaign.CampaignName" class="campaign-image" onerror="this.onerror=null;this.src='https://placehold.co/600x400/cccccc/000000?text=No+Image+Available';" />
+                                    }
+                                    else
+                                    {
+                                        <div class="campaign-image-placeholder">
+                                            <i class="fas fa-image text-gray-400 text-2xl"></i>
+                                        </div>
+                                    }
+                                    <div class="campaign-status-badge @(campaign.IsActive ? "active" : "inactive")">
+                                        @(campaign.IsActive ? "Active" : "Inactive")
+                                    </div>
+                                </div>
+                                
+                                <!-- Campaign Title -->
+                                <div class="campaign-title">@campaign.CampaignName</div>
+                                
+                                <!-- Dates in one row -->
+                                <div class="campaign-dates">
+                                    <span class="date-item">
+                                        <i class="fas fa-calendar-start"></i>
+                                        <span>@campaign.StartDate.ToString("dd/MM/yyyy")</span>
+                                    </span>
+                                    <span class="date-item">
+                                        <i class="fas fa-calendar-end"></i>
+                                        <span>@campaign.EndDate.ToString("dd/MM/yyyy")</span>
+                                    </span>
+                                </div>
+                                
+                                <!-- Items Count -->
+                                <div class="campaign-items-count">
+                                    <i class="fas fa-box"></i>
+                                    <span>@campaign.MaterialDetails.Count Items</span>
+                                </div>
+                                
+                                <!-- Toggle Details Button -->
+                                <button type="button" class="toggle-details-btn" onclick="toggleDetails('freeProduct-@campaign.Id')" 
+                                        data-target="freeProduct-@campaign.Id">
+                                    <span class="btn-text">Show Details</span>
+                                    <i class="fas fa-chevron-down toggle-icon"></i>
+                                </button>
+                                
+                                <!-- Details Content -->
+                                <div id="freeProduct-@campaign.Id" class="campaign-details-content">
+                                    @if (campaign.MaterialDetails.Any())
+                                    {
+                                        <div class="mt-3">
+                                            <div class="detail-label">Materials (@campaign.MaterialDetails.Count)</div>
+                                            @foreach (var material in campaign.MaterialDetails)
+                                            {
+                                                <div class="d-flex justify-content-between mt-2">
+                                                    <span>@material.MaterialName</span>
+                                                    <span>@($"{material.Quantity} pcs")</span>
+                                                </div>
+                                            }
+                                        </div>
+                                    }
+                                    
+                                    @if (campaign.FreeProductDetails.Any())
+                                    {
+                                        <div class="mt-3">
+                                            <div class="detail-label">Free Products (@campaign.FreeProductDetails.Count)</div>
+                                            @foreach (var kvp in campaign.FreeProductDetails)
+                                            {
+                                                var materialId = kvp.Key;
+                                                var freeProductDetail = kvp.Value;
+                                                <div class="mt-2">
+                                                    <div class="d-flex justify-content-between">
+                                                        <span>@freeProductDetail.FreeProductName</span>
+                                                        <span>@($"{freeProductDetail.FreeQuantity} pcs")</span>
+                                                    </div>
+                                                    @{
+                                                        var associatedMaterial = campaign.MaterialDetails.FirstOrDefault(m => m.MaterialId == materialId);
+                                                        if (associatedMaterial != null)
+                                                        {
+                                                            <div class="text-muted small">
+                                                                For material: @associatedMaterial.MaterialName (Qty: @associatedMaterial.Quantity)
+                                                            </div>
+                                                        }
+                                                    }
+                                                </div>
+                                            }
+                                        </div>
+                                    }
+                                    
+                                    @if (!string.IsNullOrEmpty(campaign.Description))
+                                    {
+                                        <div class="mt-3">
+                                            <div class="detail-label">Description</div>
+                                            <div class="detail-value">@campaign.Description</div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="empty-campaigns">
+                        <i class="fas fa-box-open"></i>
+                        <h4>No Free Product Campaigns</h4>
+                        <p>There are no Free Product campaigns available at the moment.</p>
+                    </div>
+                }
+            </div>
+
+            <!-- Amount Reach Goal Campaigns -->
+            <div class="mb-4">
+                <h2 class="section-header">
+                    <i class="fas fa-chart-line text-yellow-600"></i>
+                    Amount Reach Goal Campaigns
+                </h2>
+                @if (Model.AmountReachGoalCampaigns.Any())
+                {
+                    <div class="grid">
+                        @foreach (var campaign in Model.AmountReachGoalCampaigns)
+                        {
+                            <div class="campaign-card">
+                                <!-- Image with Status Badge -->
+                                <div class="campaign-image-container">
+                                    @if (!string.IsNullOrEmpty(campaign.ImagePath))
+                                    {
+                                        <img src="@campaign.ImagePath" alt="@campaign.CampaignName" class="campaign-image" onerror="this.onerror=null;this.src='https://placehold.co/600x400/cccccc/000000?text=No+Image+Available';" />
+                                    }
+                                    else
+                                    {
+                                        <div class="campaign-image-placeholder">
+                                            <i class="fas fa-image text-gray-400 text-2xl"></i>
+                                        </div>
+                                    }
+                                    <div class="campaign-status-badge @(campaign.IsActive ? "active" : "inactive")">
+                                        @(campaign.IsActive ? "Active" : "Inactive")
+                                    </div>
+                                </div>
+                                
+                                <!-- Campaign Title -->
+                                <div class="campaign-title">@campaign.CampaignName</div>
+                                
+                                <!-- Dates in one row -->
+                                <div class="campaign-dates">
+                                    <span class="date-item">
+                                        <i class="fas fa-calendar-start"></i>
+                                        <span>@campaign.StartDate.ToString("dd/MM/yyyy")</span>
+                                    </span>
+                                    <span class="date-item">
+                                        <i class="fas fa-calendar-end"></i>
+                                        <span>@campaign.EndDate.ToString("dd/MM/yyyy")</span>
+                                    </span>
+                                </div>
+                                
+                                <!-- Toggle Details Button -->
+                                <button type="button" class="toggle-details-btn" onclick="toggleDetails('amountReach-@campaign.Id')" 
+                                        data-target="amountReach-@campaign.Id">
+                                    <span class="btn-text">Show Details</span>
+                                    <i class="fas fa-chevron-down toggle-icon"></i>
+                                </button>
+                                
+                                <!-- Details Content -->
+                                <div id="amountReach-@campaign.Id" class="campaign-details-content">
+                                    <div class="campaign-detail-item">
+                                        <div class="detail-label">Target</div>
+                                        <div class="detail-value">₹@campaign.TargetAmount</div>
+                                    </div>
+                                    <div class="campaign-detail-item">
+                                        <div class="detail-label">Voucher Value</div>
+                                        <div class="detail-value">₹@campaign.VoucherValue</div>
+                                    </div>
+                                    
+                                    @if (!string.IsNullOrEmpty(campaign.Description))
+                                    {
+                                        <div class="mt-3">
+                                            <div class="detail-label">Description</div>
+                                            <div class="detail-value">@campaign.Description</div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="empty-campaigns">
+                        <i class="fas fa-chart-line"></i>
+                        <h4>No Amount Reach Goal Campaigns</h4>
+                        <p>There are no Amount Reach Goal campaigns available at the moment.</p>
+                    </div>
+                }
+            </div>
+
+            <!-- Session Duration Reward Campaigns -->
+            <div>
+                <h2 class="section-header">
+                    <i class="fas fa-clock text-red-600"></i>
+                    Session Duration Reward Campaigns
+                </h2>
+                @if (Model.SessionDurationRewardCampaigns.Any())
+                {
+                    <div class="grid">
+                        @foreach (var campaign in Model.SessionDurationRewardCampaigns)
+                        {
+                            <div class="campaign-card">
+                                <!-- Image with Status Badge -->
+                                <div class="campaign-image-container">
+                                    @if (!string.IsNullOrEmpty(campaign.ImagePath))
+                                    {
+                                        <img src="@campaign.ImagePath" alt="@campaign.CampaignName" class="campaign-image" onerror="this.onerror=null;this.src='https://placehold.co/600x400/cccccc/000000?text=No+Image+Available';" />
+                                    }
+                                    else
+                                    {
+                                        <div class="campaign-image-placeholder">
+                                            <i class="fas fa-image text-gray-400 text-2xl"></i>
+                                        </div>
+                                    }
+                                    <div class="campaign-status-badge @(campaign.IsActive ? "active" : "inactive")">
+                                        @(campaign.IsActive ? "Active" : "Inactive")
+                                    </div>
+                                </div>
+                                
+                                <!-- Campaign Title -->
+                                <div class="campaign-title">@campaign.CampaignName</div>
+                                
+                                <!-- Dates in one row -->
+                                <div class="campaign-dates">
+                                    <span class="date-item">
+                                        <i class="fas fa-calendar-start"></i>
+                                        <span>@campaign.StartDate.ToString("dd/MM/yyyy")</span>
+                                    </span>
+                                    <span class="date-item">
+                                        <i class="fas fa-calendar-end"></i>
+                                        <span>@campaign.EndDate.ToString("dd/MM/yyyy")</span>
+                                    </span>
+                                </div>
+                                
+                                <!-- Toggle Details Button -->
+                                <button type="button" class="toggle-details-btn" onclick="toggleDetails('sessionDuration-@campaign.Id')" 
+                                        data-target="sessionDuration-@campaign.Id">
+                                    <span class="btn-text">Show Details</span>
+                                    <i class="fas fa-chevron-down toggle-icon"></i>
+                                </button>
+                                
+                                <!-- Details Content -->
+                                <div id="sessionDuration-@campaign.Id" class="campaign-details-content">
+                                    <div class="campaign-detail-item">
+                                        <div class="detail-label">Duration</div>
+                                        <div class="detail-value">@campaign.SessionDuration minutes</div>
+                                    </div>
+                                    <div class="campaign-detail-item">
+                                        <div class="detail-label">Voucher Value</div>
+                                        <div class="detail-value">₹@campaign.VoucherValue</div>
+                                    </div>
+                                    
+                                    @if (!string.IsNullOrEmpty(campaign.Description))
+                                    {
+                                        <div class="mt-3">
+                                            <div class="detail-label">Description</div>
+                                            <div class="detail-value">@campaign.Description</div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="empty-campaigns">
+                        <i class="fas fa-clock"></i>
+                        <h4>No Session Duration Reward Campaigns</h4>
+                        <p>There are no Session Duration Reward campaigns available at the moment.</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function toggleDetails(id) {
+        var detailsDiv = document.getElementById(id);
+        var button = document.querySelector('[data-target="' + id + '"]');
+        var icon = button.querySelector('.toggle-icon');
+        var text = button.querySelector('.btn-text');
+        
+        if (!detailsDiv) return;
+        
+        var isHidden = detailsDiv.style.display === 'none' || window.getComputedStyle(detailsDiv).display === 'none';
+        
+        if (isHidden) {
+            detailsDiv.style.display = 'block';
+            icon.classList.remove('fa-chevron-down');
+            icon.classList.add('fa-chevron-up');
+            text.textContent = 'Hide Details';
+        } else {
+            detailsDiv.style.display = 'none';
+            icon.classList.remove('fa-chevron-up');
+            icon.classList.add('fa-chevron-down');
+            text.textContent = 'Show Details';
+        }
+    }
+    
+    // Initialize all details as hidden
+    document.addEventListener('DOMContentLoaded', function() {
+        var detailsElements = document.querySelectorAll('.campaign-details-content');
+        detailsElements.forEach(function(element) {
+            element.style.display = 'none';
+        });
+    });
+</script>

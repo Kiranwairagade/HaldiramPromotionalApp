@@ -1,0 +1,870 @@
+@model HaldiramPromotionalApp.ViewModels.VoucherViewModel
+
+@{
+    ViewData["Title"] = "Shopkeeper Dashboard";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<!-- Custom Styles -->
+<style>
+    :root {
+        --primary-color: #2c5aa0;
+        --secondary-color: #f8f9fa;
+        --accent-color: #ff6b35;
+        --success-color: #28a745;
+        --danger-color: #dc3545;
+        --warning-color: #ffc107;
+        --info-color: #17a2b8;
+        --dark-color: #343a40;
+        --light-color: #f8f9fa;
+        --border-radius: 0px; /* Sharp edges as per user preference */
+        --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        --transition: all 0.3s ease;
+    }
+
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #f5f7fb;
+        color: #333;
+        line-height: 1.6;
+        overflow: auto; /* allow page scrolling so content is fully visible */
+    }
+
+    /* Navbar Styles */
+    .navbar {
+        box-shadow: var(--box-shadow);
+        z-index: 1000;
+    }
+
+    .nav-tabs {
+        border-bottom: none;
+    }
+
+    .nav-tabs .nav-link {
+        border: none;
+        border-radius: 0;
+        padding: 6px 10px; /* Reduced padding */
+        color: #666;
+        font-weight: 500;
+        transition: var(--transition);
+        font-size: 0.9rem; /* Reduced font size */
+    }
+
+    .nav-tabs .nav-link:hover {
+        color: var(--primary-color);
+        background-color: rgba(44, 90, 160, 0.1);
+    }
+
+    .nav-tabs .nav-link.active {
+        color: var(--primary-color);
+        border-bottom: 3px solid var(--primary-color);
+        background-color: transparent;
+    }
+
+    .dashboard-header {
+        background: linear-gradient(135deg, var(--primary-color), #1e3a8a);
+        color: white;
+        padding: 1rem; /* Reduced padding */
+        margin-bottom: 1rem; /* Reduced margin */
+        box-shadow: var(--box-shadow);
+    }
+
+    .dashboard-header h2 {
+        font-weight: 600;
+        margin: 0;
+        font-size: 1.5rem; /* Reduced font size */
+    }
+
+    .card {
+        border: none;
+        border-radius: var(--border-radius);
+        box-shadow: var(--box-shadow);
+        transition: var(--transition);
+        margin-bottom: 1rem; /* Reduced margin */
+        max-height: none; /* allow cards to size naturally */
+    }
+
+    .card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+    }
+
+    .card-header {
+        background-color: white;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        padding: 0.75rem 1rem; /* Reduced padding */
+        font-weight: 600;
+        color: var(--primary-color);
+        display: flex;
+        align-items: center;
+    }
+
+    .card-header i {
+        margin-right: 8px; /* Reduced margin */
+        font-size: 1rem; /* Reduced font size */
+    }
+
+    .card-body {
+        padding: 1rem; /* Reduced padding */
+        overflow: visible; /* show full content */
+        max-height: none;
+    }
+
+    .info-item {
+        display: flex;
+        margin-bottom: 0.75rem; /* Reduced margin */
+        align-items: flex-start;
+    }
+
+    .info-icon {
+        background-color: rgba(44, 90, 160, 0.1);
+        color: var(--primary-color);
+        width: 30px; /* Reduced size */
+        height: 30px; /* Reduced size */
+        border-radius: var(--border-radius);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 10px; /* Reduced margin */
+        flex-shrink: 0;
+    }
+
+    .info-content {
+        flex: 1;
+    }
+
+    .info-label {
+        font-weight: 500;
+        color: #666;
+        font-size: 0.8rem; /* Reduced font size */
+        margin-bottom: 0.2rem; /* Reduced margin */
+    }
+
+    .info-value {
+        font-weight: 600;
+        color: #333;
+        font-size: 0.9rem; /* Reduced font size */
+    }
+
+    .scanner-container {
+        width: 100%;
+        height: 300px; /* Reduced height to prevent overflow */
+        border: 2px dashed #ddd;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        background-color: #f8f9fa;
+        margin-bottom: 0.75rem; /* Reduced margin */
+        position: relative;
+        max-width: 100%; /* Ensure it doesn't exceed container */
+    }
+
+    #qrVideo {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    /* QR Scanner overlay styles */
+    #scannerContainer {
+        position: relative;
+    }
+    
+    #scannerContainer .html5-qrcode-element {
+        width: 100%;
+        height: 100%;
+    }
+    
+    .scanner-placeholder {
+        text-align: center;
+        color: #6c757d;
+    }
+
+    .scanner-placeholder i {
+        font-size: 2rem; /* Reduced font size */
+        margin-bottom: 0.5rem; /* Reduced margin */
+        color: #adb5bd;
+    }
+    
+    .scanner-placeholder {
+        text-align: center;
+        color: #6c757d;
+    }
+
+    .scanner-placeholder i {
+        font-size: 2rem; /* Reduced font size */
+        margin-bottom: 0.5rem; /* Reduced margin */
+        display: block;
+    }
+
+    .btn-primary {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+        border-radius: var(--border-radius);
+        padding: 0.4rem 1rem; /* Reduced padding */
+        font-weight: 500;
+        transition: var(--transition);
+        font-size: 0.9rem; /* Reduced font size */
+    }
+
+    .btn-primary:hover {
+        background-color: #1e3a8a;
+        border-color: #1e3a8a;
+        transform: translateY(-1px); /* Reduced transform */
+    }
+
+    .btn-success {
+        background-color: var(--success-color);
+        border-color: var(--success-color);
+        border-radius: var(--border-radius);
+        padding: 0.4rem 1rem; /* Reduced padding */
+        font-weight: 500;
+        transition: var(--transition);
+        font-size: 0.9rem; /* Reduced font size */
+    }
+
+    .btn-success:hover {
+        background-color: #218838;
+        border-color: #218838;
+        transform: translateY(-1px); /* Reduced transform */
+    }
+
+    .btn-outline-secondary {
+        border-radius: var(--border-radius);
+        padding: 0.4rem 1rem; /* Reduced padding */
+        font-weight: 500;
+        transition: var(--transition);
+        font-size: 0.9rem; /* Reduced font size */
+    }
+
+    .form-control {
+        border-radius: var(--border-radius);
+        padding: 0.5rem 0.75rem; /* Reduced padding */
+        border: 1px solid #ddd;
+        transition: var(--transition);
+        font-size: 0.9rem; /* Reduced font size */
+    }
+
+    .form-control:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.2rem rgba(44, 90, 160, 0.25);
+    }
+
+    .alert {
+        border-radius: var(--border-radius);
+        border: none;
+        padding: 0.75rem 1rem; /* Reduced padding */
+    }
+
+    .alert-success {
+        background-color: rgba(40, 167, 69, 0.1);
+        color: #155724;
+        border-left: 4px solid var(--success-color);
+    }
+
+    .alert-danger {
+        background-color: rgba(220, 53, 69, 0.1);
+        color: #721c24;
+        border-left: 4px solid var(--danger-color);
+    }
+
+    .alert-info {
+        background-color: rgba(23, 162, 184, 0.1);
+        color: #0c5460;
+        border-left: 4px solid var(--info-color);
+    }
+
+    .section-title {
+        font-size: 1.1rem; /* Reduced font size */
+        font-weight: 600;
+        margin-bottom: 1rem; /* Reduced margin */
+        color: var(--primary-color);
+        padding-bottom: 0.3rem; /* Reduced padding */
+        border-bottom: 2px solid rgba(44, 90, 160, 0.1);
+    }
+
+    .manual-entry {
+        background-color: #f8f9fa;
+        padding: 1rem; /* Reduced padding */
+        border-radius: var(--border-radius);
+        height: 100%;
+        max-width: 100%; /* Ensure it doesn't exceed container */
+    }
+
+    .table th {
+        background-color: #f8f9fa;
+        font-weight: 600;
+        font-size: 0.85rem; /* Reduced font size */
+    }
+    
+    .table td, .table th {
+        vertical-align: middle;
+        padding: 0.5rem; /* Reduced padding */
+    }
+    
+    .badge {
+        font-size: 0.7em; /* Reduced font size */
+    }
+
+    @@media (max-width: 768px) {
+        .dashboard-header {
+            padding: 0.75rem; /* Reduced padding */
+        }
+
+        .card-body {
+            padding: 0.75rem; /* Reduced padding */
+        }
+
+        .scanner-container {
+            height: 250px; /* Reduced height for mobile */
+        }
+        
+        .nav-tabs .nav-link {
+            padding: 6px 10px; /* Reduced padding */
+            font-size: 0.8rem; /* Reduced font size */
+        }
+        
+        .info-icon {
+            width: 25px; /* Reduced size */
+            height: 25px; /* Reduced size */
+        }
+        
+        .btn {
+            padding: 0.3rem 0.75rem; /* Reduced padding */
+            font-size: 0.8rem; /* Reduced font size */
+        }
+    }
+    
+    /* Additional responsive styles for very small screens */
+    @@media (max-width: 480px) {
+        .scanner-container {
+            height: 200px; /* Further reduced height for small mobile */
+        }
+        
+        .card-body {
+            padding: 0.5rem; /* Further reduced padding */
+        }
+        
+        .form-group {
+            margin-bottom: 0.5rem; /* Reduced margin */
+        }
+    }
+    
+    /* Container adjustments for fixed height */
+    .container-fluid {
+        min-height: calc(100vh - 120px); /* let content expand */
+        overflow: visible; /* allow page scrolling */
+    }
+
+    .tab-content {
+        height: auto; /* let tabs expand as needed */
+    }
+
+    .tab-pane {
+        height: auto;
+    }
+
+    /* Adjustments for specific sections */
+    #voucher-redemption .card,
+    #shopkeeper-information .card,
+    #redemption-history .card {
+        height: auto; /* allow cards to size naturally */
+    }
+</style>
+
+<div class="container-fluid">
+    <!-- Navigation Tabs -->
+    <ul class="nav nav-tabs mb-3" id="shopkeeperTabs" role="tablist"> <!-- Reduced margin -->
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="voucher-redemption-tab" data-bs-toggle="tab" data-bs-target="#voucher-redemption" type="button" role="tab">
+                <i class="fas fa-ticket-alt me-1"></i>Voucher Redemption <!-- Reduced margin -->
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="shopkeeper-info-tab" data-bs-toggle="tab" data-bs-target="#shopkeeper-information" type="button" role="tab">
+                <i class="fas fa-store me-1"></i>Shopkeeper Information <!-- Reduced margin -->
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="redemption-history-tab" data-bs-toggle="tab" data-bs-target="#redemption-history" type="button" role="tab">
+                <i class="fas fa-history me-1"></i>Redemption History <!-- Reduced margin -->
+            </button>
+        </li>
+    </ul>
+
+    <!-- Success/Error Messages -->
+    <div class="row">
+        <div class="col-12">
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    @TempData["SuccessMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+            
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    @TempData["ErrorMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Hidden anti-forgery token for AJAX posts -->
+    <form id="antiForgeryForm" style="display:none">@Html.AntiForgeryToken()</form>
+
+    <!-- Tab Content -->
+    <div class="tab-content" id="shopkeeperTabContent">
+        <!-- Voucher Redemption Section -->
+        <div class="tab-pane fade show active" id="voucher-redemption" role="tabpanel">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-ticket-alt"></i> Voucher Redemption</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Product Details Form (shown after Points-to-Cash voucher redemption) -->
+                    @if (Model.ShowProductForm)
+                    {
+                        <div class="alert alert-info mb-3"> <!-- Reduced margin -->
+                            <h6><i class="fas fa-info-circle"></i> Product Details Required</h6> <!-- Reduced heading -->
+                            <p class="mb-2">Please enter the details of the product being redeemed with this Points-to-Cash voucher.</p> <!-- Reduced margin -->
+                        </div>
+                        
+                        <form asp-action="SaveProductDetails" method="post" class="mb-3"> <!-- Reduced margin -->
+                            <input type="hidden" name="voucherId" value="@Model.VoucherId" />
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group mb-2"> <!-- Reduced margin -->
+                                        <label for="ProductName" class="form-label">Product Name</label>
+                                        <input type="text" class="form-control" id="ProductName" name="ProductName" value="@Model.ProductName" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group mb-2"> <!-- Reduced margin -->
+                                        <label for="Quantity" class="form-label">Quantity</label>
+                                        <input type="number" class="form-control" id="Quantity" name="Quantity" value="@Model.Quantity" min="1" required>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group mb-2"> <!-- Reduced margin -->
+                                <label for="ProductDescription" class="form-label">Product Description</label>
+                                <textarea class="form-control" id="ProductDescription" name="ProductDescription" rows="2">@Model.ProductDescription</textarea> <!-- Reduced rows -->
+                            </div>
+                            <div class="form-group mb-2"> <!-- Reduced margin -->
+                                <label for="ProductPrice" class="form-label">Product Price (₹)</label>
+                                <input type="number" class="form-control" id="ProductPrice" name="ProductPrice" value="@Model.ProductPrice" step="0.01" min="0" required>
+                            </div>
+                            <div class="d-flex gap-1"> <!-- Reduced gap -->
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-save me-1"></i>Save Product Details <!-- Reduced margin -->
+                                </button>
+                                <a href="@Url.Action("ShopkeeperHome", "Home")" class="btn btn-outline-secondary">
+                                    <i class="fas fa-times me-1"></i>Cancel <!-- Reduced margin -->
+                                </a>
+                            </div>
+                        </form>
+                    }
+                    else
+                    {
+                        <div class="row">
+                            <div class="col-12 d-flex flex-column align-items-center">
+                                <h6 class="mb-2">Scan Voucher QR Code</h6>
+
+                                <div class="form-group mb-2 text-center"> <!-- Centered controls -->
+                                    <button id="startCamera" type="button" class="btn btn-primary">
+                                        <i class="fas fa-camera me-1"></i>Start Camera
+                                    </button>
+                                    <button id="stopCamera" type="button" class="btn btn-outline-secondary" style="display:none;">
+                                        <i class="fas fa-stop me-1"></i>Stop Camera
+                                    </button>
+                                </div>
+
+                                <div id="scannerWrapper" class="w-100 d-flex justify-content-center">
+                                    <div id="scannerContainer" class="scanner-container" style="display: none; width: 100%; max-width: 360px;">
+                                        <div id="qrVideo" style="width: 100%; height: 100%;"></div>
+                                    </div>
+                                </div>
+
+                                <div id="scannerPlaceholder" class="scanner-container" style="width: 100%; max-width: 360px; margin-top:12px;">
+                                    <div class="scanner-placeholder">
+                                        <i class="fas fa-qrcode"></i>
+                                        <p class="mb-1">Click "Start Camera" to begin scanning</p>
+                                    </div>
+                                </div>
+
+                                <div id="scanMessages" class="w-100 mt-3" style="max-width:360px;">
+                                    <!-- Dynamic scan/redeem messages inserted here -->
+                                </div>
+
+                                <div id="scanResult" class="mt-2" style="display: none; width: 100%; max-width: 360px;">
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        <strong>Scanned Data:</strong> <span id="scannedData"></span>
+                                    </div>
+                                    <div class="d-flex gap-1 justify-content-center">
+                                        <button id="redeemVoucher" type="button" class="btn btn-success">
+                                            <i class="fas fa-check-circle me-1"></i>Redeem Voucher
+                                        </button>
+                                        <button id="scanAgain" type="button" class="btn btn-outline-secondary">
+                                            <i class="fas fa-redo me-1"></i>Scan Again
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="w-100 mt-4" style="max-width:640px;">
+                                    <div class="manual-entry">
+                                        <h6>Manual Voucher Entry</h6>
+                                        <form asp-action="RedeemVoucher" method="post">
+                                            <div class="form-group mb-2">
+                                                <label for="voucherCode" class="form-label">Voucher Code</label>
+                                                <input type="text" class="form-control" id="voucherCode" name="voucherCode" placeholder="Enter voucher code">
+                                            </div>
+                                            <button type="submit" class="btn btn-success w-100">
+                                                <i class="fas fa-ticket-alt me-1"></i>Redeem Voucher
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Shopkeeper Information Section -->
+        <div class="tab-pane fade" id="shopkeeper-information" role="tabpanel">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-store"></i> Shopkeeper Information</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.Shopkeeper != null)
+                    {
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="info-item">
+                                    <div class="info-icon">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                    <div class="info-content">
+                                        <div class="info-label">Name</div>
+                                        <div class="info-value">@Model.Shopkeeper.Name</div>
+                                    </div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-icon">
+                                        <i class="fas fa-map-marker-alt"></i>
+                                    </div>
+                                    <div class="info-content">
+                                        <div class="info-label">Store Location</div>
+                                        <div class="info-value">@Model.Shopkeeper.StoreLocation</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="info-item">
+                                    <div class="info-icon">
+                                        <i class="fas fa-tag"></i>
+                                    </div>
+                                    <div class="info-content">
+                                        <div class="info-label">Store Type</div>
+                                        <div class="info-value">@Model.Shopkeeper.StoreType</div>
+                                    </div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-icon">
+                                        <i class="fas fa-phone"></i>
+                                    </div>
+                                    <div class="info-content">
+                                        <div class="info-label">Phone Number</div>
+                                        <div class="info-value">@Model.Shopkeeper.PhoneNumber</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-3"> <!-- Reduced padding -->
+                            <i class="fas fa-exclamation-triangle fa-lg text-warning mb-2"></i> <!-- Reduced margin -->
+                            <p class="mb-0">No shopkeeper information found.</p> <!-- Reduced margin -->
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Redemption History Section -->
+        <div class="tab-pane fade" id="redemption-history" role="tabpanel">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-history"></i> Redemption History</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.RedemptionHistory != null && Model.RedemptionHistory.Any())
+                    {
+                        <div class="row">
+                            @foreach (var voucher in Model.RedemptionHistory)
+                            {
+                                <div class="col-md-6 col-lg-4 mb-4">
+                                    <div class="card h-100">
+                                        <div class="card-header">
+                                            <h6 class="mb-0">@voucher.VoucherCode</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <p class="card-text">
+                                                <strong>Dealer:</strong> @(voucher.Dealer?.Name ?? "N/A")<br>
+                                                <strong>Date:</strong> @(voucher.RedeemedDate?.ToString("dd/MM/yyyy HH:mm") ?? "N/A")<br>
+                                                <strong>Value:</strong> ₹@voucher.VoucherValue<br>
+                                                <strong>Campaign Type:</strong> @voucher.CampaignType<br>
+                                                <strong>Status:</strong> <span class="badge bg-success">Redeemed</span>
+                                            </p>
+                                            
+                                            @{
+                                                // Display product information based on campaign type
+                                                var redeemedProduct = Model.RedeemedProducts?.FirstOrDefault(rp => rp.VoucherId == voucher.Id);
+                                            }
+                                            
+                                            @if (redeemedProduct != null)
+                                            {
+                                                <div class="product-info mt-3">
+                                                    <h6>Product Details:</h6>
+                                                    @if (voucher.CampaignType == "PointsReward")
+                                                    {
+                                                        // For PointsReward, show the reward product
+                                                        <p class="mb-1"><strong>Reward Product:</strong> @redeemedProduct.ProductName</p>
+                                                        <p class="mb-1"><strong>Quantity:</strong> @redeemedProduct.Quantity</p>
+                                                    }
+                                                    else if (voucher.CampaignType == "FreeProduct")
+                                                    {
+                                                        // For FreeProduct, show the free product
+                                                        <p class="mb-1"><strong>Free Product:</strong> @redeemedProduct.ProductName</p>
+                                                        <p class="mb-1"><strong>Quantity:</strong> @redeemedProduct.Quantity</p>
+                                                    }
+                                                    else
+                                                    {
+                                                        // For other types (PointsToCash, etc.), show the purchased product
+                                                        <p class="mb-1"><strong>Product:</strong> @redeemedProduct.ProductName</p>
+                                                        <p class="mb-1"><strong>Description:</strong> @redeemedProduct.Description</p>
+                                                        <p class="mb-1"><strong>Price:</strong> ₹@redeemedProduct.Price</p>
+                                                        <p class="mb-1"><strong>Quantity:</strong> @redeemedProduct.Quantity</p>
+                                                    }
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-3">
+                            <i class="fas fa-info-circle fa-lg text-info mb-2"></i>
+                            <p class="mb-0">No redemption history found.</p>
+                        </div>
+                    }
+                    <div class="d-flex justify-content-center">
+                        <nav>
+                            <ul class="pagination pagination-sm">
+                                <li class="page-item disabled"><a class="page-link" href="#">Previous</a></li>
+                                <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                                <li class="page-item"><a class="page-link" href="#">2</a></li>
+                                <li class="page-item"><a class="page-link" href="#">3</a></li>
+                                <li class="page-item"><a class="page-link" href="#">Next</a></li>
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <script>
+        // Remove page alerts after 5 seconds (plain JS)
+        setTimeout(function() {
+            document.querySelectorAll('.alert').forEach(function(el) { el.remove(); });
+        }, 5000);
+
+        // QR Code Scanner
+        let html5QrCode = null;
+        const startCameraButton = document.getElementById('startCamera');
+        const stopCameraButton = document.getElementById('stopCamera');
+        const scannerContainer = document.getElementById('scannerContainer');
+        const scannerPlaceholder = document.getElementById('scannerPlaceholder');
+        const scanResult = document.getElementById('scanResult');
+        const scannedData = document.getElementById('scannedData');
+        const redeemVoucherButton = document.getElementById('redeemVoucher');
+        const scanAgainButton = document.getElementById('scanAgain');
+        const scanMessages = document.getElementById('scanMessages');
+        let lastScannedData = null;
+        let autoRedeemTimeout = null;
+
+        function showMessage(type, message, timeoutMs) {
+            // type: 'success'|'danger'|'info'|'warning'
+            if (!scanMessages) return;
+            scanMessages.innerHTML = '';
+            const wrapper = document.createElement('div');
+            wrapper.className = 'alert alert-' + type + ' alert-dismissible fade show';
+            wrapper.role = 'alert';
+            wrapper.innerHTML = message + '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>';
+            scanMessages.appendChild(wrapper);
+            if (timeoutMs) {
+                setTimeout(() => { wrapper.remove(); }, timeoutMs);
+            }
+        }
+
+        function getAntiForgeryToken() {
+            const input = document.querySelector('#antiForgeryForm input[name="__RequestVerificationToken"]');
+            return input ? input.value : null;
+        }
+
+        startCameraButton && startCameraButton.addEventListener('click', function (e) {
+            e.preventDefault();
+            // Show scanner container and hide placeholder
+            scannerContainer.style.display = 'block';
+            scannerPlaceholder.style.display = 'none';
+            startCameraButton.style.display = 'none';
+            stopCameraButton.style.display = 'inline-block';
+
+            // Clear previous scan data
+            lastScannedData = null;
+            scannedData.textContent = '';
+            scanResult.style.display = 'none';
+            scanMessages.innerHTML = '';
+
+            try {
+                if (html5QrCode === null) {
+                    html5QrCode = new Html5Qrcode('qrVideo');
+                }
+
+                const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+
+                html5QrCode.start(
+                    { facingMode: 'environment' },
+                    config,
+                    (decodedText, decodedResult) => {
+                        if (lastScannedData !== decodedText) {
+                            lastScannedData = decodedText;
+                            scannedData.textContent = decodedText;
+                            scanResult.style.display = 'block';
+                            showMessage('info', '<strong>Scanned:</strong> ' + decodedText + ' — attempting redemption...');
+
+                            // Auto redeem after short delay (user can cancel by clicking Scan Again)
+                            if (autoRedeemTimeout) clearTimeout(autoRedeemTimeout);
+                            autoRedeemTimeout = setTimeout(() => { redeemFromScan(); }, 800);
+                        }
+                    },
+                    (errorMessage) => {
+                        // silent
+                    }
+                ).catch(err => {
+                    console.error('Unable to start scanning:', err);
+                    showMessage('danger', 'Camera access denied or not available. Check camera permissions.');
+                    stopCamera();
+                });
+            } catch (error) {
+                console.error('Error initializing QR scanner:', error);
+                showMessage('danger', 'Error initializing camera.');
+                stopCamera();
+            }
+        });
+
+        stopCameraButton && stopCameraButton.addEventListener('click', function (e) {
+            e.preventDefault();
+            stopCamera();
+        });
+
+        scanAgainButton && scanAgainButton.addEventListener('click', function (e) {
+            e.preventDefault();
+            // Cancel auto redeem if pending
+            if (autoRedeemTimeout) { clearTimeout(autoRedeemTimeout); autoRedeemTimeout = null; }
+            scanResult.style.display = 'none';
+            scannedData.textContent = '';
+            lastScannedData = null;
+            scanMessages.innerHTML = '';
+        });
+
+        redeemVoucherButton && redeemVoucherButton.addEventListener('click', function (e) {
+            e.preventDefault();
+            if (lastScannedData) redeemFromScan();
+        });
+
+        function redeemFromScan() {
+            if (!lastScannedData) return;
+            const token = getAntiForgeryToken();
+            if (!token) {
+                showMessage('danger', 'Missing anti-forgery token. Cannot redeem.');
+                return;
+            }
+
+            showMessage('info', 'Redeeming voucher, please wait...');
+
+            fetch('@Url.Action("RedeemVoucherByQR", "Home")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': token
+                },
+                body: JSON.stringify({ qrData: lastScannedData })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    if (data.requiresProductDetails) {
+                        // redirect to product form
+                        window.location.href = '@Url.Action("ShopkeeperHome", "Home")' + '?showProductForm=true&voucherId=' + data.voucherId;
+                        return;
+                    }
+                    showMessage('success', 'Voucher redeemed successfully.', 4000);
+                    stopCamera();
+                    scanResult.style.display = 'none';
+                    lastScannedData = null;
+                } else {
+                    showMessage('danger', 'Error redeeming voucher: ' + (data.message || 'Unknown error.'), 6000);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showMessage('danger', 'An error occurred while redeeming the voucher.');
+            });
+        }
+
+        function stopCamera() {
+            if (html5QrCode) {
+                html5QrCode.stop().then(() => {
+                    console.log('Camera stopped successfully');
+                }).catch(err => {
+                    console.error('Error stopping camera:', err);
+                }).finally(() => {
+                    resetCameraUI();
+                });
+            } else {
+                resetCameraUI();
+            }
+        }
+
+        function resetCameraUI() {
+            scannerContainer.style.display = 'none';
+            scannerPlaceholder.style.display = 'block';
+            startCameraButton.style.display = 'inline-block';
+            stopCameraButton.style.display = 'none';
+            html5QrCode = null;
+            if (autoRedeemTimeout) { clearTimeout(autoRedeemTimeout); autoRedeemTimeout = null; }
+        }
+
+        window.addEventListener('beforeunload', function () {
+            if (html5QrCode) {
+                html5QrCode.stop().catch(err => { console.error('Error stopping camera on page unload:', err); });
+            }
+        });
+    </script>
+}

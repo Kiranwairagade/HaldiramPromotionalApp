@@ -1,0 +1,67 @@
+@model HaldiramPromotionalApp.ViewModels.VoucherViewModel
+
+@{
+    ViewData["Title"] = "Voucher Redemption History";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<link rel="stylesheet" href="~/css/DealerDashboard.css" />
+
+
+
+<div class="container-fluid">
+    
+    <div class="card">
+        <div class="card-header">
+            <h5><i class="fas fa-ticket-alt"></i> Redemption History</h5>
+        </div>
+        <div class="card-body">
+            @if (Model.RedemptionHistory != null && Model.RedemptionHistory.Any())
+            {
+                <div class="row">
+                    @foreach (var voucher in Model.RedemptionHistory)
+                    {
+                        <div class="col-12 col-md-6 col-lg-4 mb-3">
+                            <div class="voucher-card">
+                                <div class="voucher-code">@voucher.VoucherCode</div>
+                                <div class="voucher-details">
+                                    <div class="voucher-detail-item">
+                                        <div class="detail-label">Campaign Type</div>
+                                        <div class="detail-value">@voucher.CampaignType</div>
+                                    </div>
+                                    <div class="voucher-detail-item">
+                                        <div class="detail-label">Value</div>
+                                        <div class="detail-value">
+                                            @if (voucher.VoucherValue > 0)
+                                            {
+                                                <span>₹@voucher.VoucherValue</span>
+                                            }
+                                            else
+                                            {
+                                                <span>N/A</span>
+                                            }
+                                        </div>
+                                    </div>
+                                    <div class="voucher-detail-item">
+                                        <div class="detail-label">Date</div>
+                                        <div class="detail-value">@(voucher.RedeemedDate?.ToString("dd/MM/yyyy") ?? "N/A")</div>
+                                    </div>
+                                </div>
+                                
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="empty-history">
+                    <i class="fas fa-ticket-alt"></i>
+                    <h4>No Redemption History</h4>
+                    <p>You haven't redeemed any vouchers yet.</p>
+                    <a href="@Url.Action("Vouchers", "Dealer")" class="btn btn-primary">View Available Vouchers</a>
+                </div>
+            }
+        </div>
+    </div>
+</div>

@@ -1,5 +1,6 @@
 using HaldiramPromotionalApp.Data;
 using HaldiramPromotionalApp.Services;
+using HaldiramPromotionalApp.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -9,7 +10,9 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 	options.UseSqlServer(builder.Configuration.GetConnectionString("AuthDbContextConnection")));
 
+// Register services
 builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<IDealerService, DealerService>();
 
 builder.Services.AddDistributedMemoryCache();
 
@@ -40,6 +43,6 @@ app.UseAuthorization();
 
 app.MapControllerRoute(
 	name: "default",
-	pattern: "{controller=Home}/{action=Login}/{id?}");
+	pattern: "{controller=Auth}/{action=Login}/{id?}");
 
 app.Run();
