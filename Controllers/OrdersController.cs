@@ -69,9 +69,11 @@ namespace HaldiramPromotionalApp.Controllers
                 {
                     int count = orderPoints / camp.VoucherGenerationThreshold;
                     var vouchersToAdd = new List<Models.Voucher>();
+                    var distributorVouchersToAdd = new List<DistributorVoucher>();
 
                     for (int i = 0; i < count; i++)
                     {
+                        // Create dealer voucher
                         var code = "V" + Guid.NewGuid().ToString("N").Substring(0, 10).ToUpper();
                         var voucher = new Models.Voucher
                         {
@@ -88,6 +90,27 @@ namespace HaldiramPromotionalApp.Controllers
                         };
 
                         vouchersToAdd.Add(voucher);
+                        
+                        // Create distributor voucher if DistributorVoucherValue is greater than 0
+                        if (camp.DistributorVoucherValue > 0)
+                        {
+                            var distributorCode = "V-D" + Guid.NewGuid().ToString("N").Substring(0, 10).ToUpper();
+                            var distributorVoucher = new DistributorVoucher
+                            {
+                                VoucherCode = distributorCode,
+                                DistributorId = dealer.DistributorId,
+                                CampaignType = "PointsToCash",
+                                CampaignId = camp.Id,
+                                VoucherValue = camp.DistributorVoucherValue,
+                                IssueDate = DateTime.UtcNow,
+                                ExpiryDate = DateTime.UtcNow.AddDays(camp.VoucherValidity),
+                                IsRedeemed = false,
+                                QRCodeData = $"{distributorCode}|{dealer.DistributorId}|{camp.DistributorVoucherValue}|{DateTime.UtcNow.AddDays(camp.VoucherValidity):yyyy-MM-dd}|Order:{order.Id}"
+                            };
+                            
+                            distributorVouchersToAdd.Add(distributorVoucher);
+                        }
+                        
                         // reduce points (not persisted) to indicate consumption for this order
                         orderPoints -= camp.VoucherGenerationThreshold;
                     }
@@ -95,6 +118,10 @@ namespace HaldiramPromotionalApp.Controllers
                     if (vouchersToAdd.Any())
                     {
                         _context.Vouchers.AddRange(vouchersToAdd);
+                        if (distributorVouchersToAdd.Any())
+                        {
+                            _context.DistributorVouchers.AddRange(distributorVouchersToAdd);
+                        }
                         await _context.SaveChangesAsync();
 
                         // Notify dealer/user for each voucher
@@ -125,9 +152,11 @@ namespace HaldiramPromotionalApp.Controllers
                 {
                     int count = orderPoints / camp.VoucherGenerationThreshold;
                     var vouchersToAdd = new List<Models.Voucher>();
+                    var distributorVouchersToAdd = new List<DistributorVoucher>();
 
                     for (int i = 0; i < count; i++)
                     {
+                        // Create dealer voucher
                         var code = "V" + Guid.NewGuid().ToString("N").Substring(0, 10).ToUpper();
                         var voucher = new Models.Voucher
                         {
@@ -144,12 +173,37 @@ namespace HaldiramPromotionalApp.Controllers
                         };
 
                         vouchersToAdd.Add(voucher);
+                        
+                        // Create distributor voucher if DistributorVoucherValue is greater than 0
+                        if (camp.DistributorVoucherValue > 0)
+                        {
+                            var distributorCode = "V-D" + Guid.NewGuid().ToString("N").Substring(0, 10).ToUpper();
+                            var distributorVoucher = new DistributorVoucher
+                            {
+                                VoucherCode = distributorCode,
+                                DistributorId = dealer.DistributorId,
+                                CampaignType = "PointsReward",
+                                CampaignId = camp.Id,
+                                VoucherValue = camp.DistributorVoucherValue,
+                                IssueDate = DateTime.UtcNow,
+                                ExpiryDate = DateTime.UtcNow.AddDays(camp.VoucherValidity),
+                                IsRedeemed = false,
+                                QRCodeData = $"{distributorCode}|{dealer.DistributorId}|{camp.DistributorVoucherValue}|{DateTime.UtcNow.AddDays(camp.VoucherValidity):yyyy-MM-dd}|Order:{order.Id}"
+                            };
+                            
+                            distributorVouchersToAdd.Add(distributorVoucher);
+                        }
+                        
                         orderPoints -= camp.VoucherGenerationThreshold;
                     }
 
                     if (vouchersToAdd.Any())
                     {
                         _context.Vouchers.AddRange(vouchersToAdd);
+                        if (distributorVouchersToAdd.Any())
+                        {
+                            _context.DistributorVouchers.AddRange(distributorVouchersToAdd);
+                        }
                         await _context.SaveChangesAsync();
 
                         foreach (var v in vouchersToAdd)

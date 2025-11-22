@@ -136,8 +136,11 @@ namespace HaldiramPromotionalApp.Controllers
 						if (toCreate > 0)
 						{
 							var vouchers = new List<Voucher>();
+							var distributorVouchers = new List<DistributorVoucher>();
+							
 							for (int i = 0; i < toCreate; i++)
 							{
+								// Create dealer voucher
 								var voucherCode = $"PTC{dealer.Id}{campaign.Id}{DateTime.UtcNow:yyyyMMddHHmmss}{i}";
 								var voucher = new Voucher
 								{
@@ -153,9 +156,32 @@ namespace HaldiramPromotionalApp.Controllers
 								};
 
 								vouchers.Add(voucher);
+								
+								// Create distributor voucher if DistributorVoucherValue is greater than 0
+								if (campaign.DistributorVoucherValue > 0)
+								{
+									var distributorVoucherCode = $"PTC-D{dealer.DistributorId}{campaign.Id}{DateTime.UtcNow:yyyyMMddHHmmss}{i}";
+									var distributorVoucher = new DistributorVoucher
+									{
+										VoucherCode = distributorVoucherCode,
+										DistributorId = dealer.DistributorId,
+										CampaignType = "PointsToCash",
+										CampaignId = campaign.Id,
+										VoucherValue = campaign.DistributorVoucherValue,
+										IssueDate = DateTime.UtcNow,
+										ExpiryDate = DateTime.UtcNow.AddDays(campaign.VoucherValidity),
+										QRCodeData = $"{distributorVoucherCode}|{dealer.DistributorId}|{campaign.DistributorVoucherValue}|{DateTime.UtcNow.AddDays(campaign.VoucherValidity):yyyy-MM-dd}"
+									};
+									
+									distributorVouchers.Add(distributorVoucher);
+								}
 							}
 
 							_context.Vouchers.AddRange(vouchers);
+							if (distributorVouchers.Any())
+							{
+								_context.DistributorVouchers.AddRange(distributorVouchers);
+							}
 							await _context.SaveChangesAsync();
 
 							foreach (var v in vouchers)
@@ -200,8 +226,11 @@ namespace HaldiramPromotionalApp.Controllers
 						if (toCreate > 0)
 						{
 							var vouchers = new List<Voucher>();
+							var distributorVouchers = new List<DistributorVoucher>();
+							
 							for (int i = 0; i < toCreate; i++)
 							{
+								// Create dealer voucher
 								var voucherCode = $"PTR{dealer.Id}{campaign.Id}{DateTime.UtcNow:yyyyMMddHHmmss}{i}";
 								var voucher = new Voucher
 								{
@@ -217,9 +246,32 @@ namespace HaldiramPromotionalApp.Controllers
 								};
 
 								vouchers.Add(voucher);
+								
+								// Create distributor voucher if DistributorVoucherValue is greater than 0
+								if (campaign.DistributorVoucherValue > 0)
+								{
+									var distributorVoucherCode = $"PTR-D{dealer.DistributorId}{campaign.Id}{DateTime.UtcNow:yyyyMMddHHmmss}{i}";
+									var distributorVoucher = new DistributorVoucher
+									{
+										VoucherCode = distributorVoucherCode,
+										DistributorId = dealer.DistributorId,
+										CampaignType = "PointsReward",
+										CampaignId = campaign.Id,
+										VoucherValue = campaign.DistributorVoucherValue,
+										IssueDate = DateTime.UtcNow,
+										ExpiryDate = DateTime.UtcNow.AddDays(campaign.VoucherValidity),
+										QRCodeData = $"{distributorVoucherCode}|{dealer.DistributorId}|{campaign.DistributorVoucherValue}|{DateTime.UtcNow.AddDays(campaign.VoucherValidity):yyyy-MM-dd}"
+									};
+									
+									distributorVouchers.Add(distributorVoucher);
+								}
 							}
 
 							_context.Vouchers.AddRange(vouchers);
+							if (distributorVouchers.Any())
+							{
+								_context.DistributorVouchers.AddRange(distributorVouchers);
+							}
 							await _context.SaveChangesAsync();
 
 							foreach (var v in vouchers)
@@ -237,70 +289,6 @@ namespace HaldiramPromotionalApp.Controllers
 					else
 					{
 						System.Diagnostics.Debug.WriteLine($"Dealer {dealer.Id} has {totalPoints} points, but needs {campaign.VoucherGenerationThreshold} for campaign {campaign.Id}");
-					}
-				}
-
-				// Check AmountReachGoal campaigns for automatic voucher generation
-				var amountReachGoalCampaigns = await _context.AmountReachGoalCampaigns
-					.Where(c => c.IsActive && c.StartDate <= DateTime.UtcNow && c.EndDate >= DateTime.UtcNow)
-					.ToListAsync();
-
-				// Log campaign count for debugging
-				System.Diagnostics.Debug.WriteLine($"Found {amountReachGoalCampaigns.Count} active AmountReachGoal campaigns");
-
-				foreach (var campaign in amountReachGoalCampaigns)
-				{
-					// Calculate total order amount for this dealer
-					var totalOrderAmount = await _context.Orders
-						.Where(o => o.DealerId == dealer.Id)
-						.SumAsync(o => (decimal?)o.TotalAmount) ?? 0;
-
-					// Log campaign information for debugging
-					System.Diagnostics.Debug.WriteLine($"Checking AmountReachGoal campaign {campaign.Id}: {campaign.CampaignName}, Target: {campaign.TargetAmount}, Dealer Total: {totalOrderAmount}");
-
-					// Check if dealer has reached the target amount for this campaign
-					if (totalOrderAmount >= campaign.TargetAmount)
-					{
-						// Check if dealer already has a voucher for this campaign
-						var existingVoucher = await _context.Vouchers
-							.AnyAsync(v => v.DealerId == dealer.Id && v.CampaignId == campaign.Id && v.CampaignType == "AmountReachGoal");
-
-						if (!existingVoucher)
-						{
-							// Generate voucher
-							var voucherCode = $"ARG{dealer.Id}{campaign.Id}{DateTime.UtcNow:yyyyMMddHHmmss}";
-							var voucher = new Voucher
-							{
-								VoucherCode = voucherCode,
-								DealerId = dealer.Id,
-								CampaignType = "AmountReachGoal",
-								CampaignId = campaign.Id,
-								VoucherValue = campaign.VoucherValue,
-								PointsUsed = 0, // No points used for this campaign type
-								IssueDate = DateTime.UtcNow,
-								ExpiryDate = DateTime.UtcNow.AddDays(campaign.VoucherValidity),
-								QRCodeData = $"{voucherCode}|{dealer.Id}|{campaign.VoucherValue}|{DateTime.UtcNow.AddDays(campaign.VoucherValidity):yyyy-MM-dd}"
-							};
-
-							_context.Vouchers.Add(voucher);
-							await _context.SaveChangesAsync();
-
-							// Log successful voucher creation for debugging
-							System.Diagnostics.Debug.WriteLine($"Created AmountReachGoal voucher {voucherCode} for dealer {dealer.Id} and campaign {campaign.Id}");
-
-							// Create notification for voucher generation
-							await _notificationService.CreateVoucherNotificationAsync(user.Id, voucherCode, campaign.VoucherValue, voucher.Id);
-						}
-						else
-						{
-							// Log that voucher already exists
-							System.Diagnostics.Debug.WriteLine($"Dealer {dealer.Id} already has a voucher for AmountReachGoal campaign {campaign.Id}");
-						}
-					}
-					else
-					{
-						// Log insufficient order amount
-						System.Diagnostics.Debug.WriteLine($"Dealer {dealer.Id} has {totalOrderAmount} total order amount, but needs {campaign.TargetAmount} for campaign {campaign.Id}");
 					}
 				}
 
@@ -375,8 +363,11 @@ namespace HaldiramPromotionalApp.Controllers
 								if (toCreate > 0)
 								{
 									var vouchers = new List<Voucher>();
+									var distributorVouchers = new List<DistributorVoucher>();
+									
 									for (int i = 0; i < toCreate; i++)
 									{
+										// Create dealer voucher
 										var voucherCode = $"FRP{dealer.Id}{campaign.Id}{DateTime.UtcNow:yyyyMMddHHmmss}{i}";
 										var voucher = new Voucher
 										{
@@ -392,9 +383,32 @@ namespace HaldiramPromotionalApp.Controllers
 										};
 
 										vouchers.Add(voucher);
+										
+										// Create distributor voucher if DistributorVoucherValue is greater than 0
+										if (campaign.DistributorVoucherValue > 0)
+										{
+											var distributorVoucherCode = $"FRP-D{dealer.DistributorId}{campaign.Id}{DateTime.UtcNow:yyyyMMddHHmmss}{i}";
+											var distributorVoucher = new DistributorVoucher
+											{
+												VoucherCode = distributorVoucherCode,
+												DistributorId = dealer.DistributorId,
+												CampaignType = "FreeProduct",
+												CampaignId = campaign.Id,
+												VoucherValue = campaign.DistributorVoucherValue,
+												IssueDate = DateTime.UtcNow,
+												ExpiryDate = DateTime.UtcNow.AddDays(30),
+												QRCodeData = $"{distributorVoucherCode}|{dealer.DistributorId}|{campaign.DistributorVoucherValue}|{DateTime.UtcNow.AddDays(30):yyyy-MM-dd}"
+											};
+											
+											distributorVouchers.Add(distributorVoucher);
+										}
 									}
 
 									_context.Vouchers.AddRange(vouchers);
+									if (distributorVouchers.Any())
+									{
+										_context.DistributorVouchers.AddRange(distributorVouchers);
+									}
 									await _context.SaveChangesAsync();
 
 									foreach (var v in vouchers)
@@ -1531,6 +1545,7 @@ namespace HaldiramPromotionalApp.Controllers
 
 				// Get campaign details to determine voucher value
 				decimal voucherValue = 0;
+				decimal distributorVoucherValue = 0;
 				int voucherValidity = 30; // Default validity
 
 				if (campaignType == "PointsToCash")
@@ -1539,6 +1554,7 @@ namespace HaldiramPromotionalApp.Controllers
 					if (campaign != null)
 					{
 						voucherValue = campaign.VoucherValue;
+						distributorVoucherValue = campaign.DistributorVoucherValue;
 						voucherValidity = campaign.VoucherValidity;
 					}
 				}
@@ -1548,15 +1564,35 @@ namespace HaldiramPromotionalApp.Controllers
 					if (campaign != null)
 					{
 						voucherValidity = campaign.VoucherValidity;
+						distributorVoucherValue = campaign.DistributorVoucherValue;
 						// For PointsReward campaigns, we might want to set a default value or calculate based on reward product
 						voucherValue = 100; // Default value
+					}
+				}
+				else if (campaignType == "AmountReachGoal")
+				{
+					var campaign = await _context.AmountReachGoalCampaigns.FirstOrDefaultAsync(c => c.Id == campaignId);
+					if (campaign != null)
+					{
+						voucherValue = campaign.VoucherValue;
+						distributorVoucherValue = campaign.DistributorVoucherValue;
+						voucherValidity = campaign.VoucherValidity;
+					}
+				}
+				else if (campaignType == "FreeProduct")
+				{
+					var campaign = await _context.FreeProductCampaigns.FirstOrDefaultAsync(c => c.Id == campaignId);
+					if (campaign != null)
+					{
+						distributorVoucherValue = campaign.DistributorVoucherValue;
+						voucherValidity = 30; // Default validity for FreeProduct
 					}
 				}
 
 				// Generate unique voucher code
 				var voucherCode = $"V{dealer.Id}{DateTime.UtcNow:yyyyMMddHHmmss}";
 
-				// Create voucher
+				// Create dealer voucher
 				var voucher = new Voucher
 				{
 					VoucherCode = voucherCode,
@@ -1571,6 +1607,26 @@ namespace HaldiramPromotionalApp.Controllers
 				};
 
 				_context.Vouchers.Add(voucher);
+				
+				// Create distributor voucher if DistributorVoucherValue is greater than 0
+				if (distributorVoucherValue > 0)
+				{
+					var distributorVoucherCode = $"V-D{dealer.DistributorId}{DateTime.UtcNow:yyyyMMddHHmmss}";
+					var distributorVoucher = new DistributorVoucher
+					{
+						VoucherCode = distributorVoucherCode,
+						DistributorId = dealer.DistributorId,
+						CampaignType = campaignType,
+						CampaignId = campaignId,
+						VoucherValue = distributorVoucherValue,
+						IssueDate = DateTime.UtcNow,
+						ExpiryDate = DateTime.UtcNow.AddDays(voucherValidity),
+						QRCodeData = $"{distributorVoucherCode}|{dealer.DistributorId}|{distributorVoucherValue}|{DateTime.UtcNow.AddDays(voucherValidity):yyyy-MM-dd}"
+					};
+					
+					_context.DistributorVouchers.Add(distributorVoucher);
+				}
+				
 				await _context.SaveChangesAsync();
 
 				TempData["SuccessMessage"] = $"Voucher generated successfully! Code: {voucherCode}";

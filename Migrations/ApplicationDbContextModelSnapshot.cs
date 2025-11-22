@@ -791,10 +791,19 @@ namespace HaldiramPromotionalApp.Migrations
                     b.Property<DateTime>("RedemptionDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<int?>("RewardProductId")
+                        .HasColumnType("int");
+
                     b.Property<int>("VoucherId")
                         .HasColumnType("int");
 
+                    b.Property<string>("VoucherType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("RewardProductId");
 
                     b.HasIndex("VoucherId");
 
@@ -1042,11 +1051,17 @@ namespace HaldiramPromotionalApp.Migrations
 
             modelBuilder.Entity("HaldiramPromotionalApp.Models.RedeemedProduct", b =>
                 {
+                    b.HasOne("HaldiramPromotionalApp.Models.Product", "RewardProduct")
+                        .WithMany()
+                        .HasForeignKey("RewardProductId");
+
                     b.HasOne("HaldiramPromotionalApp.Models.Voucher", "Voucher")
                         .WithMany()
                         .HasForeignKey("VoucherId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("RewardProduct");
 
                     b.Navigation("Voucher");
                 });

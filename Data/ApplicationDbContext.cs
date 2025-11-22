@@ -34,6 +34,7 @@ namespace HaldiramPromotionalApp.Data
         public DbSet<Customer_Master> Customer_Masters { get; set; }    
         public DbSet<EmployeeMaster> EmployeeMasters { get; set; }
         public DbSet<RedeemedProduct> RedeemedProducts { get; set; } // Added RedeemedProducts DbSet
+        public DbSet<DistributorVoucher> DistributorVouchers { get; set; }
 
 
     }

@@ -5,6 +5,61 @@
 
 <link rel="stylesheet" href="~/css/DealerDashboard.css" />
 
+<style>
+    /* Add consistent badge colors for active/inactive status */
+    .campaign-status-badge {
+        border-radius: 9999px; /* Fully rounded corners */
+        padding: 0.25rem 0.75rem;
+        font-size: 0.75rem;
+        font-weight: 500;
+        position: absolute;
+        top: 0.5rem;
+        right: 0.5rem;
+        backdrop-filter: blur(10px); /* Translucent effect */
+    }
+    
+    .campaign-status-badge.active {
+        background-color: rgba(16, 185, 129, 0.8); /* green-500 with 80% opacity */
+        color: white;
+        border: 1px solid rgba(16, 185, 129, 0.9);
+    }
+    
+    .campaign-status-badge.inactive {
+        background-color: rgba(239, 68, 68, 0.8); /* red-500 with 80% opacity */
+        color: white;
+        border: 1px solid rgba(239, 68, 68, 0.9);
+    }
+    
+    /* Ensure show details button text color doesn't change on hover */
+    .toggle-details-btn {
+        color: #4F46E5; /* indigo-600 */
+        background-color: transparent;
+        border: none;
+        padding: 0.5rem;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        cursor: pointer;
+        transition: none;
+    }
+    
+    .toggle-details-btn:hover {
+        color: #4F46E5; /* Keep the same color on hover */
+        background-color: rgba(79, 70, 229, 0.1); /* Light background on hover */
+    }
+    
+    .toggle-details-btn:focus {
+        outline: none;
+        box-shadow: none;
+    }
+    
+    /* Ensure campaign image container has relative positioning for absolute badge */
+    .campaign-image-container {
+        position: relative;
+    }
+</style>
+
 <div class="container-fluid">
     <div class="card">
         <div class="card-header">
@@ -47,11 +102,11 @@
                                 <div class="campaign-dates">
                                     <span class="date-item">
                                         <i class="fas fa-calendar-start"></i>
-                                        <span>@campaign.StartDate.ToString("dd/MM/yyyy")</span>
+                                        <span>Starts on: @campaign.StartDate.ToString("dd/MM/yyyy")</span>
                                     </span>
                                     <span class="date-item">
                                         <i class="fas fa-calendar-end"></i>
-                                        <span>@campaign.EndDate.ToString("dd/MM/yyyy")</span>
+                                        <span>Ends on: @campaign.EndDate.ToString("dd/MM/yyyy")</span>
                                     </span>
                                 </div>
                                 
@@ -145,11 +200,11 @@
                                 <div class="campaign-dates">
                                     <span class="date-item">
                                         <i class="fas fa-calendar-start"></i>
-                                        <span>@campaign.StartDate.ToString("dd/MM/yyyy")</span>
+                                        <span>Starts on: @campaign.StartDate.ToString("dd/MM/yyyy")</span>
                                     </span>
                                     <span class="date-item">
                                         <i class="fas fa-calendar-end"></i>
-                                        <span>@campaign.EndDate.ToString("dd/MM/yyyy")</span>
+                                        <span>Ends on: @campaign.EndDate.ToString("dd/MM/yyyy")</span>
                                     </span>
                                 </div>
                                 
@@ -247,11 +302,11 @@
                                 <div class="campaign-dates">
                                     <span class="date-item">
                                         <i class="fas fa-calendar-start"></i>
-                                        <span>@campaign.StartDate.ToString("dd/MM/yyyy")</span>
+                                        <span>Starts on: @campaign.StartDate.ToString("dd/MM/yyyy")</span>
                                     </span>
                                     <span class="date-item">
                                         <i class="fas fa-calendar-end"></i>
-                                        <span>@campaign.EndDate.ToString("dd/MM/yyyy")</span>
+                                        <span>Ends on: @campaign.EndDate.ToString("dd/MM/yyyy")</span>
                                     </span>
                                 </div>
                                 
@@ -369,11 +424,11 @@
                                 <div class="campaign-dates">
                                     <span class="date-item">
                                         <i class="fas fa-calendar-start"></i>
-                                        <span>@campaign.StartDate.ToString("dd/MM/yyyy")</span>
+                                        <span>Starts on: @campaign.StartDate.ToString("dd/MM/yyyy")</span>
                                     </span>
                                     <span class="date-item">
                                         <i class="fas fa-calendar-end"></i>
-                                        <span>@campaign.EndDate.ToString("dd/MM/yyyy")</span>
+                                        <span>Ends on: @campaign.EndDate.ToString("dd/MM/yyyy")</span>
                                     </span>
                                 </div>
                                 
@@ -453,11 +508,11 @@
                                 <div class="campaign-dates">
                                     <span class="date-item">
                                         <i class="fas fa-calendar-start"></i>
-                                        <span>@campaign.StartDate.ToString("dd/MM/yyyy")</span>
+                                        <span>Starts on: @campaign.StartDate.ToString("dd/MM/yyyy")</span>
                                     </span>
                                     <span class="date-item">
                                         <i class="fas fa-calendar-end"></i>
-                                        <span>@campaign.EndDate.ToString("dd/MM/yyyy")</span>
+                                        <span>Ends on: @campaign.EndDate.ToString("dd/MM/yyyy")</span>
                                     </span>
                                 </div>
                                 
