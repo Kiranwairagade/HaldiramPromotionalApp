@@ -466,10 +466,12 @@ else
                 <h3 class="cart-title">Your Cart</h3>
                 <button class="close-cart" onclick="toggleCart()">×</button>
             </div>
-            <div class="cart-items" id="cartItems"></div>
-            <div class="eligible-campaigns" id="eligibleCampaigns" style="padding: 1rem; border-top: 1px solid var(--gray-200); background-color: var(--gray-50);">
-                <h4 style="margin-top: 0; color: var(--primary);">Eligible Campaigns</h4>
-                <div id="campaignsInfo">Add items to see eligible campaigns</div>
+            <div class="cart-content-wrapper">
+                <div class="cart-items" id="cartItems"></div>
+                <div class="eligible-campaigns" id="eligibleCampaigns">
+                    <h4>Eligible Campaigns</h4>
+                    <div id="campaignsInfo">Add items to see eligible campaigns</div>
+                </div>
             </div>
             <div class="cart-footer">
                 <div class="cart-total">

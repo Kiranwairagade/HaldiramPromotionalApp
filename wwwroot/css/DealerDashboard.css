@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿/* ========================================
+﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿/* ========================================
    Dealer Dashboard - Standalone CSS
    ======================================== */
 
@@ -861,11 +861,18 @@ body {
     transform: none;
 }
 
-.cart-items {
+.cart-content-wrapper {
     flex: 1;
     overflow-y: auto;
     padding: 1.5rem;
     background-color: white;
+    display: flex;
+    flex-direction: column;
+}
+
+.cart-items {
+    flex: 1;
+    margin-bottom: 1.5rem;
 }
 
 .cart-item {
@@ -1076,8 +1083,7 @@ body {
     background-color: var(--gray-50);
     border-top: 1px solid var(--gray-200);
     padding: 1rem;
-    max-height: 300px;
-    overflow-y: auto;
+    flex: 1;
 }
 
 .eligible-campaigns h4 {
