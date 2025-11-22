@@ -1,41 +1,16 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+﻿using System;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
 namespace HaldiramPromotionalApp.Migrations
 {
     /// <inheritdoc />
-    public partial class UpdateVoucherModelForEntityTypes : Migration
+    public partial class CompleteDatabaseSchema : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropForeignKey(
-                name: "FK_Vouchers_DealerMasters_DealerId",
-                table: "Vouchers");
-
-            migrationBuilder.AlterColumn<int>(
-                name: "DealerId",
-                table: "Vouchers",
-                type: "int",
-                nullable: true,
-                oldClrType: typeof(int),
-                oldType: "int");
-
-            migrationBuilder.AddColumn<string>(
-                name: "EntityIdentifier",
-                table: "Vouchers",
-                type: "nvarchar(max)",
-                nullable: false,
-                defaultValue: "");
-
-            migrationBuilder.AddColumn<string>(
-                name: "EntityType",
-                table: "Vouchers",
-                type: "nvarchar(max)",
-                nullable: false,
-                defaultValue: "");
-
             migrationBuilder.CreateTable(
                 name: "Customer_Masters",
                 columns: table => new
@@ -63,6 +38,31 @@ namespace HaldiramPromotionalApp.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "EmployeeMasters",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    EmpCode = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    FirstName = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
+                    MiddileName = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
+                    LastName = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
+                    Department = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
+                    Route = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
+                    Segment = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
+                    Grade = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
+                    UserType = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
+                    Designation = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
+                    EmployeeType = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
+                    PhoneNumber = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: false),
+                    isActive = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_EmployeeMasters", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "EmpToCustMaps",
                 columns: table => new
                 {
@@ -74,6 +74,30 @@ namespace HaldiramPromotionalApp.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_EmpToCustMaps", x => x.id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "RedeemedProducts",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    VoucherId = table.Column<int>(type: "int", nullable: false),
+                    ProductName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Price = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    Quantity = table.Column<int>(type: "int", nullable: false),
+                    RedemptionDate = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_RedeemedProducts", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_RedeemedProducts_Vouchers_VoucherId",
+                        column: x => x.VoucherId,
+                        principalTable: "Vouchers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -102,21 +126,15 @@ namespace HaldiramPromotionalApp.Migrations
                 table: "Cust2EmpMaps",
                 column: "empt2custid");
 
-            migrationBuilder.AddForeignKey(
-                name: "FK_Vouchers_DealerMasters_DealerId",
-                table: "Vouchers",
-                column: "DealerId",
-                principalTable: "DealerMasters",
-                principalColumn: "Id");
+            migrationBuilder.CreateIndex(
+                name: "IX_RedeemedProducts_VoucherId",
+                table: "RedeemedProducts",
+                column: "VoucherId");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropForeignKey(
-                name: "FK_Vouchers_DealerMasters_DealerId",
-                table: "Vouchers");
-
             migrationBuilder.DropTable(
                 name: "Cust2EmpMaps");
 
@@ -124,33 +142,13 @@ namespace HaldiramPromotionalApp.Migrations
                 name: "Customer_Masters");
 
             migrationBuilder.DropTable(
+                name: "EmployeeMasters");
+
+            migrationBuilder.DropTable(
+                name: "RedeemedProducts");
+
+            migrationBuilder.DropTable(
                 name: "EmpToCustMaps");
-
-            migrationBuilder.DropColumn(
-                name: "EntityIdentifier",
-                table: "Vouchers");
-
-            migrationBuilder.DropColumn(
-                name: "EntityType",
-                table: "Vouchers");
-
-            migrationBuilder.AlterColumn<int>(
-                name: "DealerId",
-                table: "Vouchers",
-                type: "int",
-                nullable: false,
-                defaultValue: 0,
-                oldClrType: typeof(int),
-                oldType: "int",
-                oldNullable: true);
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_Vouchers_DealerMasters_DealerId",
-                table: "Vouchers",
-                column: "DealerId",
-                principalTable: "DealerMasters",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
         }
     }
 }

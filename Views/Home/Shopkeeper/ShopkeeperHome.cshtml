@@ -148,7 +148,7 @@
 
     .scanner-container {
         width: 100%;
-        height: 420px; /* larger so scanner is fully visible */
+        height: 300px; /* Reduced height to prevent overflow */
         border: 2px dashed #ddd;
         display: flex;
         align-items: center;
@@ -157,19 +157,9 @@
         background-color: #f8f9fa;
         margin-bottom: 0.75rem; /* Reduced margin */
         position: relative;
+        max-width: 100%; /* Ensure it doesn't exceed container */
     }
-    
-    .scanner-placeholder {
-        text-align: center;
-        color: #6c757d;
-    }
-    
-    .scanner-placeholder i {
-        font-size: 2rem; /* Reduced font size */
-        margin-bottom: 0.5rem; /* Reduced margin */
-        color: #adb5bd;
-    }
-    
+
     #qrVideo {
         width: 100%;
         height: 100%;
@@ -184,6 +174,17 @@
     #scannerContainer .html5-qrcode-element {
         width: 100%;
         height: 100%;
+    }
+    
+    .scanner-placeholder {
+        text-align: center;
+        color: #6c757d;
+    }
+
+    .scanner-placeholder i {
+        font-size: 2rem; /* Reduced font size */
+        margin-bottom: 0.5rem; /* Reduced margin */
+        color: #adb5bd;
     }
     
     .scanner-placeholder {
@@ -288,6 +289,7 @@
         padding: 1rem; /* Reduced padding */
         border-radius: var(--border-radius);
         height: 100%;
+        max-width: 100%; /* Ensure it doesn't exceed container */
     }
 
     .table th {
@@ -315,7 +317,7 @@
         }
 
         .scanner-container {
-            height: 300px; /* mobile-friendly height */
+            height: 250px; /* Reduced height for mobile */
         }
         
         .nav-tabs .nav-link {
@@ -331,6 +333,21 @@
         .btn {
             padding: 0.3rem 0.75rem; /* Reduced padding */
             font-size: 0.8rem; /* Reduced font size */
+        }
+    }
+    
+    /* Additional responsive styles for very small screens */
+    @@media (max-width: 480px) {
+        .scanner-container {
+            height: 200px; /* Further reduced height for small mobile */
+        }
+        
+        .card-body {
+            padding: 0.5rem; /* Further reduced padding */
+        }
+        
+        .form-group {
+            margin-bottom: 0.5rem; /* Reduced margin */
         }
     }
     
@@ -467,12 +484,12 @@
                                 </div>
 
                                 <div id="scannerWrapper" class="w-100 d-flex justify-content-center">
-                                    <div id="scannerContainer" class="scanner-container" style="display: none; width: 360px; max-width: 90%;">
+                                    <div id="scannerContainer" class="scanner-container" style="display: none; width: 100%; max-width: 360px;">
                                         <div id="qrVideo" style="width: 100%; height: 100%;"></div>
                                     </div>
                                 </div>
 
-                                <div id="scannerPlaceholder" class="scanner-container" style="width:360px; max-width:90%; margin-top:12px;">
+                                <div id="scannerPlaceholder" class="scanner-container" style="width: 100%; max-width: 360px; margin-top:12px;">
                                     <div class="scanner-placeholder">
                                         <i class="fas fa-qrcode"></i>
                                         <p class="mb-1">Click "Start Camera" to begin scanning</p>
@@ -483,7 +500,7 @@
                                     <!-- Dynamic scan/redeem messages inserted here -->
                                 </div>
 
-                                <div id="scanResult" class="mt-2" style="display: none; width:360px; max-width:90%;">
+                                <div id="scanResult" class="mt-2" style="display: none; width: 100%; max-width: 360px;">
                                     <div class="alert alert-info">
                                         <i class="fas fa-info-circle me-1"></i>
                                         <strong>Scanned Data:</strong> <span id="scannedData"></span>
@@ -591,42 +608,70 @@
                 <div class="card-body">
                     @if (Model.RedemptionHistory != null && Model.RedemptionHistory.Any())
                     {
-                        <div class="table-responsive">
-                            <table class="table table-striped table-sm"> <!-- Added table-sm for smaller tables -->
-                                <thead>
-                                    <tr>
-                                        <th>Voucher Code</th>
-                                        <th>Dealer</th>
-                                        <th>Redemption Date</th>
-                                        <th>Value</th>
-                                        <th>Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var voucher in Model.RedemptionHistory)
-                                    {
-                                        <tr>
-                                            <td>@voucher.VoucherCode</td>
-                                            <td>@(voucher.Dealer?.Name ?? "N/A")</td>
-                                            <td>@(voucher.RedeemedDate?.ToString("dd/MM/yyyy HH:mm") ?? "N/A")</td>
-                                            <td>₹@voucher.VoucherValue</td>
-                                            <td><span class="badge bg-success">Redeemed</span></td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
+                        <div class="row">
+                            @foreach (var voucher in Model.RedemptionHistory)
+                            {
+                                <div class="col-md-6 col-lg-4 mb-4">
+                                    <div class="card h-100">
+                                        <div class="card-header">
+                                            <h6 class="mb-0">@voucher.VoucherCode</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <p class="card-text">
+                                                <strong>Dealer:</strong> @(voucher.Dealer?.Name ?? "N/A")<br>
+                                                <strong>Date:</strong> @(voucher.RedeemedDate?.ToString("dd/MM/yyyy HH:mm") ?? "N/A")<br>
+                                                <strong>Value:</strong> ₹@voucher.VoucherValue<br>
+                                                <strong>Campaign Type:</strong> @voucher.CampaignType<br>
+                                                <strong>Status:</strong> <span class="badge bg-success">Redeemed</span>
+                                            </p>
+                                            
+                                            @{
+                                                // Display product information based on campaign type
+                                                var redeemedProduct = Model.RedeemedProducts?.FirstOrDefault(rp => rp.VoucherId == voucher.Id);
+                                            }
+                                            
+                                            @if (redeemedProduct != null)
+                                            {
+                                                <div class="product-info mt-3">
+                                                    <h6>Product Details:</h6>
+                                                    @if (voucher.CampaignType == "PointsReward")
+                                                    {
+                                                        // For PointsReward, show the reward product
+                                                        <p class="mb-1"><strong>Reward Product:</strong> @redeemedProduct.ProductName</p>
+                                                        <p class="mb-1"><strong>Quantity:</strong> @redeemedProduct.Quantity</p>
+                                                    }
+                                                    else if (voucher.CampaignType == "FreeProduct")
+                                                    {
+                                                        // For FreeProduct, show the free product
+                                                        <p class="mb-1"><strong>Free Product:</strong> @redeemedProduct.ProductName</p>
+                                                        <p class="mb-1"><strong>Quantity:</strong> @redeemedProduct.Quantity</p>
+                                                    }
+                                                    else
+                                                    {
+                                                        // For other types (PointsToCash, etc.), show the purchased product
+                                                        <p class="mb-1"><strong>Product:</strong> @redeemedProduct.ProductName</p>
+                                                        <p class="mb-1"><strong>Description:</strong> @redeemedProduct.Description</p>
+                                                        <p class="mb-1"><strong>Price:</strong> ₹@redeemedProduct.Price</p>
+                                                        <p class="mb-1"><strong>Quantity:</strong> @redeemedProduct.Quantity</p>
+                                                    }
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            }
                         </div>
                     }
                     else
                     {
-                        <div class="text-center py-3"> <!-- Reduced padding -->
-                            <i class="fas fa-info-circle fa-lg text-info mb-2"></i> <!-- Reduced margin -->
-                            <p class="mb-0">No redemption history found.</p> <!-- Reduced margin -->
+                        <div class="text-center py-3">
+                            <i class="fas fa-info-circle fa-lg text-info mb-2"></i>
+                            <p class="mb-0">No redemption history found.</p>
                         </div>
                     }
                     <div class="d-flex justify-content-center">
                         <nav>
-                            <ul class="pagination pagination-sm"> <!-- Smaller pagination -->
+                            <ul class="pagination pagination-sm">
                                 <li class="page-item disabled"><a class="page-link" href="#">Previous</a></li>
                                 <li class="page-item active"><a class="page-link" href="#">1</a></li>
                                 <li class="page-item"><a class="page-link" href="#">2</a></li>

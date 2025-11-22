@@ -25,6 +25,7 @@ namespace HaldiramPromotionalApp.ViewModels
     {
         public List<Voucher> Vouchers { get; set; } = new List<Voucher>();
         public List<Voucher> RedemptionHistory { get; set; } = new List<Voucher>(); // Add redemption history
+        public List<RedeemedProduct> RedeemedProducts { get; set; } = new List<RedeemedProduct>(); // Add redeemed products
         public int TotalPoints { get; set; } = 0;
         public DealerMaster Dealer { get; set; }
         public ShopkeeperMaster Shopkeeper { get; set; }

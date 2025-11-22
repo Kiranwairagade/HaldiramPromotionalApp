@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿﻿﻿using HaldiramPromotionalApp.Models;
+﻿﻿using HaldiramPromotionalApp.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace HaldiramPromotionalApp.Data
@@ -33,6 +33,7 @@ namespace HaldiramPromotionalApp.Data
         public DbSet<Cust2EmpMap> Cust2EmpMaps { get; set; } 
         public DbSet<Customer_Master> Customer_Masters { get; set; }    
         public DbSet<EmployeeMaster> EmployeeMasters { get; set; }
+        public DbSet<RedeemedProduct> RedeemedProducts { get; set; } // Added RedeemedProducts DbSet
 
 
     }
