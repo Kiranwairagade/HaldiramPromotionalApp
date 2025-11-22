@@ -429,41 +429,44 @@
                     <!-- Product Details Form (shown after Points-to-Cash voucher redemption) -->
                     @if (Model.ShowProductForm)
                     {
-                        <div class="alert alert-info mb-3"> <!-- Reduced margin -->
-                            <h6><i class="fas fa-info-circle"></i> Product Details Required</h6> <!-- Reduced heading -->
-                            <p class="mb-2">Please enter the details of the product being redeemed with this Points-to-Cash voucher.</p> <!-- Reduced margin -->
+                        <div class="alert alert-info mb-3">
+                            <h6><i class="fas fa-info-circle"></i> Product Details Required</h6>
+                            <p class="mb-2">Please enter the details of the product being redeemed with this voucher.</p>
                         </div>
                         
-                        <form asp-action="SaveProductDetails" method="post" class="mb-3"> <!-- Reduced margin -->
+                        <form asp-action="SaveProductDetails" method="post" class="mb-3" id="productForm">
                             <input type="hidden" name="voucherId" value="@Model.VoucherId" />
                             <div class="row">
                                 <div class="col-md-6">
-                                    <div class="form-group mb-2"> <!-- Reduced margin -->
+                                    <div class="form-group mb-2">
                                         <label for="ProductName" class="form-label">Product Name</label>
                                         <input type="text" class="form-control" id="ProductName" name="ProductName" value="@Model.ProductName" required>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
-                                    <div class="form-group mb-2"> <!-- Reduced margin -->
+                                    <div class="form-group mb-2">
                                         <label for="Quantity" class="form-label">Quantity</label>
                                         <input type="number" class="form-control" id="Quantity" name="Quantity" value="@Model.Quantity" min="1" required>
                                     </div>
                                 </div>
                             </div>
-                            <div class="form-group mb-2"> <!-- Reduced margin -->
+                            <div class="form-group mb-2">
                                 <label for="ProductDescription" class="form-label">Product Description</label>
-                                <textarea class="form-control" id="ProductDescription" name="ProductDescription" rows="2">@Model.ProductDescription</textarea> <!-- Reduced rows -->
+                                <textarea class="form-control" id="ProductDescription" name="ProductDescription" rows="2">@Model.ProductDescription</textarea>
                             </div>
-                            <div class="form-group mb-2"> <!-- Reduced margin -->
+                            <div class="form-group mb-2">
                                 <label for="ProductPrice" class="form-label">Product Price (₹)</label>
                                 <input type="number" class="form-control" id="ProductPrice" name="ProductPrice" value="@Model.ProductPrice" step="0.01" min="0" required>
+                                <div class="invalid-feedback" id="priceValidationMessage">
+                                    Price must not exceed the voucher value of ₹<span id="voucherValue">@Model.VoucherValue</span>
+                                </div>
                             </div>
-                            <div class="d-flex gap-1"> <!-- Reduced gap -->
+                            <div class="d-flex gap-1">
                                 <button type="submit" class="btn btn-success">
-                                    <i class="fas fa-save me-1"></i>Save Product Details <!-- Reduced margin -->
+                                    <i class="fas fa-save me-1"></i>Save Product Details
                                 </button>
                                 <a href="@Url.Action("ShopkeeperHome", "Home")" class="btn btn-outline-secondary">
-                                    <i class="fas fa-times me-1"></i>Cancel <!-- Reduced margin -->
+                                    <i class="fas fa-times me-1"></i>Cancel
                                 </a>
                             </div>
                         </form>
@@ -628,19 +631,25 @@
                                             @{
                                                 // Display product information based on campaign type
                                                 var redeemedProduct = Model.RedeemedProducts?.FirstOrDefault(rp => rp.VoucherId == voucher.Id);
+                                                var campaignDetails = Model.VoucherCampaignDetails?.GetValueOrDefault(voucher.Id);
                                             }
                                             
-                                            @if (redeemedProduct != null)
+                                            @if (voucher.CampaignType == "PointsReward" && campaignDetails != null)
+                                            {
+                                                <div class="product-info mt-3">
+                                                    <h6>Reward Product:</h6>
+                                                    <p class="mb-1"><strong>Name:</strong> @campaignDetails.RewardProductName</p>
+                                                    @if (redeemedProduct != null)
+                                                    {
+                                                        <p class="mb-1"><strong>Quantity:</strong> @redeemedProduct.Quantity</p>
+                                                    }
+                                                </div>
+                                            }
+                                            else if (redeemedProduct != null)
                                             {
                                                 <div class="product-info mt-3">
                                                     <h6>Product Details:</h6>
-                                                    @if (voucher.CampaignType == "PointsReward")
-                                                    {
-                                                        // For PointsReward, show the reward product
-                                                        <p class="mb-1"><strong>Reward Product:</strong> @redeemedProduct.ProductName</p>
-                                                        <p class="mb-1"><strong>Quantity:</strong> @redeemedProduct.Quantity</p>
-                                                    }
-                                                    else if (voucher.CampaignType == "FreeProduct")
+                                                    @if (voucher.CampaignType == "FreeProduct")
                                                     {
                                                         // For FreeProduct, show the free product
                                                         <p class="mb-1"><strong>Free Product:</strong> @redeemedProduct.ProductName</p>
@@ -693,6 +702,45 @@
         setTimeout(function() {
             document.querySelectorAll('.alert').forEach(function(el) { el.remove(); });
         }, 5000);
+
+        // Product form validation
+        document.addEventListener('DOMContentLoaded', function() {
+            const productForm = document.getElementById('productForm');
+            if (productForm) {
+                const priceInput = document.getElementById('ProductPrice');
+                const voucherValueElement = document.getElementById('voucherValue');
+                const priceValidationMessage = document.getElementById('priceValidationMessage');
+                
+                if (priceInput && voucherValueElement) {
+                    const voucherValue = parseFloat(voucherValueElement.textContent) || 0;
+                    
+                    productForm.addEventListener('submit', function(e) {
+                        const price = parseFloat(priceInput.value) || 0;
+                        
+                        if (price > voucherValue) {
+                            e.preventDefault();
+                            priceInput.classList.add('is-invalid');
+                            priceValidationMessage.style.display = 'block';
+                        } else {
+                            priceInput.classList.remove('is-invalid');
+                            priceValidationMessage.style.display = 'none';
+                        }
+                    });
+                    
+                    priceInput.addEventListener('input', function() {
+                        const price = parseFloat(priceInput.value) || 0;
+                        
+                        if (price > voucherValue) {
+                            priceInput.classList.add('is-invalid');
+                            priceValidationMessage.style.display = 'block';
+                        } else {
+                            priceInput.classList.remove('is-invalid');
+                            priceValidationMessage.style.display = 'none';
+                        }
+                    });
+                }
+            }
+        });
 
         // QR Code Scanner
         let html5QrCode = null;

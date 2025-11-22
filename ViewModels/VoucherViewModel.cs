@@ -41,5 +41,6 @@ namespace HaldiramPromotionalApp.ViewModels
         public decimal ProductPrice { get; set; }
         public int Quantity { get; set; } = 1;
         public bool ShowProductForm { get; set; } = false;
+        public decimal VoucherValue { get; set; } // Add voucher value for validation
     }
 }

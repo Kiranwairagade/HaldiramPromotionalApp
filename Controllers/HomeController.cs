@@ -584,6 +584,11 @@ namespace HaldiramPromotionalApp.Controllers
                 var redeemedProducts = await _context.RedeemedProducts
                     .ToListAsync();
 
+                // Get PointsReward campaigns for displaying reward product information
+                var pointsRewardCampaigns = await _context.PointsRewardCampaigns
+                    .Include(c => c.RewardProduct)
+                    .ToDictionaryAsync(c => c.Id, c => c);
+
                 // Generate QR code data for each voucher
                 var voucherQRCodeData = new Dictionary<int, string>();
                 foreach (var voucher in vouchers)
@@ -612,6 +617,38 @@ namespace HaldiramPromotionalApp.Controllers
                     ShowProductForm = showProductForm,
                     VoucherId = voucherId
                 };
+
+                // If showing product form, populate the voucher value for validation
+                if (showProductForm && voucherId > 0)
+                {
+                    var voucher = await _context.Vouchers.FirstOrDefaultAsync(v => v.Id == voucherId);
+                    if (voucher != null)
+                    {
+                        viewModel.VoucherValue = voucher.VoucherValue;
+                    }
+                }
+
+                // Add PointsReward campaign details to the view model
+                var voucherCampaignDetails = new Dictionary<int, VoucherCampaignDetails>();
+                foreach (var voucher in redemptionHistory)
+                {
+                    var campaignDetails = new VoucherCampaignDetails
+                    {
+                        CampaignType = voucher.CampaignType,
+                        VoucherValue = voucher.VoucherValue
+                    };
+
+                    // If this is a PointsReward voucher, get the reward product details
+                    if (voucher.CampaignType == "PointsReward" && pointsRewardCampaigns.ContainsKey(voucher.CampaignId))
+                    {
+                        var campaign = pointsRewardCampaigns[voucher.CampaignId];
+                        campaignDetails.RewardProductName = campaign.RewardProduct?.ProductName ?? "Reward Product";
+                    }
+
+                    voucherCampaignDetails[voucher.Id] = campaignDetails;
+                }
+
+                viewModel.VoucherCampaignDetails = voucherCampaignDetails;
 
                 return View("~/Views/Home/Shopkeeper/ShopkeeperHome.cshtml", viewModel);
             }
@@ -1899,6 +1936,12 @@ namespace HaldiramPromotionalApp.Controllers
                         TempData["SuccessMessage"] = $"Voucher {voucher.VoucherCode} redeemed successfully! Please enter product details.";
                         return RedirectToAction("ShopkeeperHome", new { showProductForm = true, voucherId = voucher.Id });
                     }
+                    // If this is an AmountReachGoal or SessionDurationReward voucher, also show product details form
+                    else if (voucher.CampaignType == "AmountReachGoal" || voucher.CampaignType == "SessionDurationReward")
+                    {
+                        TempData["SuccessMessage"] = $"Voucher {voucher.VoucherCode} redeemed successfully! Please enter product details.";
+                        return RedirectToAction("ShopkeeperHome", new { showProductForm = true, voucherId = voucher.Id });
+                    }
                     else
                     {
                         TempData["SuccessMessage"] = $"Voucher {voucher.VoucherCode} redeemed successfully!";
@@ -2058,6 +2101,13 @@ namespace HaldiramPromotionalApp.Controllers
                 {
                     TempData["ErrorMessage"] = "Voucher not found.";
                     return RedirectToAction("ShopkeeperHome");
+                }
+                
+                // Validate that product price does not exceed voucher value
+                if (ProductPrice > voucher.VoucherValue)
+                {
+                    TempData["ErrorMessage"] = "Product price cannot exceed voucher value.";
+                    return RedirectToAction("ShopkeeperHome", new { showProductForm = true, voucherId = voucherId });
                 }
                 
                 // Create a new redeemed product entry
