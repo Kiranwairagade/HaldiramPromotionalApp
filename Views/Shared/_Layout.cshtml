@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿<!DOCTYPE html>
+﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -487,14 +487,13 @@
                                             <i class="fas fa-coins"></i> Available Points: <span id="dealerPointsMobile">@(ViewData["AvailablePoints"] ?? ViewData["TotalPoints"] ?? 0)</span>
                                         </div>
                                     }
-
-                                    <button type="submit" form="logoutForm" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    <button onclick="logout()" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                                         <i class="fas fa-sign-out-alt mr-2"></i> Logout
                                     </button>
                                 </div>
                             </div>
                         </div>
-                        <form asp-area="" asp-controller="Home" asp-action="Logout" method="post" id="logoutForm" style="display: none;"></form>
+                        
                     }
                     else
                     {
@@ -575,7 +574,7 @@
                         </div>
                     }
                     
-                    <button type="submit" form="logoutForm" class="nav-link-mobile block w-full text-left">
+                    <button onclick="logout()" class="nav-link-mobile block w-full text-left">
                         <i class="fas fa-sign-out-alt"></i> Logout
                     </button>
                 }
@@ -702,6 +701,12 @@
             adjustBottomNav();
             window.addEventListener('resize', adjustBottomNav);
         });
+            
+        // Logout function
+        function logout() {
+            // Redirect to the logout endpoint
+            window.location.href = '/Home/Logout';
+        }
     </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
